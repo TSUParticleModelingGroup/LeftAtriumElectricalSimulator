@@ -1,0 +1,26 @@
+# Compiles and runs the program
+
+#if you get a permission denied error, type this command in the terminal:
+#chmod 755 compile.sh
+
+set -e
+
+# Keep moved source folders compatible with existing ../include header paths.
+ln -sfn ../include Source/include
+
+cd Source/model
+
+#compile the ImGui files
+
+nvcc -c ../third_party/imgui/imgui.cpp ../third_party/imgui/imgui_draw.cpp ../third_party/imgui/imgui_tables.cpp ../third_party/imgui/imgui_widgets.cpp
+nvcc -c ../third_party/imgui/imgui_impl_glfw.cpp ../third_party/imgui/imgui_impl_opengl3.cpp
+
+nvcc SVT.cu ../third_party/glad.c\
+     imgui.o imgui_draw.o imgui_tables.o imgui_widgets.o imgui_impl_glfw.o imgui_impl_opengl3.o \
+     -o svt -lglfw -lGL -lGLU -lm -lX11 -lXrandr -lXinerama -lXcursor -lXi
+
+#Moving svt to ExecutableFiles
+mv svt ../../ExecutableFiles
+
+#Removing the .o files
+rm -f *.o

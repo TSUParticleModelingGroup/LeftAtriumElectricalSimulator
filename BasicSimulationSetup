@@ -1,0 +1,58 @@
+!!!Important: In this file, do not use the equal sign in a comment, as it triggers the reading of an input.
+
+The units we use in the code are: length in millimeters (mm), mass in grams (g), and time in milliseconds (ms). 
+Any value read from this file that is not in these units will be converted to these units in the code.
+
+Read from NodesMuscles file (0) or read from a previous run file (1).
+Should be a 0 or a 1.
+
+--NodesMusclesFileOrPreviousRunsFile = 0;
+
+Name of the files that holds the nodes and muscles. 
+
+CSphere340.bin
+IdealLeftAtrium2.3Kdemo.bin
+Test.bin
+
+Place the Nodes and Muscle file you would like to run here.
+
+--InputFileName = CSphere340.bin
+
+Name of previous run files that were stored in GitHub.
+test
+
+If you have made a previous run file and would like to run it, just place its name below. Also, this file will not 
+be copied to GitHub, so you can build as many as you want without cluttering up the GitHub folder. If you have a good 
+run that you want to share on GitHub for everyone to use, you will need to manually upload it to GitHub.
+ 
+Place the name of the previous run file you would like to execute here.
+
+--PreviousRunFileName = test
+
+Note: You will only read from a (nodes and muscle file) or a (previous run file), not both.
+
+Connection line width for the lines that represent muscles connecting the nodes:
+1.0 to 3.0 works well for simulations with many nodes, and 5.0 to 10.0 is suitable for simulations with fewer nodes.
+It should be a float.
+	
+--LineWidth = 1.0;
+
+Set the size of the node spheres here. It is scaled by the RadiusOfLeftAtrium. A good value is 0.01.
+It should be a float.
+
+--NodeRadiusAdjustment = 0.005;
+
+Set the size of a point drawn if shperes are turned off but you still want to see the node. A good value is 5.0 to 10.0.
+It should be a float.
+
+--NodePointSize = 1.5;
+
+Background color (Background of the scene): red, green, blue.
+All three should be floats.
+
+--BackGroundRed = 0.0;
+--BackGroundGreen = 0.0;
+--BackGroundBlue = 0.0;
+
+
+
