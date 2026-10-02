@@ -1,0 +1,1 @@
+github hates empty folders, but we need this folder for SaveSettings to work
