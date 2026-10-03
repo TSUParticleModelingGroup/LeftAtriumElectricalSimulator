@@ -18,37 +18,6 @@
  void createGUI();
 */
 
-/*
-void showMuscleTypes()
-{
-	// If the binary file included node section colors, apply them back onto visible tissue nodes.
-	if(BinaryNodeColors != NULL)
-	{
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			// Do not overwrite special marker colors (ablation, adjust/find markers, etc.).
-			if(!Node[i].isAblated && !Node[i].isDrawNode)
-			{
-				// Restore the node color that was saved in the binary export.
-				Node[i].color = BinaryNodeColors[i];
-			}
-		}
-	}
-
-	// If the binary file included muscle section colors, restore those too.
-	if(BinaryMuscleColors != NULL)
-	{
-		for(int i = 0; i < NumberOfMuscles; i++)
-		{
-			// Restore the muscle color that was saved in the binary export.
-			Muscle[i].color = BinaryMuscleColors[i];
-		}
-	}
-
-	copyNodesMusclesToGPU();
-}
-*/
-
 
 // Helper function to show a tooltip in ImGui
 void ShowTooltip(const char* text) 
@@ -103,6 +72,7 @@ void ShowIdentifiedNodesBox()
 		drawPicture();
 	}
 }
+
 // Display box for identified muscles in FindMuscleMode
 void ShowIdentifiedMusclesBox()
 {
@@ -1006,65 +976,16 @@ void createGUI()
         }
     }
     
-    // Utility functions
-    if (ImGui::CollapsingHeader("Utilities"))
-    {
+	// Utility functions
+	if (ImGui::CollapsingHeader("Utilities"))
+	{
 		//Save run button
-        if (ImGui::Button("Save Run"))
+		if (ImGui::Button("Save Run"))
 		{
-            saveRun();
-        }
+		    saveRun();
+		}
 		ShowTooltip("(Ctrl + Shift + S)\nSave current muscle properties and simulation\nsettings to a file for later use");
-
-		if (ImGui::Button("Show sections"))
-		{
-			SimulationSwitch.isPaused = true;
-			// Apply saved section colors from the loaded binary data.
-			//showMuscleTypes();
-			// Redraw immediately so the section colors appear as soon as the button is pressed.
-			drawPicture();
-		}
-		ShowTooltip("Shows the designated sections of the left atrium in different colors.");
-
-        //Find nodes button - toggle to show/hide markers
-        static bool markersShowing = false;
-        if (ImGui::Button(markersShowing ? "Hide Pulse/Back/Top Nodes" : "Show Pulse/Back/Top"))
-		{
-            if (markersShowing)
-            {
-                hidePulseBackTopNodes();
-                markersShowing = false;
-            }
-            else
-            {
-                findNodes();
-                markersShowing = true;
-            }
-        }
-		ShowTooltip("Toggle visibility of pulse/back/top node markers");
-
-		// Display selected-node information.
-		if (SimulationSwitch.nodesFound) 
-		{
-			ImGui::Separator();
-			ImGui::Text("Pulse node (gold): %d", PulsePointNode);
-			ImGui::Text("Back node (orange): %d", FrontNode);
-			ImGui::Text("Top node (cyan): %d", UpNode);
-		}
-
-		if (ImGui::Button("Save State"))
-		{
-			saveState();
-		}
-		ShowTooltip("(Ctrl + S)\nSave the current state of the simulation, including all node properties and current simulation time\nThis is different from Save Run, which only saves muscle properties and general settings");
-		
-		ImGui::SameLine();
-		if (ImGui::Button("Load State"))
-		{
-			loadState();
-		}
-		ShowTooltip("(Ctrl + Z)\nLoad a previously saved state of the simulation\nThis will overwrite the current state with the saved one, including all node properties and current simulation time");
-    }
+	}
 
 	//Display movement controls
 	if (ImGui::CollapsingHeader("Keyboard Controls"))

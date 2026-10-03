@@ -127,8 +127,8 @@ struct simulationSwitchesStructure
 // How many nodes and muscle the simulation contains.
 // They are initially read in form files in the NodesMuscles folder.
 // *** Should be stored if a runfile is saved.
-int NumberOfNodes;
-int NumberOfMuscles;
+int NumberOfNodes = -1;
+int NumberOfMuscles = -1;
 
 // This will hold all the nodes.
 // It is initially read in form files in the NodesMuscles folder.
@@ -180,7 +180,6 @@ int PulsePointNode = -1; // Set to -1 to flag it if it is used before it is set.
 // *** Should be stored if a runfile is saved.
 int UpNode = -1; // Set to -1 to flag it if it is used before it is set.
 int FrontNode = -1; // Set to -1 to flag it if it is used before it is set.
-
 
 // Node types: Assigns a number for the different types of tissue. 
 // The oder of the number they are assigned is also very important.
@@ -304,18 +303,18 @@ int main(int, char**);
 // System input and output functions ********************************************************
 void readBasicSimulationSetupParameters();
 void readIntermediateSimulationSetupParameters();
-void setSimulationRunDefaults();
 void readNodesAndMusclesFromBinaryFile();
-//void getNodesandMusclesFromPreviuosRun();
+void saveRun();
 void uploadPreviousRun();
 
-// Run setup Functions ***********************************************************************
-//void generalSimulationSetup();
+// Setup Functions ***********************************************************************
+void setSimulationRunDefaults();
 void createNewRun();
 void setRemainingParameters();
 void setupCudaEnvironment();
 void setRemainingNodeAndMuscleAttributes();
 
+// Function called by the idle callback. *************************************************
 void nBody(double);
 
 // CUDA Functions ***********************************************************************
@@ -327,9 +326,6 @@ void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
 void copyNodesFromGPU();
 void copyNodesToGPU();
-
-// Node and Muscle Setup Functions ***********************************************************************
-
  
 // Viewing Functions ***********************************************************************
 void showMuscleTypes();
@@ -355,10 +351,6 @@ void createGUI();
  void movieOn();
  void movieOff();
  void screenShot();
- void saveRun();
- void saveState();
- void loadState();
- void findNodes();
  void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
  void keyHeld(GLFWwindow* window);
  void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);

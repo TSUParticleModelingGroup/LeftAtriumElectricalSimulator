@@ -404,47 +404,6 @@ void readIntermediateSimulationSetupParameters()
 }
 
 /*
- This function:
- Sets the simulation's default run settings. Most of these will get over written if you run an previuos run but they are all
- set here for a new run and for safety if an existing file read did not set something.
-*/
-void setSimulationRunDefaults()
-{
-	RunTime = 0.0;
-		
-	RefractoryPeriodAdjustmentMultiplier = 1.0;
-	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
-
-	CenterOfSimulation.x = 0.0;
-	CenterOfSimulation.y = 0.0;
-	CenterOfSimulation.z = 0.0;
-	CenterOfSimulation.w = 0.0;
-
-	AngleOfSimulation.x = 0.0;
-	AngleOfSimulation.y = 1.0;
-	AngleOfSimulation.z = 0.0;
-	AngleOfSimulation.w = 0.0;
-
-	SimulationSwitch.isPaused = true;
-	SimulationSwitch.isInAblateMode = false;
-	SimulationSwitch.isInEctopicBeatMode = false;
-	SimulationSwitch.isInEctopicEventMode = false;
-	SimulationSwitch.isInAdjustMuscleAreaMode = false;
-	SimulationSwitch.isInAdjustMuscleLineMode = false;
-	SimulationSwitch.isInFindNodeMode = false;
-	SimulationSwitch.isInMouseFunctionMode = false;
-	SimulationSwitch.isRecording = false;
-	SimulationSwitch.ViewFlag = 1;
-	SimulationSwitch.DrawNodesFlag = 0;
-	SimulationSwitch.DrawFrontHalfFlag = 0;
-	SimulationSwitch.ShowMuscleTypesFlag = false;
-	SimulationSwitch.nodesFound = false;
-	SimulationSwitch.frontNodeIndex = -1;
-	SimulationSwitch.topNodeIndex = -1;
-	SimulationSwitch.guiCollapsed = false;
-}
-
-/*
  This function reads node and muscle data from a config-exported binary file.
  It appends the binary values into the existing model structs by filling fields
  that already exist in this model's node and muscle structures.
@@ -457,7 +416,7 @@ void readNodesAndMusclesFromBinaryFile()
 	struct stat fileStat;
 
 	// Build the expected input path under the binary folder.
-	strcpy(fileName, "./ModelNodesMuscles/");
+	strcpy(fileName, "./NodesMuscles/");
 	strcat(fileName, NodesMusclesFileName);
 
 	// Enforce .bin extension for early detection of invalid file names and to avoid confusion with raw files
@@ -489,28 +448,14 @@ void readNodesAndMusclesFromBinaryFile()
 		exit(0);
 	}
 
-	// Read and validate format version before reading any payload.
-	int version = 0;
-	fread(&version, sizeof(int), 1, inFile);
-	if(version != 1)
-	{
-		printf("\n\n Unsupported binary version %d in %s.", version, fileName);
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-
-	// Read global counts and orientation references
+	// Read global counts and pulse node
 	fread(&NumberOfNodes, sizeof(int), 1, inFile);
 	fread(&NumberOfMuscles, sizeof(int), 1, inFile);
 	fread(&PulsePointNode, sizeof(int), 1, inFile);
-	fread(&UpNode, sizeof(int), 1, inFile);
-	fread(&FrontNode, sizeof(int), 1, inFile);
 
 	printf("\n NumberOfNodes = %d", NumberOfNodes);
 	printf("\n NumberOfMuscles = %d", NumberOfMuscles);
 	printf("\n PulsePointNode = %d", PulsePointNode);
-	printf("\n UpNode = %d", UpNode);
-	printf("\n FrontNode = %d", FrontNode);
 
 	// Allocate and initialize node structs with model defaults.
 	cudaHostAlloc((void**)&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault);
@@ -596,24 +541,133 @@ void readNodesAndMusclesFromBinaryFile()
 	fclose(inFile);
 	printf("\n Binary file %s has been read in.\n", fileName);
 }
-		
-// Run setup Functions *********************************************************************** 
+
 /*
- This function:
- Bla Bla BMW
+ This function saves all the node and muscle values set in the run to a file. This file can then be used at a
+ later date to start a run with the exact settings used at the time of capture.
+ So if the user has spent a great deal of time setting up a scenario, they can save the scenario and use it again later.
+ We use it to create scenarios that have arrhythmias preprogrammed into them and have members from a class we are
+ presenting to come up and see if they can use the ablation tool to eliminate the arythmia.
 */
-void createNewRun()
+void saveRun()
 {
-	// Seeding the random number generator.
-	time_t t;
-	srand((unsigned) time(&t));
+	// Copying the latest node and muscle information down from the GPU.
+	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
+	cudaErrorCheck(__FILE__, __LINE__);
+	cudaMemcpy( Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost);
+	cudaErrorCheck(__FILE__, __LINE__);
 	
-	readNodesAndMusclesFromBinaryFile();
-	setRemainingNodeAndMuscleAttributes();
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{	
-		checkMuscle(i);
+	// Moving into the file that contains previuos run files.
+	chdir("./PreviousRunsFile");
+	
+	// Creating an output directory name to store run settings infomation in. It is unique down to the second  
+	// to keep the user from overwriting files (You just cannot save more than one file a second).
+	string timeStamp = "Run_" + getTimeStamp();
+	const char *directoryName = timeStamp.c_str();
+	
+	// Creating the diretory to hold the run settings.
+	if(mkdir(directoryName, 0777) == 0)
+	{
+		printf("\n Directory '%s' created successfully.\n", directoryName);
 	}
+	else
+	{
+		printf("\n Error creating directory '%s'.\n", directoryName);
+	}
+	
+	// Moving into the directory
+	chdir(directoryName);
+	
+	// Copying all the nodes and muscle (with their properties) into this folder in the file named run.
+	FILE *runFile;
+	
+  	runFile = fopen("run", "wb");
+	
+	// Saving this to check if it is changed in an updated program and flag it if it has.
+	int linksPerNode = MUSCLES_PER_NODE;
+	fwrite(&linksPerNode, sizeof(int), 1, runFile);
+	
+	// Saving run values so the program will look exactly like it did when the run ended.
+	fwrite(&RunTime, sizeof(double), 1, runFile);
+	fwrite(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, runFile);
+	fwrite(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, runFile);
+	fwrite(&CenterOfSimulation, sizeof(float4), 1, runFile);
+	fwrite(&AngleOfSimulation, sizeof(float4), 1, runFile);
+	fwrite(&PulsePointNode, sizeof(int), 1, runFile);
+	fwrite(&RadiusOfLeftAtrium, sizeof(double), 1, runFile);
+	
+	// Saving the switch value so the simulation will start exactly as it ended.
+	fwrite(&SimulationSwitch, sizeof(SimulationSwitch), 1, runFile);
+  	
+  	// Saving the nodes.
+	fwrite(&NumberOfNodes, sizeof(int), 1, runFile);
+	fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, runFile);
+	
+	// Saving the muscles.
+	fwrite(&NumberOfMuscles, sizeof(int), 1, runFile);
+	fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, runFile);
+        
+	fclose(runFile);
+	
+	//Copying the simulationSetup files into this directory so you will know how it was initally setup.
+	FILE *fileIn;
+	FILE *fileOut;
+	long sizeOfFile;
+  	char *buffer;
+
+	//BASIC sim setup file
+	fileIn = fopen("../../BasicSimulationSetup", "rb");
+
+	if(fileIn == NULL)
+	{
+		printf("\n\n The basic simulationSetup file does not exist.");
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
+	}
+
+	// Finding the size of the BasicSimulationSetup file.
+	fseek (fileIn , 0 , SEEK_END);
+  	sizeOfFile = ftell(fileIn);
+  	rewind (fileIn);
+  	
+  	// Creating a buffer to hold the BasicSimulationSetup file.
+  	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
+  	fread (buffer, 1, sizeOfFile, fileIn);
+	fileOut = fopen("BasicSimulationSetup", "wb");
+	fwrite (buffer, 1, sizeOfFile, fileOut);
+	fclose(fileIn);
+	fclose(fileOut);
+	free(buffer);
+
+	//INTERMEDIATE sim setup file
+	fileIn = fopen("../../IntermediateSimulationSetup", "rb");
+
+	if(fileIn == NULL)
+	{
+		printf("\n\n The intermediate simulationSetup file does not exist.");
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
+	}
+
+	// Finding the size of the IntermediateSimulationSetup file.
+	fseek (fileIn , 0 , SEEK_END);
+  	sizeOfFile = ftell(fileIn);
+  	rewind (fileIn);
+  	
+  	// Creating a buffer to hold the simulationSetup file.
+  	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
+  	fread (buffer, 1, sizeOfFile, fileIn);
+	fileOut = fopen("IntermediateSimulationSetup", "wb");
+	fwrite (buffer, 1, sizeOfFile, fileOut);
+	fclose(fileIn);
+	fclose(fileOut);
+	free(buffer);
+
+	// Making a readMe file to put any infomation about why you are saving this run.
+	system("gedit readMe");
+	
+	// Moving back to the SVT directory.
+	chdir("../");
 }
 
 /*
@@ -636,19 +690,10 @@ void uploadPreviousRun()
 		printf("\n The simulation has been terminated.\n\n");
 		exit(0);
 	}
-
-	//settingFile = fopen("run", "wb");
-  	
-        fread(&NumberOfNodes, sizeof(int), 1, inFile);
-        // Creating memory space for the nodes on the CPU and GPU
-        cudaHostAlloc(&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
-        cudaErrorCheck(__FILE__, __LINE__);
-        cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
-        cudaErrorCheck(__FILE__, __LINE__);
-        fread(Node, sizeof(nodeAttributesStructure), NumberOfNodes, inFile);
-  	
-        int linksPerNode = MUSCLES_PER_NODE;
-        fread(&linksPerNode, sizeof(int), 1, inFile);
+	
+	// Checking to see if linksPerNode has changed.
+	int linksPerNode;
+	fread(&linksPerNode, sizeof(int), 1, inFile);
         if(linksPerNode != MUSCLES_PER_NODE)
         {
               printf("\n\n The number Of muscle per node do not match.");
@@ -656,42 +701,103 @@ void uploadPreviousRun()
               printf("\n to %d in header.h then recompile the code.", linksPerNode);
               printf("\n The simulation has been terminated.\n\n");
               exit(0);
+
         }
+        
+        // Reading run values so the program will look exactly like it did when the run ended.
+        fread(&RunTime, sizeof(double), 1, inFile);
+	fread(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, inFile);
+	fread(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, inFile);
+	fread(&CenterOfSimulation, sizeof(float4), 1, inFile);
+	fread(&AngleOfSimulation, sizeof(float4), 1, inFile);
+	fread(&PulsePointNode, sizeof(int), 1, inFile);
+	fread(&RadiusOfLeftAtrium, sizeof(double), 1, inFile);
+	
+	// Reading the switch value so the simulation will start exactly as it ended.
+	fread(&SimulationSwitch, sizeof(SimulationSwitch), 1, inFile);
   	
+  	// Reading in the nodes and allocating space for them on the CPU and GPU.
+        fread(&NumberOfNodes, sizeof(int), 1, inFile);
+        printf("\n NumberOfNodes = %d.\n", NumberOfNodes);
+        cudaHostAlloc(&Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
+        cudaErrorCheck(__FILE__, __LINE__);
+        cudaMalloc((void**)&NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure));
+        cudaErrorCheck(__FILE__, __LINE__);
+        fread(Node, sizeof(nodeAttributesStructure), NumberOfNodes, inFile);
+        
+	// Reading in the muscles and allocating space for them on the CPU and GPU.
         fread(&NumberOfMuscles, sizeof(int), 1, inFile);
-        // Creating memory space for the muscles on the CPU and GPU
+        printf("\n NumberOfMuscles = %d.\n", NumberOfMuscles);
         cudaHostAlloc(&Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaHostAllocDefault); // Making page locked memory on the CPU.
         cudaErrorCheck(__FILE__, __LINE__);
         cudaMalloc((void**)&MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure));
         cudaErrorCheck(__FILE__, __LINE__);
         fread(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, inFile);
-
-  	// To keep the contraction state what was readin from the BasicSimulationSetup file not what the state was
-  	// when the simulation was saved we save it in a temp, overwrite it then restore it.
-        fread(&SimulationSwitch, sizeof(SimulationSwitch), 1, inFile);
-  	
-        fread(&PulsePointNode, sizeof(int), 1, inFile);
-        fread(&UpNode, sizeof(int), 1, inFile);
-        fread(&FrontNode, sizeof(int), 1, inFile);
-  	
-        fread(&ViewName, sizeof(char), 256, inFile);
-  	
-        fread(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, inFile);
-        fread(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, inFile);
-        
-        fread(&RadiusOfLeftAtrium, sizeof(double), 1, inFile);
-        //fread(&MassOfLeftAtrium, sizeof(double), 1, inFile);
-        //fread(&MyocyteForcePerMassFraction, sizeof(double), 1, inFile);
-  	
-        fread(&CenterOfSimulation, sizeof(float4), 1, inFile);
-        fread(&AngleOfSimulation, sizeof(float4), 1, inFile);
-        
-        fread(&RunTime, sizeof(double), 1, inFile);
         
 	fclose(inFile);
-	RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
 	
-	printf("\n Nodes and Muscles have been read in from %s.\n", fileName);	
+	printf("\n Previous run file: %s has been readin.\n", fileName);	
+}
+
+		
+// Setup Functions *********************************************************************** 
+/*
+ This function:
+ Sets the simulation's default run settings. Most of these will get over written if you run an previuos run but they are all
+ set here for a new run and for safety if an existing file read did not set something.
+*/
+void setSimulationRunDefaults()
+{
+	RunTime = 0.0;
+		
+	RefractoryPeriodAdjustmentMultiplier = 1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+
+	CenterOfSimulation.x = 0.0;
+	CenterOfSimulation.y = 0.0;
+	CenterOfSimulation.z = 0.0;
+	CenterOfSimulation.w = 0.0;
+
+	AngleOfSimulation.x = 0.0;
+	AngleOfSimulation.y = 1.0;
+	AngleOfSimulation.z = 0.0;
+	AngleOfSimulation.w = 0.0;
+
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInAblateMode = false;
+	SimulationSwitch.isInEctopicBeatMode = false;
+	SimulationSwitch.isInEctopicEventMode = false;
+	SimulationSwitch.isInAdjustMuscleAreaMode = false;
+	SimulationSwitch.isInAdjustMuscleLineMode = false;
+	SimulationSwitch.isInFindNodeMode = false;
+	SimulationSwitch.isInMouseFunctionMode = false;
+	SimulationSwitch.isRecording = false;
+	SimulationSwitch.ViewFlag = 1;
+	SimulationSwitch.DrawNodesFlag = 0;
+	SimulationSwitch.DrawFrontHalfFlag = 0;
+	SimulationSwitch.ShowMuscleTypesFlag = false;
+	SimulationSwitch.nodesFound = false;
+	SimulationSwitch.frontNodeIndex = -1;
+	SimulationSwitch.topNodeIndex = -1;
+	SimulationSwitch.guiCollapsed = false;
+}
+
+/*
+ This function:
+ Bla Bla BMW
+*/
+void createNewRun()
+{
+	// Seeding the random number generator.
+	time_t t;
+	srand((unsigned) time(&t));
+	
+	readNodesAndMusclesFromBinaryFile();
+	setRemainingNodeAndMuscleAttributes();
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{	
+		checkMuscle(i);
+	}
 }
 
 /*
@@ -770,16 +876,12 @@ void setupCudaEnvironment()
 /*
  In this function, we set the remaining value of the nodes and muscles.
  1: Setting the pulse point node.
- 2: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
-    the left atrium. 
- 3: Here we set the base muscle attributes. 
+ 2: Here we set the base muscle attributes. 
     a: Setting the muscles conduction velocity. 
     b: Setting the muscles conduction duration (How long it takes for a signal to travel across the muscle).
     c: Setting the muscle's refractory period.
     d: Setting the muscle's absolute refractory period.
- 7: Setting all the atributes of BB. 
- 8: Setting all the atributes of the LAA.
- 9: Setting all the atributes of the PV.
+ 3: Setting all the node and muscle atributes based on type. 
 */
 void setRemainingNodeAndMuscleAttributes()
 {	
@@ -788,20 +890,7 @@ void setRemainingNodeAndMuscleAttributes()
 	Node[PulsePointNode].beatPeriod = BeatPeriod;
 	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
 	
-	// 2: BMW we do not need this.
-	double dx, dy, dz, d;
-	double totalLengthOfAllMuscles = 0.0;
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{	
-		dx = Node[Muscle[i].nodeA].position.x - Node[Muscle[i].nodeB].position.x;
-		dy = Node[Muscle[i].nodeA].position.y - Node[Muscle[i].nodeB].position.y;
-		dz = Node[Muscle[i].nodeA].position.z - Node[Muscle[i].nodeB].position.z;
-		d = sqrt(dx*dx + dy*dy + dz*dz);
-		Muscle[i].naturalLength = d; // The natural length is how far apart its two ends are at rest.
-		totalLengthOfAllMuscles += d;
-	}
-	
-	// 4:
+	// 2:
 	double stddev, left, right;
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
@@ -827,75 +916,96 @@ void setRemainingNodeAndMuscleAttributes()
 		Muscle[i].absoluteRefractoryPeriodFraction = BaseAbsoluteRefractoryPeriodFraction + croppedRandomNumber(stddev, left, right);
 	}
 	
-	
-	int typeLA = 0;
-	int typeBB = 1;
-	int typeLAA = 2;
-	int typeScar = 3;
-	int typePV = 4;
-	int typeMV = 5;
+	// 3:
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		if(Node[i].type == TypeBachmannBundle)
 		{
-			//Do BB stuff
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == typeBB)
-		{
-
-			Node[i].isDrawNode = true;
-		}
-		else if(Node[i].type == typeLAA)
+		else if(Node[i].type == TypePulmonaryVeins)
 		{
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == typeScar)
+		else if(Node[i].type == TypeBackWall)
+		{
+			Node[i].isDrawNode = true;
+		}
+		else if(Node[i].type == TypeMitralValve)
+		{
+			Node[i].isDrawNode = true;
+		}
+		else if(Node[i].type == TypeAppendage)
+		{
+			Node[i].isDrawNode = true;
+		}
+		else if(Node[i].type == TypeStandardLA)
+		{
+			Node[i].isDrawNode = true;
+		}
+		else if(Node[i].type == TypeScarTissue)
 		{
 			Node[i].isAblated = true;
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == typePV)
+		else if(Node[i].type == TypeExtraTissue)
 		{
+			Node[i].isAblated = true;
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == typeMV)
+		else
 		{
-			Node[i].isDrawNode = true;
+			printf("\n\n Unknown tissue type.");
+			printf("\n The simulation has been terminated.\n\n");
+			exit(0);
 		}
 	}
 	
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
-		if(Muscle[i].type == typeLA)
-		{
-			//LA do nothing.
-		}
-		else if(Muscle[i].type == typeBB)
+		if(Muscle[i].type == TypeBachmannBundle)
 		{
 			Muscle[i].conductionDuration /= BachmannsBundleMultiplier;
 		}
-		else if(Muscle[i].type == typeLAA)
+		else if(Muscle[i].type == TypePulmonaryVeins)
+		{
+			
+		}
+		else if(Muscle[i].type == TypeBackWall)
 		{
 			//
 		}
-		else if(Muscle[i].type == typeScar)
+		else if(Muscle[i].type == TypeMitralValve)
 		{
 			//
 		}
-		else if(Muscle[i].type == typePV)
+		else if(Muscle[i].type == TypeAppendage)
 		{
 			//
 		}
-		else if(Muscle[i].type == typeMV)
+		else if(Muscle[i].type == TypeStandardLA)
 		{
 			//
+		}
+		else if(Muscle[i].type == TypeScarTissue)
+		{
+			//
+		}
+		else if(Muscle[i].type == TypeExtraTissue)
+		{
+			//
+		}
+		else
+		{
+			printf("\n\n Unknown tissue type.");
+			printf("\n The simulation has been terminated.\n\n");
+			exit(0);
 		}
 	}
 	
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
-		if(Muscle[i].type == typeLAA)
+		if(Muscle[i].type == TypeAppendage)
 		{
 			// Adjust speed on LAA vector
 		}
