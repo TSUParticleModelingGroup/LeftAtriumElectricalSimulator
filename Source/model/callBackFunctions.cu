@@ -323,563 +323,86 @@ void screenShot()
 */
 void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	float dAngle = 0.01;
+	float dx,dy,dz;
+	dx = dy = dz = 0.01*RadiusOfLeftAtrium;
+	
 	// See if GUI wants this event (Prevents keys from being registered when doing things like typing in a text box)
 	ImGuiIO& io = ImGui::GetIO();
 	if (io.WantCaptureKeyboard) return;
 
-	// Only process key press events, not releases or repeats
-	if (action != GLFW_PRESS) return;
-
-	// Check for specific key presses
-	switch (key) 
+	// Tab always toggles GUI mode <-> mouse mode, even when GUI currently has focus.
+	if(key == GLFW_KEY_TAB && action == GLFW_PRESS)
 	{
-		case GLFW_KEY_ESCAPE: // Shift + Escape to exit
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
-			break;
+		if (SimulationSwitch.isInMouseFunctionMode == true)
+		{
+			// Switch to GUI mode: collapse mouse mode, expand GUI
+			SimulationSwitch.isInMouseFunctionMode = false;
+			SimulationSwitch.guiCollapsed = false;
+			glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		} 
+		else 
+		{
+			// Switch to mouse mode: collapse GUI, enable mouse mode
+			SimulationSwitch.isInMouseFunctionMode = true;
+			SimulationSwitch.guiCollapsed = true;
+			glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+		return;
+	}
 
-		case GLFW_KEY_R: // r/R key to toggle run/pause
-			if(SimulationSwitch.isPaused)
-			{
-				SimulationSwitch.isPaused = false;
-			}
-			else
-			{
-				SimulationSwitch.isPaused = true;
-			}
-			break;
-
-		case GLFW_KEY_F2: // F2 key to draw only half of the nodes
-			if(SimulationSwitch.DrawFrontHalfFlag)
-			{
-				SimulationSwitch.DrawFrontHalfFlag = false;
-			}
-			else
-			{
-				SimulationSwitch.DrawFrontHalfFlag = true;
-			}
-			drawPicture();
-			break;
-
-		case GLFW_KEY_F3: //show nodes 0 = none 1 = half 2 = all
-			if(SimulationSwitch.DrawNodesFlag == 0)
-			{
-				SimulationSwitch.DrawNodesFlag = 1;
-			}
-			else if(SimulationSwitch.DrawNodesFlag == 1)
-			{
-				SimulationSwitch.DrawNodesFlag = 2;
-			}
-			else
-			{
-				SimulationSwitch.DrawNodesFlag = 0;
-			}
-			drawPicture();
-			break;
-
-		case GLFW_KEY_F4: // Toggle movie recording
-			if(SimulationSwitch.isRecording)
-			{
-				movieOff();
-			}
-			else
-			{
-				movieOn();
-			}
-			break;
-
-		case GLFW_KEY_F5: // Take a screenshot
-			screenShot();
-			break;
-
-		case GLFW_KEY_F6: // Toggle ablate mode
-			if(SimulationSwitch.isInAblateMode)
-			{
-				mouseFunctionsOff();
-			}
-			else
-			{
-				mouseAblateMode();
-				SimulationSwitch.isInMouseFunctionMode = true;
-			}
-			break;
-		case GLFW_KEY_F7: // F7 adjust area, Shift + F7 adjust line
-			if (mods & GLFW_MOD_SHIFT)
-			{
-				if(SimulationSwitch.isInAdjustMuscleLineMode)
-				{
-					mouseFunctionsOff();
-				}
-				else
-				{
-					mouseAdjustMusclesLineModeMultiplier();
-					SimulationSwitch.isInMouseFunctionMode = true;
-				}
-			}
-			else
-			{
-				if(SimulationSwitch.isInAdjustMuscleAreaMode)
-				{
-					mouseFunctionsOff();
-				}
-				else
-				{
-					mouseAdjustMusclesAreaModeMultiplier();
-					SimulationSwitch.isInMouseFunctionMode = true;
-				}
-			}
-			break;
-		
-		case GLFW_KEY_F8: // F8 ectopic trigger, Shift + F8 ectopic beat
-			if (mods & GLFW_MOD_SHIFT)
-			{
-				if(SimulationSwitch.isInEctopicBeatMode)
-				{
-					mouseFunctionsOff();
-				}
-				else
-				{
-					mouseEctopicBeatMode();
-					SimulationSwitch.isInMouseFunctionMode = true;
-				}
-			}
-			else
-			{
-				if(SimulationSwitch.isInEctopicEventMode)
-				{
-					mouseFunctionsOff();
-				}
-				else
-				{
-					mouseEctopicEventMode();
-					SimulationSwitch.isInMouseFunctionMode = true;
-				}
-			}
-			break;
-
-		case GLFW_KEY_F9: // F9 identify muscle, Shift + F9 identify node
-			if(SimulationSwitch.isInFindNodeMode || SimulationSwitch.isInFindMuscleMode)
-			{
-				mouseFunctionsOff();
-			}
-			else
-			{
-				(mods & GLFW_MOD_SHIFT) ? mouseIdentifyNodeMode() : mouseIdentifyMuscleMode();
-				SimulationSwitch.isInMouseFunctionMode = true;
-			}
-			break;
-
-		// Tab toggles between mouse mode and GUI mode
-		case GLFW_KEY_TAB:
-			if (SimulationSwitch.isInMouseFunctionMode) 
-			{
-				// Switch to GUI mode: collapse mouse mode, expand GUI
-				SimulationSwitch.isInMouseFunctionMode = false;
-				SimulationSwitch.guiCollapsed = false;
-				glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			} 
-			else 
-			{
-				// Switch to mouse mode: collapse GUI, enable mouse mode
-				SimulationSwitch.isInMouseFunctionMode = true;
-				SimulationSwitch.guiCollapsed = true;
-				glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			}
-			drawPicture();
-			break;
+	// X-axis Translations and Rotations
+        if(key == GLFW_KEY_X && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+        	if((mods & GLFW_MOD_CONTROL) && (mods & GLFW_MOD_SHIFT)) rotateXAxis(-dAngle);
+		else if(mods == GLFW_MOD_SHIFT) translateObject(dx, 0.0, 0.0);
+		else if(mods == GLFW_MOD_CONTROL) rotateXAxis(dAngle);
+		else translateObject(-dx, 0.0, 0.0);
+        }
         
-
-		// Might make this a held key pending feedback
-		case GLFW_KEY_KP_SUBTRACT:
-		case GLFW_KEY_MINUS:
-			if (mods & GLFW_MOD_CONTROL) // Ctrl + - : decrease beat period
-			{
-				Node[PulsePointNode].beatPeriod -= 10;
-				if(Node[PulsePointNode].beatPeriod < 0)
-				{
-					Node[PulsePointNode].beatPeriod = 0;
-				}
-				copyNodesToGPU();
-			}
-			else if (mods & GLFW_MOD_SHIFT) // Shift + - : decrease simulation speed
-			{
-				DrawRate -= 50;
-				if(DrawRate < 100) DrawRate = 100;
-			}
-			else // - : decrease selection radius
-			{
-				HitMultiplier -= 0.01;
-				if(HitMultiplier < 0.01) HitMultiplier = 0.01;
-			}
-			break;
-
-		case GLFW_KEY_KP_ADD:
-		case GLFW_KEY_EQUAL:
-			if (mods & GLFW_MOD_CONTROL) // Ctrl + = : increase beat period
-			{
-				Node[PulsePointNode].beatPeriod += 10;
-				if(Node[PulsePointNode].beatPeriod > 10000)
-				{
-					Node[PulsePointNode].beatPeriod = 10000;
-				}
-				copyNodesToGPU();
-			}
-			else if (mods & GLFW_MOD_SHIFT) // Shift + = : increase simulation speed
-			{
-				DrawRate += 50;
-				if(DrawRate > 5000) DrawRate = 5000;
-			}
-			else // = : increase selection radius
-			{
-				HitMultiplier += 0.025;
-				if(HitMultiplier > 0.5) HitMultiplier = 0.5;
-			}
-			break;
-
-		default: // For any other key, do nothing
-			break;
-		
-	}
-}
-
-/*
-	This function will process held keys.
-	Since GLFW will not allow us to have 2 key call backs and seems to force us to use either presses or holds
-	we will use this function to process held keys.
-
-	We will need to consider all early exit cases for keys that don't need to be held and will need to handle shift keys in a different way
-
-*/
-void keyHeld(GLFWwindow* window)
-{
-	// Check if any movement keys (or keys we want to work if held) are pressed
-    bool validKey = 
-        glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS ||
-	glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS ||
-	glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS ||
-	glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ||
-	glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
-
-	//early exit if no valid key is pressed or if control is held down (to avoid conflict with ctrl+key shortcuts)
-	if (!validKey || glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) return;
-
-	bool shiftHeld = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || 
-						glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
-
-	// Copy nodes from GPU once per frame
-    copyNodesFromGPU();
-
-	float dAngle = 0.01;
-	float zoom = 0.01*RadiusOfLeftAtrium;
-	float temp;
-	float4 lookVector;
-	float d;
-	float4 centerOfObject;
-	
-	//copyNodesMusclesFromGPU();
-	
-	lookVector.x = CenterX - EyeX;
-	lookVector.y = CenterY - EyeY;
-	lookVector.z = CenterZ - EyeZ;
-	d = sqrt(lookVector.x*lookVector.x + lookVector.y*lookVector.y + lookVector.z*lookVector.z);
-	
-	if(d < 0.00001)
+        // Y-axis Translations and Rotations
+        if(key == GLFW_KEY_Y && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+        	if((mods & GLFW_MOD_CONTROL) && (mods & GLFW_MOD_SHIFT)) rotateYAxis(dAngle);
+		else if(mods == GLFW_MOD_SHIFT) translateObject(0.0, dy, 0.0);
+		else if(mods == GLFW_MOD_CONTROL) rotateYAxis(-dAngle);
+		else translateObject(0.0, -dy, 0.0);
+        }
+        
+        // Z-axis Translations and Rotations
+        if(key == GLFW_KEY_Z && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+        	if((mods & GLFW_MOD_CONTROL) && (mods & GLFW_MOD_SHIFT)) rotateZAxis(-dAngle);
+		else if(mods == GLFW_MOD_SHIFT) translateObject(0.0, 0.0, dz);
+		else if(mods == GLFW_MOD_CONTROL) rotateZAxis(dAngle);
+		else translateObject(0.0, 0.0, -dz);
+        }
+        
+        if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
-		printf("\n The lookVector is too small.");
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+		return;
 	}
-	else
+	
+	if(key == GLFW_KEY_R && action == GLFW_PRESS)
 	{
-		lookVector.x /= d;
-		lookVector.y /= d;
-		lookVector.z /= d;
+		if(SimulationSwitch.isPaused) SimulationSwitch.isPaused = false;
+		else SimulationSwitch.isPaused = true;
+		return;
 	}
-
-	// WASD movement keys
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && !shiftHeld))   // Rotate counterclockwise on the x-axis
+	
+	if(key == GLFW_KEY_M && action == GLFW_PRESS)
 	{
-		centerOfObject = findCenterOfObject();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfObject.x;
-			Node[i].position.y -= centerOfObject.y;
-			Node[i].position.z -= centerOfObject.z;
-			temp = cos(dAngle)*Node[i].position.y - sin(dAngle)*Node[i].position.z;
-			Node[i].position.z  = sin(dAngle)*Node[i].position.y + cos(dAngle)*Node[i].position.z;
-			Node[i].position.y  = temp;
-			Node[i].position.x += centerOfObject.x;
-			Node[i].position.y += centerOfObject.y;
-			Node[i].position.z += centerOfObject.z;
-		}
-		AngleOfSimulation.x += dAngle;
+		if(SimulationSwitch.isRecording) movieOff();
+		else movieOn();
+		return;
 	}
-
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS  || (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && !shiftHeld))   // Rotate clockwise on the y-axis
+	
+	if(key == GLFW_KEY_S && action == GLFW_PRESS)
 	{
-		centerOfObject = findCenterOfObject();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfObject.x;
-			Node[i].position.y -= centerOfObject.y;
-			Node[i].position.z -= centerOfObject.z;
-			temp = cos(dAngle)*Node[i].position.x + sin(dAngle)*Node[i].position.z;
-			Node[i].position.z  = -sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.z;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfObject.x;
-			Node[i].position.y += centerOfObject.y;
-			Node[i].position.z += centerOfObject.z;
-		}
-		AngleOfSimulation.y += dAngle;
+		screenShot();
+		return;
 	}
-
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS  || (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && !shiftHeld))  // Rotate clockwise on the x-axis
-	{
-		centerOfObject = findCenterOfObject();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfObject.x;
-			Node[i].position.y -= centerOfObject.y;
-			Node[i].position.z -= centerOfObject.z;
-			temp = cos(-dAngle)*Node[i].position.y - sin(-dAngle)*Node[i].position.z;
-			Node[i].position.z  = sin(-dAngle)*Node[i].position.y + cos(-dAngle)*Node[i].position.z;
-			Node[i].position.y  = temp; 
-			Node[i].position.x += centerOfObject.x;
-			Node[i].position.y += centerOfObject.y;
-			Node[i].position.z += centerOfObject.z;
-		}
-		AngleOfSimulation.x -= dAngle;
-	}
-	
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS  || (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && !shiftHeld))  // Rotate counterclockwise on the y-axis
-	{
-		centerOfObject = findCenterOfObject();
-		for(int i = 0; i < NumberOfNodes; i++)
-		{
-			Node[i].position.x -= centerOfObject.x;
-			Node[i].position.y -= centerOfObject.y;
-			Node[i].position.z -= centerOfObject.z;
-			temp =  cos(-dAngle)*Node[i].position.x + sin(-dAngle)*Node[i].position.z;
-			Node[i].position.z  = -sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.z;
-			Node[i].position.x  = temp;
-			Node[i].position.x += centerOfObject.x;
-			Node[i].position.y += centerOfObject.y;
-			Node[i].position.z += centerOfObject.z;
-		}
-		AngleOfSimulation.y -= dAngle;
-	}
-	
-	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) 
-	{
-		if(shiftHeld)  // Uppercase Z - Rotate clockwise on the z-axis
-		{
-			centerOfObject = findCenterOfObject();
-			for(int i = 0; i < NumberOfNodes; i++)
-			{
-				Node[i].position.x -= centerOfObject.x;
-				Node[i].position.y -= centerOfObject.y;
-				Node[i].position.z -= centerOfObject.z;
-				temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
-				Node[i].position.y  = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
-				Node[i].position.x  = temp;
-				Node[i].position.x += centerOfObject.x;
-				Node[i].position.y += centerOfObject.y;
-				Node[i].position.z += centerOfObject.z;
-			}
-			AngleOfSimulation.z -= dAngle;
-		}
-		else  // Lowercase z - Rotate counterclockwise on the z-axis
-		{
-			centerOfObject = findCenterOfObject();
-			for(int i = 0; i < NumberOfNodes; i++)
-			{
-				Node[i].position.x -= centerOfObject.x;
-				Node[i].position.y -= centerOfObject.y;
-				Node[i].position.z -= centerOfObject.z;
-				temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
-				Node[i].position.y  = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
-				Node[i].position.x  = temp;
-				Node[i].position.x += centerOfObject.x;
-				Node[i].position.y += centerOfObject.y;
-				Node[i].position.z += centerOfObject.z;
-			}
-			AngleOfSimulation.z += dAngle;
-		}
-	}
-	
-	float dx = 5.0;
-	float dy = 5.0;
-	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) 
-	{
-		if(shiftHeld)  // Uppercase E - Zoom out
-		{
-			for(int i = 0; i < NumberOfNodes; i++)
-			{
-				Node[i].position.x += dx; //zoom*lookVector.x;
-				//Node[i].position.y += zoom*lookVector.y;
-				//Node[i].position.z += zoom*lookVector.z;
-			}
-			CenterOfSimulation.x += dx;
-			//CenterOfSimulation.y += zoom*lookVector.y;
-			//CenterOfSimulation.z += zoom*lookVector.z;
-		}
-		else  // Lowercase e - Zoom in
-		{
-			for(int i = 0; i < NumberOfNodes; i++)
-			{
-				Node[i].position.x -= dx;
-				//Node[i].position.y -= zoom*lookVector.y;
-				//Node[i].position.z -= zoom*lookVector.z;
-			}
-			CenterOfSimulation.x -= dx;
-			//CenterOfSimulation.y -= zoom*lookVector.y;
-			//CenterOfSimulation.z -= zoom*lookVector.z;
-		}
-	}
-	
-	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) 
-	{
-		if(shiftHeld)  // Uppercase E - Zoom out
-		{
-			for(int i = 0; i < NumberOfNodes; i++)
-			{
-				Node[i].position.y += dy; //zoom*lookVector.x;
-				//Node[i].position.y += zoom*lookVector.y;
-				//Node[i].position.z += zoom*lookVector.z;
-			}
-			CenterOfSimulation.y += dy;
-			//CenterOfSimulation.y += zoom*lookVector.y;
-			//CenterOfSimulation.z += zoom*lookVector.z;
-		}
-		else  // Lowercase e - Zoom in
-		{
-			for(int i = 0; i < NumberOfNodes; i++)
-			{
-				Node[i].position.y -= dy;
-				//Node[i].position.y -= zoom*lookVector.y;
-				//Node[i].position.z -= zoom*lookVector.z;
-			}
-			CenterOfSimulation.y -= dy;
-			//CenterOfSimulation.y -= zoom*lookVector.y;
-			//CenterOfSimulation.z -= zoom*lookVector.z;
-		}
-	}
-	
-	
-	
-	
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) 
-	{
-		if(shiftHeld)  // Uppercase E - Zoom out
-		{
-			for(int i = 0; i < NumberOfNodes; i++)
-			{
-				Node[i].position.x += zoom*lookVector.x;
-				Node[i].position.y += zoom*lookVector.y;
-				Node[i].position.z += zoom*lookVector.z;
-			}
-			CenterOfSimulation.x += zoom*lookVector.x;
-			CenterOfSimulation.y += zoom*lookVector.y;
-			CenterOfSimulation.z += zoom*lookVector.z;
-		}
-		else  // Lowercase e - Zoom in
-		{
-			for(int i = 0; i < NumberOfNodes; i++)
-			{
-				Node[i].position.x -= zoom*lookVector.x;
-				Node[i].position.y -= zoom*lookVector.y;
-				Node[i].position.z -= zoom*lookVector.z;
-			}
-			CenterOfSimulation.x -= zoom*lookVector.x;
-			CenterOfSimulation.y -= zoom*lookVector.y;
-			CenterOfSimulation.z -= zoom*lookVector.z;
-		}
-	}
-	
-	
-	
-	
-
-	if (shiftHeld) 
-	{
-		// Shift + Left/Right for Z-axis rotation (same as z/Z)
-		if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) 
-		{
-			// Rotate clockwise on the z-axis (same as uppercase Z)
-			centerOfObject = findCenterOfObject();
-			for(int i = 0; i < NumberOfNodes; i++) 
-			{
-				Node[i].position.x -= centerOfObject.x;
-				Node[i].position.y -= centerOfObject.y;
-				Node[i].position.z -= centerOfObject.z;
-				temp = cos(-dAngle)*Node[i].position.x - sin(-dAngle)*Node[i].position.y;
-				Node[i].position.y = sin(-dAngle)*Node[i].position.x + cos(-dAngle)*Node[i].position.y;
-				Node[i].position.x = temp;
-				Node[i].position.x += centerOfObject.x;
-				Node[i].position.y += centerOfObject.y;
-				Node[i].position.z += centerOfObject.z;
-			}
-			AngleOfSimulation.z -= dAngle;
-		}
-		
-		if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) 
-		{
-			// Rotate counterclockwise on the z-axis (same as lowercase z)
-			centerOfObject = findCenterOfObject();
-			for(int i = 0; i < NumberOfNodes; i++) 
-			{
-				Node[i].position.x -= centerOfObject.x;
-				Node[i].position.y -= centerOfObject.y;
-				Node[i].position.z -= centerOfObject.z;
-				temp = cos(dAngle)*Node[i].position.x - sin(dAngle)*Node[i].position.y;
-				Node[i].position.y = sin(dAngle)*Node[i].position.x + cos(dAngle)*Node[i].position.y;
-				Node[i].position.x = temp;
-				Node[i].position.x += centerOfObject.x;
-				Node[i].position.y += centerOfObject.y;
-				Node[i].position.z += centerOfObject.z;
-			}
-			AngleOfSimulation.z += dAngle;
-		}
-		
-		// Shift + Up/Down for zooming (same as e/E)
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) 
-		{
-			// Zoom in (same as lowercase e)
-			for(int i = 0; i < NumberOfNodes; i++) 
-			{
-				Node[i].position.x -= zoom*lookVector.x;
-				Node[i].position.y -= zoom*lookVector.y;
-				Node[i].position.z -= zoom*lookVector.z;
-			}
-			CenterOfSimulation.x -= zoom*lookVector.x;
-			CenterOfSimulation.y -= zoom*lookVector.y;
-			CenterOfSimulation.z -= zoom*lookVector.z;
-		}
-		
-		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) 
-		{
-			// Zoom out (same as uppercase E)
-			for(int i = 0; i < NumberOfNodes; i++) 
-			{
-				Node[i].position.x += zoom*lookVector.x;
-				Node[i].position.y += zoom*lookVector.y;
-				Node[i].position.z += zoom*lookVector.z;
-			}
-			CenterOfSimulation.x += zoom*lookVector.x;
-			CenterOfSimulation.y += zoom*lookVector.y;
-			CenterOfSimulation.z += zoom*lookVector.z;
-		}
-	}
-
-	drawPicture(); // Redraw the picture after all the changes
-	copyNodesToGPU(); // Copy the modified nodes back to the GPU
-
 }
 
 /*
@@ -1321,13 +844,11 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 		copyNodesMusclesToGPU();
 		//printf("\nSNx = %f SNy = %f SNz = %f\n", NodePosition[0].x, NodePosition[0].y, NodePosition[0].z);
 	}
-	
 }
 
 void scrollWheel(GLFWwindow* window, double xoffset, double yoffset)
 {
-    bool ctrlHeld = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || 
-                     glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
+    bool ctrlHeld = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
     
     if(ctrlHeld)
     {

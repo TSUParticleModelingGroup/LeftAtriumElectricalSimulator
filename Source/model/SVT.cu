@@ -188,14 +188,14 @@ int main(int argc, char** argv)
 	gluLookAt(EyeX, EyeY, EyeZ, CenterX, CenterY, CenterZ, UpX, UpY, UpZ);
 
 	// Draw once to initialize everything
-	drawPicture();
-	glfwSwapBuffers(Window);
+	//drawPicture();
+	//glfwSwapBuffers(Window);
 	// Main loop
 	while (!glfwWindowShouldClose(Window))
 	{
 		glfwPollEvents();
 
-		keyHeld(Window); // Handle key hold events
+		//keyHeld(Window); // Handle key hold events BMW
 
 		// Start ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
@@ -1388,6 +1388,8 @@ float4 findCenterOfObject()
 	centerOfObject.y = 0.0;
 	centerOfObject.z = 0.0;
 	centerOfObject.w = 0.0;
+	
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		 centerOfObject.x += Node[i].position.x;
@@ -1425,6 +1427,7 @@ void centerObject()
 		Node[i].position.y -= centerOfObject.y;
 		Node[i].position.z -= centerOfObject.z;
 	}
+	copyNodesToGPU();
 	CenterOfSimulation.x = 0.0;
 	CenterOfSimulation.y = 0.0;
 	CenterOfSimulation.z = 0.0;
@@ -1438,18 +1441,19 @@ void centerObject()
 */
 void translateObject(float dx, float dy, float dz)
 {
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		Node[i].position.x += dx;
 		Node[i].position.y += dy;
 		Node[i].position.z += dz;
 	}
+	copyNodesToGPU();
 	
 	CenterOfSimulation.x += dx;
 	CenterOfSimulation.y += dy;
 	CenterOfSimulation.z += dz;
 }
-
 
 /*
  This function:
@@ -1458,12 +1462,14 @@ void translateObject(float dx, float dy, float dz)
 void rotateXAxis(float angle)
 {
 	float temp;
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp = cos(angle)*Node[i].position.y - sin(angle)*Node[i].position.z;
 		Node[i].position.z  = sin(angle)*Node[i].position.y + cos(angle)*Node[i].position.z;
 		Node[i].position.y  = temp;
 	}
+	copyNodesToGPU();
 	AngleOfSimulation.x += angle;
 }
 
@@ -1474,12 +1480,14 @@ void rotateXAxis(float angle)
 void rotateYAxis(float angle)
 {
 	float temp;
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp =  cos(-angle)*Node[i].position.x + sin(-angle)*Node[i].position.z;
 		Node[i].position.z  = -sin(-angle)*Node[i].position.x + cos(-angle)*Node[i].position.z;
 		Node[i].position.x  = temp;
 	}
+	copyNodesToGPU();
 	AngleOfSimulation.y += angle;
 }
 
@@ -1490,12 +1498,14 @@ void rotateYAxis(float angle)
 void rotateZAxis(float angle)
 {
 	float temp;
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp = cos(angle)*Node[i].position.x - sin(angle)*Node[i].position.y;
 		Node[i].position.y  = sin(angle)*Node[i].position.x + cos(angle)*Node[i].position.y;
 		Node[i].position.x  = temp;
 	}
+	copyNodesToGPU();
 	AngleOfSimulation.z += angle;
 }
 

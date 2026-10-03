@@ -1009,59 +1009,59 @@ void createGUI()
 
 	//Offset stats window by 10px from top-left edges. anchor to top left corner
 	ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x + 10, viewport->WorkPos.y + 10),ImGuiCond_Always,ImVec2(0.0f, 0.0f));
+	
+	// Create a new window for simulation stats, args are window name, NULL for no specific flags, and window_flags to set the window flags
+	ImGui::Begin("Simulation Stats", NULL, window_flags); 
 
-	ImGui::Begin("Simulation Stats", NULL, window_flags); // Create a new window for simulation stats, args are window name, NULL for no specific flags, and window_flags to set the window flags
-
-	// Show current mouse mode if in mouse mode
-	if (SimulationSwitch.isInMouseFunctionMode)
-	{
-		const char* mode = NULL;
-		ImVec4 color = ImVec4(1,1,1,1);
-		if (SimulationSwitch.isInAblateMode) { mode = "Ablate"; color = ImVec4(1,0,0,1); }
-		else if (SimulationSwitch.isInEctopicBeatMode) { mode = "Ectopic Beat"; color = ImVec4(0,1,0,1); }
-		else if (SimulationSwitch.isInEctopicEventMode) { mode = "Ectopic Trigger"; color = ImVec4(0,0.5f,1,1); }
-		else if (SimulationSwitch.isInAdjustMuscleAreaMode) { mode = "Adjust Area Mult"; color = ImVec4(1,1,0,1); }
-		else if (SimulationSwitch.isInAdjustMuscleLineMode) { mode = "Adjust Line Mult"; color = ImVec4(1,0.5f,0,1); }
-		else if (SimulationSwitch.isInFindNodeMode) { mode = "Identify Node"; color = ImVec4(0.5f,0,1,1); }
-		else if (SimulationSwitch.isInFindMuscleMode) { mode = "Identify Muscle"; color = ImVec4(0,0.3f,1,1); }
-		if (mode)
-			ImGui::TextColored(color, "Mouse Mode: %s", mode);
-		else
-			ImGui::Text("Mouse Mode: None");
-	}
-
-	//
-	if(!SimulationSwitch.isInMouseFunctionMode)
-	{
-		ImGui::Text("H to expand/collapse controls GUI");
-		ImGui::Text("Tab to toggle mouse/GUI mode");
-	}
-	else
-	{
-		ImGui::Text("Tab to toggle mouse/GUI mode");
-	}
-
-	//Shows run time of the simulation and beat rate of the pulse node
-	ImGui::Text("Run time: %.2f ms", RunTime);
-	ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
-
-	//shows our current refractory period and conduction velocity multipliers
-	if(SimulationSwitch.isInAdjustMuscleAreaMode || SimulationSwitch.isInAdjustMuscleLineMode) 
-	{
-		ImGui::Separator();
-		ImGui::Text("Refractory multiplier: %.3f", RefractoryPeriodAdjustmentMultiplier);
-		ImGui::Text("Conduction multiplier: %.3f", MuscleConductionVelocityAdjustmentMultiplier);
-	}
-
-	// Print ectopic beat nodes and their periods
-	ImGui::Separator();
-	for(int i = 0; i < NumberOfNodes; i++) 
-	{
-		if(Node[i].isBeatNode && i != PulsePointNode) 
+		// Show current mouse mode if in mouse mode
+		if (SimulationSwitch.isInMouseFunctionMode)
 		{
-			ImGui::Text("Ectopic Beat Node %d: %.2f ms", i, Node[i].beatPeriod);
+			const char* mode = NULL;
+			ImVec4 color = ImVec4(1,1,1,1);
+			if (SimulationSwitch.isInAblateMode) { mode = "Ablate"; color = ImVec4(1,0,0,1); }
+			else if (SimulationSwitch.isInEctopicBeatMode) { mode = "Ectopic Beat"; color = ImVec4(0,1,0,1); }
+			else if (SimulationSwitch.isInEctopicEventMode) { mode = "Ectopic Trigger"; color = ImVec4(0,0.5f,1,1); }
+			else if (SimulationSwitch.isInAdjustMuscleAreaMode) { mode = "Adjust Area Mult"; color = ImVec4(1,1,0,1); }
+			else if (SimulationSwitch.isInAdjustMuscleLineMode) { mode = "Adjust Line Mult"; color = ImVec4(1,0.5f,0,1); }
+			else if (SimulationSwitch.isInFindNodeMode) { mode = "Identify Node"; color = ImVec4(0.5f,0,1,1); }
+			else if (SimulationSwitch.isInFindMuscleMode) { mode = "Identify Muscle"; color = ImVec4(0,0.3f,1,1); }
+			if (mode)
+				ImGui::TextColored(color, "Mouse Mode: %s", mode);
+			else
+				ImGui::Text("Mouse Mode: None");
 		}
-	}
-  
-    ImGui::End(); //end of stats window
+
+		//
+		if(!SimulationSwitch.isInMouseFunctionMode)
+		{
+			ImGui::Text("H to expand/collapse controls GUI");
+			ImGui::Text("Tab to toggle mouse/GUI mode");
+		}
+		else
+		{
+			ImGui::Text("Tab to toggle mouse/GUI mode");
+		}
+
+		//Shows run time of the simulation and beat rate of the pulse node
+		ImGui::Text("Run time: %.2f ms", RunTime);
+		ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
+
+		//shows our current refractory period and conduction velocity multipliers
+		if(SimulationSwitch.isInAdjustMuscleAreaMode || SimulationSwitch.isInAdjustMuscleLineMode) 
+		{
+			ImGui::Separator();
+			ImGui::Text("Refractory multiplier: %.3f", RefractoryPeriodAdjustmentMultiplier);
+			ImGui::Text("Conduction multiplier: %.3f", MuscleConductionVelocityAdjustmentMultiplier);
+		}
+
+		// Print ectopic beat nodes and their periods
+		ImGui::Separator();
+		for(int i = 0; i < NumberOfNodes; i++) 
+		{
+			if(Node[i].isBeatNode && i != PulsePointNode) 
+			{
+				ImGui::Text("Ectopic Beat Node %d: %.2f ms", i, Node[i].beatPeriod);
+			}
+		}
+	ImGui::End(); //end of stats window
 }

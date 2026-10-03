@@ -352,7 +352,7 @@ void createGUI();
  void movieOff();
  void screenShot();
  void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
- void keyHeld(GLFWwindow* window);
+ // BMW void keyHeld(GLFWwindow* window);
  void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
  void myMouse(GLFWwindow* window, int button, int state, double x, double y);
  void scrollWheel(GLFWwindow*, double, double);
@@ -361,8 +361,8 @@ void createGUI();
  double findAverageRadiusOfLeftAtrium();
  void checkMuscle(int);
  double croppedRandomNumber(double, double, double);
- float4 findCenterOfObject();
- void centerObject();
+ float4 findCenterOfObject(); // BMW not used but we may in the future
+ void centerObject();         // BMW not used but we may in the future
  void translateObject(float, float, float);
  void rotateXAxis(float);
  void rotateYAxis(float);
