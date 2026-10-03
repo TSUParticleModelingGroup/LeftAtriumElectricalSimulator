@@ -40,7 +40,7 @@ void reshape(GLFWwindow* window, int width, int height)
 
 	// if we are recording we do not want to change the viewport or projection
 	//otherwise the movie will be messed up
-	if (Simulation.isRecording) return;
+	if (SimulationSwitch.isRecording) return;
 
 	// if not recording, set the viewport to match the new window size
 	glViewport(0, 0, width, height); // Set the viewport size to match the window size
@@ -53,7 +53,7 @@ void reshape(GLFWwindow* window, int width, int height)
 	glLoadIdentity();
 
 	//now we need to maintain the same aspect ratio for both orthogonal and frustum view
-	if(Simulation.ViewFlag == 0) // Orthogonal view
+	if(SimulationSwitch.ViewFlag == 0) // Orthogonal view
 	{
 		glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0); // Orthogonal projection
 	}
@@ -80,16 +80,16 @@ int centerMouse(GLFWwindow* window, double* mx, double* my, double* mz)
 */
 void mouseFunctionsOff()
 {
-	//Simulation.isPaused = true;
-	Simulation.isInAblateMode = false;
-	Simulation.isInEctopicBeatMode = false;
-	Simulation.isInEctopicEventMode = false;
-	Simulation.isInAdjustMuscleAreaMode = false;
-	Simulation.isInAdjustMuscleLineMode = false;
-	Simulation.isInFindNodeMode = false;
-	Simulation.isInFindMuscleMode = false;
-	Simulation.isInMouseFunctionMode = false;
-	Simulation.guiCollapsed = false;
+	//SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInAblateMode = false;
+	SimulationSwitch.isInEctopicBeatMode = false;
+	SimulationSwitch.isInEctopicEventMode = false;
+	SimulationSwitch.isInAdjustMuscleAreaMode = false;
+	SimulationSwitch.isInAdjustMuscleLineMode = false;
+	SimulationSwitch.isInFindNodeMode = false;
+	SimulationSwitch.isInFindMuscleMode = false;
+	SimulationSwitch.isInMouseFunctionMode = false;
+	SimulationSwitch.guiCollapsed = false;
 	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	drawPicture();
 }
@@ -100,8 +100,8 @@ void mouseFunctionsOff()
 void mouseAblateMode()
 {
 	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInAblateMode = true;
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInAblateMode = true;
 	drawPicture();
 }
 
@@ -111,8 +111,8 @@ void mouseAblateMode()
 void mouseEctopicBeatMode()
 {
 	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInEctopicBeatMode = true;
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInEctopicBeatMode = true;
 	drawPicture();
 }
 
@@ -122,8 +122,8 @@ void mouseEctopicBeatMode()
 void mouseEctopicEventMode()
 {
 	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInEctopicEventMode = true;
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInEctopicEventMode = true;
 	drawPicture();
 }
 
@@ -133,8 +133,8 @@ void mouseEctopicEventMode()
 void mouseAdjustMusclesAreaModeMultiplier()
 {
 	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInAdjustMuscleAreaMode = true;
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInAdjustMuscleAreaMode = true;
 	drawPicture();
 	
 	//bool returnFlag = setMouseMuscleAttributes();
@@ -146,8 +146,8 @@ void mouseAdjustMusclesAreaModeMultiplier()
 void mouseAdjustMusclesLineModeMultiplier()
 {
 	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInAdjustMuscleLineMode = true;
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInAdjustMuscleLineMode = true;
 	drawPicture();
 	
 	//bool returnFlag = setMouseMuscleAttributes();
@@ -160,16 +160,16 @@ void mouseAdjustMusclesLineModeMultiplier()
 void mouseIdentifyNodeMode()
 {
 	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInFindNodeMode = true;
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInFindNodeMode = true;
 	drawPicture();
 }
 
 void mouseIdentifyMuscleMode()
 {
 	mouseFunctionsOff();
-	Simulation.isPaused = true;
-	Simulation.isInFindMuscleMode = true;
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInFindMuscleMode = true;
 	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	drawPicture();
 }
@@ -207,7 +207,7 @@ void setEctopicBeat(int nodeId)
 	
 	
 	// We only let you set 1 ectopic beat at a time.
-	Simulation.isInEctopicBeatMode = false;
+	SimulationSwitch.isInEctopicBeatMode = false;
 }
 
 /*
@@ -248,7 +248,7 @@ void movieOn()
 	MovieFile = popen(baseCommand, "w");
 	Buffer = (unsigned char*)malloc(4 * CaptureWidth * CaptureHeight);
 
-	Simulation.isRecording = true;
+	SimulationSwitch.isRecording = true;
 }
 
 /*
@@ -256,12 +256,12 @@ void movieOn()
 */
 void movieOff()
 {
-	if(Simulation.isRecording) 
+	if(SimulationSwitch.isRecording) 
 	{
 		pclose(MovieFile);
 	}
 	free(Buffer);
-	Simulation.isRecording = false;
+	SimulationSwitch.isRecording = false;
 }
 
 /*
@@ -286,9 +286,9 @@ void screenShot()
 	ScreenShotFile = popen(cmd, "w");
 	buffer = (unsigned char*)malloc(4 * CaptureWidth * CaptureHeight);
 	
-	if(!Simulation.isPaused) //if the simulation is running
+	if(!SimulationSwitch.isPaused) //if the simulation is running
 	{
-		Simulation.isPaused = true; //pause the simulation
+		SimulationSwitch.isPaused = true; //pause the simulation
 		savedPauseState = false; //save the pause state
 	}
 	else //if the simulation is already paused
@@ -313,10 +313,9 @@ void screenShot()
 	//system("ffmpeg -i output1.mp4 screenShot.jpeg");
 	//system("rm output1.mp4");
 
-	Simulation.isPaused = savedPauseState; //restore the pause state before we took the screenshot
+	SimulationSwitch.isPaused = savedPauseState; //restore the pause state before we took the screenshot
 	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
-
 
 /*
  This function saves all the node and muscle values set in the run to a file. This file can then be used at a
@@ -325,7 +324,7 @@ void screenShot()
  We use it to create scenarios that have arrhythmias preprogrammed into them and have members from a class we are
  presenting to come up and see if they can use the ablation tool to eliminate the arythmia.
 */
-void saveSettings()
+void saveRun()
 {
 	// Copying the latest node and muscle information down from the GPU.
 	cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
@@ -359,32 +358,32 @@ void saveSettings()
 	
   	settingFile = fopen("run", "wb");
   	
-              fwrite(&NumberOfNodes, sizeof(int), 1, settingFile);
-              fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, settingFile);
-        	
-              int linksPerNode = MUSCLES_PER_NODE;
-              fwrite(&linksPerNode, sizeof(int), 1, settingFile);
-        	
-              fwrite(&NumberOfMuscles, sizeof(int), 1, settingFile);
-              fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, settingFile);
-        
-              fwrite(&Simulation, sizeof(Simulation), 1, settingFile);
-        	
-              fwrite(&PulsePointNode, sizeof(int), 1, settingFile);
-              fwrite(&UpNode, sizeof(int), 1, settingFile);
-              fwrite(&FrontNode, sizeof(int), 1, settingFile);
-        	
-              fwrite(&ViewName, sizeof(char), 256, settingFile);
-        	
-              fwrite(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, settingFile);
-              fwrite(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, settingFile);
-              
-              fwrite(&RadiusOfLeftAtrium, sizeof(double), 1, settingFile);
-        	
-              fwrite(&CenterOfSimulation, sizeof(float4), 1, settingFile);
-              fwrite(&AngleOfSimulation, sizeof(float4), 1, settingFile);
-              
-              fwrite(&RunTime, sizeof(double), 1, settingFile);
+	fwrite(&NumberOfNodes, sizeof(int), 1, settingFile);
+	fwrite(Node, sizeof(nodeAttributesStructure), NumberOfNodes, settingFile);
+
+	int linksPerNode = MUSCLES_PER_NODE;
+	fwrite(&linksPerNode, sizeof(int), 1, settingFile);
+
+	fwrite(&NumberOfMuscles, sizeof(int), 1, settingFile);
+	fwrite(Muscle, sizeof(muscleAttributesStructure), NumberOfMuscles, settingFile);
+
+	fwrite(&SimulationSwitch, sizeof(SimulationSwitch), 1, settingFile);
+
+	fwrite(&PulsePointNode, sizeof(int), 1, settingFile);
+	fwrite(&UpNode, sizeof(int), 1, settingFile);
+	fwrite(&FrontNode, sizeof(int), 1, settingFile);
+
+	fwrite(&ViewName, sizeof(char), 256, settingFile);
+
+	fwrite(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, settingFile);
+	fwrite(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, settingFile);
+
+	fwrite(&RadiusOfLeftAtrium, sizeof(double), 1, settingFile);
+
+	fwrite(&CenterOfSimulation, sizeof(float4), 1, settingFile);
+	fwrite(&AngleOfSimulation, sizeof(float4), 1, settingFile);
+
+	fwrite(&RunTime, sizeof(double), 1, settingFile);
         
 	fclose(settingFile);
 	
@@ -442,30 +441,6 @@ void saveSettings()
 	fclose(fileOut);
 	free(buffer);
 
-	//ADVANCED sim setup file
-	fileIn = fopen("../../AdvancedSimulationSetup", "rb");
-
-	if(fileIn == NULL)
-	{
-		printf("\n\n The advanced simulationSetup file does not exist.");
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-
-	// Finding the size of the AdvancedSimulationSetup file.
-	fseek (fileIn , 0 , SEEK_END);
-  	sizeOfFile = ftell(fileIn);
-  	rewind (fileIn);
-  	
-  	// Creating a buffer to hold the AdvancedSimulationSetup file.
-  	buffer = (char*)malloc(sizeof(char)*sizeOfFile);
-  	fread (buffer, 1, sizeOfFile, fileIn);
-	fileOut = fopen("AdvancedSimulationSetup", "wb");
-	fwrite (buffer, 1, sizeOfFile, fileOut);
-	fclose(fileIn);
-	fclose(fileOut);
-	free(buffer);
-	
 	// Making a readMe file to put any infomation about why you are saving this run.
 	system("gedit readMe");
 	
@@ -495,7 +470,7 @@ void saveState()
     
     // Save simulation timers and relevant state variables
 	//this lets you save the mouse function you're in, I thought it might be useful for trigger placement, so I added it
-    fwrite(&Simulation, sizeof(Simulation), 1, file);
+    fwrite(&SimulationSwitch, sizeof(SimulationSwitch), 1, file);
 
     // Save node and muscle counts
     fwrite(&NumberOfNodes, sizeof(int), 1, file);
@@ -523,7 +498,7 @@ void loadState()
     fread(&RunTime, sizeof(double), 1, file);
     
     // Load simulation timers and relevant state variables
-    fread(&Simulation, sizeof(Simulation), 1, file);
+    fread(&SimulationSwitch, sizeof(SimulationSwitch), 1, file);
 
     // Load node and muscle counts
     int nNodes, nMuscles;
@@ -549,7 +524,7 @@ void loadState()
     cudaMemcpy(MuscleGPU, Muscle, NumberOfMuscles * sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice);
 
     drawPicture();
-	Simulation.isPaused = true; // Pause the simulation after loading state
+	SimulationSwitch.isPaused = true; // Pause the simulation after loading state
     //printf("Simulation state loaded at runtime: %.2f ms\n", RunTime);
 }
 
@@ -558,38 +533,38 @@ void findNodes()
 	copyNodesFromGPU();
 
 	// Reset previously highlighted back/top nodes.
-	if (Simulation.frontNodeIndex >= 0 && Simulation.frontNodeIndex < NumberOfNodes)
+	if (SimulationSwitch.frontNodeIndex >= 0 && SimulationSwitch.frontNodeIndex < NumberOfNodes)
 	{
-		if (Node[Simulation.frontNodeIndex].isAblated)
+		if (Node[SimulationSwitch.frontNodeIndex].isAblated)
 		{
-			Node[Simulation.frontNodeIndex].isDrawNode = true;
-			Node[Simulation.frontNodeIndex].color.x = 1.0f;
-			Node[Simulation.frontNodeIndex].color.y = 1.0f;
-			Node[Simulation.frontNodeIndex].color.z = 1.0f;
+			Node[SimulationSwitch.frontNodeIndex].isDrawNode = true;
+			Node[SimulationSwitch.frontNodeIndex].color.x = 1.0f;
+			Node[SimulationSwitch.frontNodeIndex].color.y = 1.0f;
+			Node[SimulationSwitch.frontNodeIndex].color.z = 1.0f;
 		}
 		else
 		{
-			Node[Simulation.frontNodeIndex].isDrawNode = false;
-			Node[Simulation.frontNodeIndex].color.x = 0.0f;
-			Node[Simulation.frontNodeIndex].color.y = 1.0f;
-			Node[Simulation.frontNodeIndex].color.z = 0.0f;
+			Node[SimulationSwitch.frontNodeIndex].isDrawNode = false;
+			Node[SimulationSwitch.frontNodeIndex].color.x = 0.0f;
+			Node[SimulationSwitch.frontNodeIndex].color.y = 1.0f;
+			Node[SimulationSwitch.frontNodeIndex].color.z = 0.0f;
 		}
 	}
-	if (Simulation.topNodeIndex >= 0 && Simulation.topNodeIndex < NumberOfNodes)
+	if (SimulationSwitch.topNodeIndex >= 0 && SimulationSwitch.topNodeIndex < NumberOfNodes)
 	{
-		if (Node[Simulation.topNodeIndex].isAblated)
+		if (Node[SimulationSwitch.topNodeIndex].isAblated)
 		{
-			Node[Simulation.topNodeIndex].isDrawNode = true;
-			Node[Simulation.topNodeIndex].color.x = 1.0f;
-			Node[Simulation.topNodeIndex].color.y = 1.0f;
-			Node[Simulation.topNodeIndex].color.z = 1.0f;
+			Node[SimulationSwitch.topNodeIndex].isDrawNode = true;
+			Node[SimulationSwitch.topNodeIndex].color.x = 1.0f;
+			Node[SimulationSwitch.topNodeIndex].color.y = 1.0f;
+			Node[SimulationSwitch.topNodeIndex].color.z = 1.0f;
 		}
 		else
 		{
-			Node[Simulation.topNodeIndex].isDrawNode = false;
-			Node[Simulation.topNodeIndex].color.x = 0.0f;
-			Node[Simulation.topNodeIndex].color.y = 1.0f;
-			Node[Simulation.topNodeIndex].color.z = 0.0f;
+			Node[SimulationSwitch.topNodeIndex].isDrawNode = false;
+			Node[SimulationSwitch.topNodeIndex].color.x = 0.0f;
+			Node[SimulationSwitch.topNodeIndex].color.y = 1.0f;
+			Node[SimulationSwitch.topNodeIndex].color.z = 0.0f;
 		}
 	}
 
@@ -617,9 +592,9 @@ void findNodes()
 	}
 
 	// Store indices for persistent display in the Utilities panel.
-	Simulation.frontNodeIndex = FrontNode;
-	Simulation.topNodeIndex = UpNode;
-	Simulation.nodesFound = ((PulsePointNode >= 0 && PulsePointNode < NumberOfNodes) ||
+	SimulationSwitch.frontNodeIndex = FrontNode;
+	SimulationSwitch.topNodeIndex = UpNode;
+	SimulationSwitch.nodesFound = ((PulsePointNode >= 0 && PulsePointNode < NumberOfNodes) ||
 		(FrontNode >= 0 && FrontNode < NumberOfNodes) ||
 		(UpNode >= 0 && UpNode < NumberOfNodes));
 
@@ -686,9 +661,9 @@ void hidePulseBackTopNodes()
 	}
 
 	// Clear the flag and indices.
-	Simulation.nodesFound = false;
-	Simulation.frontNodeIndex = -1;
-	Simulation.topNodeIndex = -1;
+	SimulationSwitch.nodesFound = false;
+	SimulationSwitch.frontNodeIndex = -1;
+	SimulationSwitch.topNodeIndex = -1;
 
 	drawPicture();
 	copyNodesToGPU();
@@ -715,46 +690,46 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			break;
 
 		case GLFW_KEY_R: // r/R key to toggle run/pause
-			if(Simulation.isPaused)
+			if(SimulationSwitch.isPaused)
 			{
-				Simulation.isPaused = false;
+				SimulationSwitch.isPaused = false;
 			}
 			else
 			{
-				Simulation.isPaused = true;
+				SimulationSwitch.isPaused = true;
 			}
 			break;
 
 		case GLFW_KEY_F2: // F2 key to draw only half of the nodes
-			if(Simulation.DrawFrontHalfFlag)
+			if(SimulationSwitch.DrawFrontHalfFlag)
 			{
-				Simulation.DrawFrontHalfFlag = false;
+				SimulationSwitch.DrawFrontHalfFlag = false;
 			}
 			else
 			{
-				Simulation.DrawFrontHalfFlag = true;
+				SimulationSwitch.DrawFrontHalfFlag = true;
 			}
 			drawPicture();
 			break;
 
 		case GLFW_KEY_F3: //show nodes 0 = none 1 = half 2 = all
-			if(Simulation.DrawNodesFlag == 0)
+			if(SimulationSwitch.DrawNodesFlag == 0)
 			{
-				Simulation.DrawNodesFlag = 1;
+				SimulationSwitch.DrawNodesFlag = 1;
 			}
-			else if(Simulation.DrawNodesFlag == 1)
+			else if(SimulationSwitch.DrawNodesFlag == 1)
 			{
-				Simulation.DrawNodesFlag = 2;
+				SimulationSwitch.DrawNodesFlag = 2;
 			}
 			else
 			{
-				Simulation.DrawNodesFlag = 0;
+				SimulationSwitch.DrawNodesFlag = 0;
 			}
 			drawPicture();
 			break;
 
 		case GLFW_KEY_F4: // Toggle movie recording
-			if(Simulation.isRecording)
+			if(SimulationSwitch.isRecording)
 			{
 				movieOff();
 			}
@@ -769,39 +744,39 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			break;
 
 		case GLFW_KEY_F6: // Toggle ablate mode
-			if(Simulation.isInAblateMode)
+			if(SimulationSwitch.isInAblateMode)
 			{
 				mouseFunctionsOff();
 			}
 			else
 			{
 				mouseAblateMode();
-				Simulation.isInMouseFunctionMode = true;
+				SimulationSwitch.isInMouseFunctionMode = true;
 			}
 			break;
 		case GLFW_KEY_F7: // F7 adjust area, Shift + F7 adjust line
 			if (mods & GLFW_MOD_SHIFT)
 			{
-				if(Simulation.isInAdjustMuscleLineMode)
+				if(SimulationSwitch.isInAdjustMuscleLineMode)
 				{
 					mouseFunctionsOff();
 				}
 				else
 				{
 					mouseAdjustMusclesLineModeMultiplier();
-					Simulation.isInMouseFunctionMode = true;
+					SimulationSwitch.isInMouseFunctionMode = true;
 				}
 			}
 			else
 			{
-				if(Simulation.isInAdjustMuscleAreaMode)
+				if(SimulationSwitch.isInAdjustMuscleAreaMode)
 				{
 					mouseFunctionsOff();
 				}
 				else
 				{
 					mouseAdjustMusclesAreaModeMultiplier();
-					Simulation.isInMouseFunctionMode = true;
+					SimulationSwitch.isInMouseFunctionMode = true;
 				}
 			}
 			break;
@@ -809,56 +784,56 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 		case GLFW_KEY_F8: // F8 ectopic trigger, Shift + F8 ectopic beat
 			if (mods & GLFW_MOD_SHIFT)
 			{
-				if(Simulation.isInEctopicBeatMode)
+				if(SimulationSwitch.isInEctopicBeatMode)
 				{
 					mouseFunctionsOff();
 				}
 				else
 				{
 					mouseEctopicBeatMode();
-					Simulation.isInMouseFunctionMode = true;
+					SimulationSwitch.isInMouseFunctionMode = true;
 				}
 			}
 			else
 			{
-				if(Simulation.isInEctopicEventMode)
+				if(SimulationSwitch.isInEctopicEventMode)
 				{
 					mouseFunctionsOff();
 				}
 				else
 				{
 					mouseEctopicEventMode();
-					Simulation.isInMouseFunctionMode = true;
+					SimulationSwitch.isInMouseFunctionMode = true;
 				}
 			}
 			break;
 
 		case GLFW_KEY_F9: // F9 identify muscle, Shift + F9 identify node
-			if(Simulation.isInFindNodeMode || Simulation.isInFindMuscleMode)
+			if(SimulationSwitch.isInFindNodeMode || SimulationSwitch.isInFindMuscleMode)
 			{
 				mouseFunctionsOff();
 			}
 			else
 			{
 				(mods & GLFW_MOD_SHIFT) ? mouseIdentifyNodeMode() : mouseIdentifyMuscleMode();
-				Simulation.isInMouseFunctionMode = true;
+				SimulationSwitch.isInMouseFunctionMode = true;
 			}
 			break;
 
 		// Tab toggles between mouse mode and GUI mode
 		case GLFW_KEY_TAB:
-			if (Simulation.isInMouseFunctionMode) 
+			if (SimulationSwitch.isInMouseFunctionMode) 
 			{
 				// Switch to GUI mode: collapse mouse mode, expand GUI
-				Simulation.isInMouseFunctionMode = false;
-				Simulation.guiCollapsed = false;
+				SimulationSwitch.isInMouseFunctionMode = false;
+				SimulationSwitch.guiCollapsed = false;
 				glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			} 
 			else 
 			{
 				// Switch to mouse mode: collapse GUI, enable mouse mode
-				Simulation.isInMouseFunctionMode = true;
-				Simulation.guiCollapsed = true;
+				SimulationSwitch.isInMouseFunctionMode = true;
+				SimulationSwitch.guiCollapsed = true;
 				glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			}
 			drawPicture();
@@ -922,7 +897,7 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 		case GLFW_KEY_S: // Ctrl + S save state, Ctrl + Shift + S save settings
 			if ((mods & GLFW_MOD_CONTROL) && (mods & GLFW_MOD_SHIFT))
 			{
-				saveSettings();
+				saveRun();
 			}
 			else if (mods & GLFW_MOD_CONTROL)
 			{
@@ -938,14 +913,14 @@ void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 			break;
 		
 		case GLFW_KEY_H: // H to collapse/expand GUI (was Ctrl+H)
-			Simulation.guiCollapsed = !Simulation.guiCollapsed;
+			SimulationSwitch.guiCollapsed = !SimulationSwitch.guiCollapsed;
 			break;
 
 		// T key: Ctrl + T to show saved section colors.
 		case GLFW_KEY_T:
 			if (mods & GLFW_MOD_CONTROL)
 			{
-				Simulation.isPaused = true;
+				SimulationSwitch.isPaused = true;
 				// Reapply section colors that were saved in the loaded binary file.
 				//showMuscleTypes();
 				// Refresh the scene right away so the color change is visible immediately.
@@ -1313,7 +1288,7 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
     ImGuiIO& io = ImGui::GetIO();
 
 	//Show cursor when highlighting over IMGUI elements
-	if (Simulation.isInMouseFunctionMode)
+	if (SimulationSwitch.isInMouseFunctionMode)
 	{
 		//Uncomment this to have the cursor show when it hovers the GUI in mouse function mode
 		if (io.WantCaptureMouse)
@@ -1359,7 +1334,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 		}
 		
 		// Only allow mode actions when in mouse function mode
-		if(!Simulation.isInMouseFunctionMode)
+		if(!SimulationSwitch.isInMouseFunctionMode)
 		{
 			return;
 		}
@@ -1371,7 +1346,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 		
 		if(button == GLFW_MOUSE_BUTTON_LEFT)
 		{	
-			if(Simulation.isInAdjustMuscleLineMode)
+			if(SimulationSwitch.isInAdjustMuscleLineMode)
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1454,7 +1429,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 					}
 				}
 			}
-			else if(Simulation.isInFindMuscleMode)
+			else if(SimulationSwitch.isInFindMuscleMode)
 			{
 				// Find the closest muscle to the mouse and identify it
 				int closestMuscle = -1;
@@ -1492,7 +1467,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 					
 					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 					{
-						if(Simulation.isInAblateMode)
+						if(SimulationSwitch.isInAblateMode)
 						{
 							Node[i].isAblated = true;
 							Node[i].isDrawNode = true;
@@ -1501,14 +1476,14 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 							Node[i].color.z = 1.0;
 						}
 						
-						if(Simulation.isInEctopicBeatMode)
+						if(SimulationSwitch.isInEctopicBeatMode)
 						{
-							Simulation.isPaused = true;
+							SimulationSwitch.isPaused = true;
 							// printf("\n Node number = %d", i);
 							setEctopicBeat(i);
 						}
 						
-						if(Simulation.isInAdjustMuscleAreaMode)
+						if(SimulationSwitch.isInAdjustMuscleAreaMode)
 						{
 							for(int j = 0; j < MUSCLES_PER_NODE; j++)
 							{
@@ -1542,7 +1517,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 							}
 						}
 						
-						if(Simulation.isInEctopicEventMode)
+						if(SimulationSwitch.isInEctopicEventMode)
 						{
 							cudaMemcpy( Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost);
 							cudaErrorCheck(__FILE__, __LINE__);
@@ -1560,7 +1535,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 							printf("\n Ectopic Event Node Number = %d, Time = %f\n", i, RunTime);
 						}
 						
-						if(Simulation.isInFindNodeMode)
+						if(SimulationSwitch.isInFindNodeMode)
 						{
 							Node[i].isDrawNode = true;
 							Node[i].color.x = 1.0;
@@ -1574,7 +1549,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 		}
 		else if(button == GLFW_MOUSE_BUTTON_RIGHT) // Right Mouse button down
 		{
-			if(Simulation.isInAdjustMuscleLineMode)
+			if(SimulationSwitch.isInAdjustMuscleLineMode)
 			{
 				// Finding the two closest nodes to the mouse.
 				int nodeId1 = -1;
@@ -1668,7 +1643,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 					dz = MouseZ - Node[i].position.z;
 					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
 					{
-						if(Simulation.isInAblateMode)
+						if(SimulationSwitch.isInAblateMode)
 						{
 							Node[i].isAblated = false;
 							Node[i].isDrawNode = false;
@@ -1677,7 +1652,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 							Node[i].color.z = 0.0;
 						}
 						
-						if(Simulation.isInAdjustMuscleAreaMode)
+						if(SimulationSwitch.isInAdjustMuscleAreaMode)
 						{
 							for(int j = 0; j < MUSCLES_PER_NODE; j++)
 							{
@@ -1710,7 +1685,7 @@ void myMouse(GLFWwindow* window, int button, int action, int mods)
 						}
 
 						//Reset ectopic trigger colors
-						if(Simulation.isInEctopicEventMode)
+						if(SimulationSwitch.isInEctopicEventMode)
 						{
 							Node[i].color.x = 0.0;
 							Node[i].color.y = 1.0;

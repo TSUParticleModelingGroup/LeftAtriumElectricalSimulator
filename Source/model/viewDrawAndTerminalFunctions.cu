@@ -307,7 +307,7 @@ void frustumView()
 	glLoadIdentity();
 	glFrustum(-0.2, 0.2, -0.2, 0.2, Near, Far);
 	glMatrixMode(GL_MODELVIEW);
-	Simulation.ViewFlag = 1;
+	SimulationSwitch.ViewFlag = 1;
 	drawPicture();
 }
 
@@ -322,7 +322,7 @@ void drawPicture()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
-	//if(!Simulation.isPaused) glColor3d(0.0,1.0,0.0); // Green is running
+	//if(!SimulationSwitch.isPaused) glColor3d(0.0,1.0,0.0); // Green is running
 	//else glColor3d(1.0,0.0,0.0); // Red is paused	
 	glColor3d(Node[PulsePointNode].color.x, Node[PulsePointNode].color.y, Node[PulsePointNode].color.z);
 	glPushMatrix();
@@ -342,11 +342,11 @@ void drawPicture()
 	}
 	
 	// Drawing nodes
-	if(Simulation.DrawNodesFlag == 1 || Simulation.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
+	if(SimulationSwitch.DrawNodesFlag == 1 || SimulationSwitch.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
 	{
 		for(int i = 0; i < NumberOfNodes; i++) // Start at 1 to skip the pulse node and go through all nodes
 		{
-			if(Simulation.DrawFrontHalfFlag == 1 || Simulation.DrawNodesFlag == 1) //If we're only drawing the nodes on the front half.
+			if(SimulationSwitch.DrawFrontHalfFlag == 1 || SimulationSwitch.DrawNodesFlag == 1) //If we're only drawing the nodes on the front half.
 			{
 				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  //Draw only the nodes in the front half.
 				{
@@ -377,7 +377,7 @@ void drawPicture()
 		glBegin(GL_POINTS);
 	 	for(int i = 0; i < NumberOfNodes; i++)
 		{
-			if(Simulation.DrawFrontHalfFlag == 1)
+			if(SimulationSwitch.DrawFrontHalfFlag == 1)
 			{
 				if(CenterOfSimulation.z - 0.001 < Node[i].position.z)  // Only drawing the nodes in the front half.
 				{
@@ -415,7 +415,7 @@ void drawPicture()
 					k = Muscle[muscleNumber].nodeB;
 				}
 				
-				if(Simulation.DrawFrontHalfFlag == 1)
+				if(SimulationSwitch.DrawFrontHalfFlag == 1)
 				{
 					if(CenterOfSimulation.z - 0.001 < Node[i].position.z && CenterOfSimulation.z - 0.001 < Node[k].position.z)  // Only drawing the nodes in the front half.
 					{
@@ -439,20 +439,20 @@ void drawPicture()
 		}	
 	}
 	
-	// Mogy
+	// BMW
 // Just stuck this in to track the Action Potintial it will need cleaning up
 // It does all muscle and is not turned off if you are only looking at the front half.
 // It has not on off button in the simulationSwitchesStructure or a button on the GUI.
 // Start ******************
 	
-	Simulation.isDrawAP = 1;
+	SimulationSwitch.isDrawAP = 1;
 	float distance;
 	float x,y,z,dx,dy,dz,d;
 	int id1, id2;
 	glColor3d(0.0, 0.0, 1.0);
 	glPointSize(5.0);
 	glBegin(GL_POINTS);
-	if(Simulation.isDrawAP)
+	if(SimulationSwitch.isDrawAP)
 	{
 		for(int i = 0; i < NumberOfMuscles; i++)
 		{
@@ -486,7 +486,7 @@ void drawPicture()
 // STop *****************************
 
 	// Puts a ball at the location of the mouse if a mouse function is on.
-	if(Simulation.isInMouseFunctionMode)
+	if(SimulationSwitch.isInMouseFunctionMode)
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -503,7 +503,7 @@ void drawPicture()
 	}
 	
 	// Saves the picture if a movie is being recorded.
-	if(Simulation.isRecording)
+	if(SimulationSwitch.isRecording)
 	{
 		// Read pixels at the locked capture resolution so videos/screenshots stay consistent
 		glReadPixels(0, 0, CaptureWidth, CaptureHeight, GL_RGBA, GL_UNSIGNED_BYTE, Buffer);
@@ -545,20 +545,20 @@ void createGUI()
     window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing; // Always resize the window to fit the content
 
 	//comment this out if you would like to allow the user to unhide the GUI while in mouse mode, can cause problems
-	if(Simulation.isInMouseFunctionMode) Simulation.guiCollapsed = true;
+	if(SimulationSwitch.isInMouseFunctionMode) SimulationSwitch.guiCollapsed = true;
 	
-	ImGui::SetNextWindowCollapsed(Simulation.guiCollapsed, ImGuiCond_Always);
+	ImGui::SetNextWindowCollapsed(SimulationSwitch.guiCollapsed, ImGuiCond_Always);
 
     // Main Controls Window
     ImGui::Begin("Control Panel", NULL, window_flags); //title of the window, NULL means no pointer to a bool to close the window, window_flags are the flags we set above
     
 	//update bool to match current state (makes sure clicking also works in addition to ctrl + h)
-	Simulation.guiCollapsed = ImGui::IsWindowCollapsed();
+	SimulationSwitch.guiCollapsed = ImGui::IsWindowCollapsed();
 
     // Run/Pause button
-    if (ImGui::Button(Simulation.isPaused ? "Run" : "Pause")) //print whats happening
+    if (ImGui::Button(SimulationSwitch.isPaused ? "Run" : "Pause")) //print whats happening
     {
-        Simulation.isPaused = !Simulation.isPaused;
+        SimulationSwitch.isPaused = !SimulationSwitch.isPaused;
     }
 	ShowTooltip("(F1) or r/R");
     
@@ -566,34 +566,34 @@ void createGUI()
     if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen)) //open by default
     {
         // View controls
-        bool frontHalf = Simulation.DrawFrontHalfFlag == 1; //Needed because ImGui needs a bool for a checkbox, can make a dropbox if more display options are needed
+        bool frontHalf = SimulationSwitch.DrawFrontHalfFlag == 1; //Needed because ImGui needs a bool for a checkbox, can make a dropbox if more display options are needed
         if(ImGui::Checkbox("Draw Front Half Only", &frontHalf)) //checkbox for if we only want to draw the first half of the nodes
         {
 			//when the button is pressed it will change the value of frontHalf to the opposite of what it was before
-            Simulation.DrawFrontHalfFlag = frontHalf ? 1 : 0;
+            SimulationSwitch.DrawFrontHalfFlag = frontHalf ? 1 : 0;
             drawPicture();
         }
 		ShowTooltip("(F2)");
         
         // Node display options
         const char* nodeOptions[] = { "Off", "Half", "Full" }; //array of options for the dropdown menu
-        int nodeDisplay = Simulation.DrawNodesFlag;
+        int nodeDisplay = SimulationSwitch.DrawNodesFlag;
 
 		//Combo makes a dropdown menu with the options in the array
         if(ImGui::Combo("Show Nodes", &nodeDisplay, nodeOptions, 3)) //args are menu name, pointer to the selected option, array of text options, # of options
         {
-            if (nodeDisplay != Simulation.DrawNodesFlag) // Only update if the value changes
+            if (nodeDisplay != SimulationSwitch.DrawNodesFlag) // Only update if the value changes
             {
-                Simulation.DrawNodesFlag = nodeDisplay;
+                SimulationSwitch.DrawNodesFlag = nodeDisplay;
                 drawPicture();
             }
         }
 		ShowTooltip("(F3)");
         
         // Button for recording
-		if (ImGui::Button(Simulation.isRecording ? "Stop Recording" : "Record Video"))
+		if (ImGui::Button(SimulationSwitch.isRecording ? "Stop Recording" : "Record Video"))
 		{
-			if (Simulation.isRecording)
+			if (SimulationSwitch.isRecording)
 			{
 				movieOff();
 			}
@@ -642,44 +642,44 @@ void createGUI()
 		// Display current mouse mode
 		ImGui::Text("Current Mode: ");
 
-		if (Simulation.isInAblateMode) 
+		if (SimulationSwitch.isInAblateMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ablate Mode");
 			ImGui::Text("Tab to exit mouse mode");
 			ImGui::Text("(Left Click: Ablate, Right Click: Undo)");
 		}
-		else if (Simulation.isInEctopicBeatMode) 
+		else if (SimulationSwitch.isInEctopicBeatMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Ectopic Beat");
 			ImGui::Text("Tab to exit mouse mode");
 		} 
-		else if (Simulation.isInEctopicEventMode) 
+		else if (SimulationSwitch.isInEctopicEventMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 0.5f, 1.0f, 1.0f), "Ectopic Trigger");
 			ImGui::Text("Tab to exit mouse mode");
 		} 
-		else if (Simulation.isInAdjustMuscleAreaMode) 
+		else if (SimulationSwitch.isInAdjustMuscleAreaMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Adjust Area");
 			ImGui::Text("Tab to exit mouse mode");
 		} 
-		else if (Simulation.isInAdjustMuscleLineMode) 
+		else if (SimulationSwitch.isInAdjustMuscleLineMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Adjust Line");
 			ImGui::Text("Tab to exit mouse mode");
 		} 
-		else if (Simulation.isInFindNodeMode) 
+		else if (SimulationSwitch.isInFindNodeMode) 
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.5f, 0.0f, 1.0f, 1.0f), "Identify Node");
 			ImGui::Text("Tab to exit mouse mode");
 		}
-		else if (Simulation.isInFindMuscleMode)
+		else if (SimulationSwitch.isInFindMuscleMode)
 		{
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(0.0f, 0.3f, 1.0f, 1.0f), "Identify Muscle");
@@ -696,7 +696,7 @@ void createGUI()
 		if (ImGui::Button("Mouse Off"))
 		{
 			mouseFunctionsOff();
-			Simulation.isInMouseFunctionMode = false;
+			SimulationSwitch.isInMouseFunctionMode = false;
 		}
 		ShowTooltip("(Tab)\nDisables all mouse interaction with the model");
 
@@ -745,13 +745,13 @@ void createGUI()
 		ShowTooltip("(Shift + F9)\nLeft-click to display the ID of a node");
 
 		// Display identified nodes in a window when in find node mode
-		if (Simulation.isInFindNodeMode)
+		if (SimulationSwitch.isInFindNodeMode)
 		{
 			ShowIdentifiedNodesBox();
 		}
 
 		// Display identified muscles in a window when in find muscle mode
-		if (Simulation.isInFindMuscleMode)
+		if (SimulationSwitch.isInFindMuscleMode)
 		{
 			ShowIdentifiedMusclesBox();
 		}
@@ -765,7 +765,7 @@ void createGUI()
 		ShowTooltip("(-/=): decrease/increase selection area\nAdjusts the size of the selection area\nLarger values affect more nodes");
 
 		//Muscle adjustment sliders; shows when in adjust line or adjust area mode
-		if (Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode)
+		if (SimulationSwitch.isInAdjustMuscleAreaMode || SimulationSwitch.isInAdjustMuscleLineMode)
 		{
 			ImGui::Separator(); //add a line to separate the sections
 			ImGui::Text("Muscle Adjustment Parameters");
@@ -1009,16 +1009,16 @@ void createGUI()
     // Utility functions
     if (ImGui::CollapsingHeader("Utilities"))
     {
-		//Save settings button
-        if (ImGui::Button("Save Settings"))
+		//Save run button
+        if (ImGui::Button("Save Run"))
 		{
-            saveSettings();
+            saveRun();
         }
 		ShowTooltip("(Ctrl + Shift + S)\nSave current muscle properties and simulation\nsettings to a file for later use");
 
 		if (ImGui::Button("Show sections"))
 		{
-			Simulation.isPaused = true;
+			SimulationSwitch.isPaused = true;
 			// Apply saved section colors from the loaded binary data.
 			//showMuscleTypes();
 			// Redraw immediately so the section colors appear as soon as the button is pressed.
@@ -1044,7 +1044,7 @@ void createGUI()
 		ShowTooltip("Toggle visibility of pulse/back/top node markers");
 
 		// Display selected-node information.
-		if (Simulation.nodesFound) 
+		if (SimulationSwitch.nodesFound) 
 		{
 			ImGui::Separator();
 			ImGui::Text("Pulse node (gold): %d", PulsePointNode);
@@ -1056,7 +1056,7 @@ void createGUI()
 		{
 			saveState();
 		}
-		ShowTooltip("(Ctrl + S)\nSave the current state of the simulation, including all node properties and current simulation time\nThis is different from Save Settings, which only saves muscle properties and general settings");
+		ShowTooltip("(Ctrl + S)\nSave the current state of the simulation, including all node properties and current simulation time\nThis is different from Save Run, which only saves muscle properties and general settings");
 		
 		ImGui::SameLine();
 		if (ImGui::Button("Load State"))
@@ -1092,17 +1092,17 @@ void createGUI()
 	ImGui::Begin("Simulation Stats", NULL, window_flags); // Create a new window for simulation stats, args are window name, NULL for no specific flags, and window_flags to set the window flags
 
 	// Show current mouse mode if in mouse mode
-	if (Simulation.isInMouseFunctionMode)
+	if (SimulationSwitch.isInMouseFunctionMode)
 	{
 		const char* mode = NULL;
 		ImVec4 color = ImVec4(1,1,1,1);
-		if (Simulation.isInAblateMode) { mode = "Ablate"; color = ImVec4(1,0,0,1); }
-		else if (Simulation.isInEctopicBeatMode) { mode = "Ectopic Beat"; color = ImVec4(0,1,0,1); }
-		else if (Simulation.isInEctopicEventMode) { mode = "Ectopic Trigger"; color = ImVec4(0,0.5f,1,1); }
-		else if (Simulation.isInAdjustMuscleAreaMode) { mode = "Adjust Area Mult"; color = ImVec4(1,1,0,1); }
-		else if (Simulation.isInAdjustMuscleLineMode) { mode = "Adjust Line Mult"; color = ImVec4(1,0.5f,0,1); }
-		else if (Simulation.isInFindNodeMode) { mode = "Identify Node"; color = ImVec4(0.5f,0,1,1); }
-		else if (Simulation.isInFindMuscleMode) { mode = "Identify Muscle"; color = ImVec4(0,0.3f,1,1); }
+		if (SimulationSwitch.isInAblateMode) { mode = "Ablate"; color = ImVec4(1,0,0,1); }
+		else if (SimulationSwitch.isInEctopicBeatMode) { mode = "Ectopic Beat"; color = ImVec4(0,1,0,1); }
+		else if (SimulationSwitch.isInEctopicEventMode) { mode = "Ectopic Trigger"; color = ImVec4(0,0.5f,1,1); }
+		else if (SimulationSwitch.isInAdjustMuscleAreaMode) { mode = "Adjust Area Mult"; color = ImVec4(1,1,0,1); }
+		else if (SimulationSwitch.isInAdjustMuscleLineMode) { mode = "Adjust Line Mult"; color = ImVec4(1,0.5f,0,1); }
+		else if (SimulationSwitch.isInFindNodeMode) { mode = "Identify Node"; color = ImVec4(0.5f,0,1,1); }
+		else if (SimulationSwitch.isInFindMuscleMode) { mode = "Identify Muscle"; color = ImVec4(0,0.3f,1,1); }
 		if (mode)
 			ImGui::TextColored(color, "Mouse Mode: %s", mode);
 		else
@@ -1110,7 +1110,7 @@ void createGUI()
 	}
 
 	//
-	if(!Simulation.isInMouseFunctionMode)
+	if(!SimulationSwitch.isInMouseFunctionMode)
 	{
 		ImGui::Text("H to expand/collapse controls GUI");
 		ImGui::Text("Tab to toggle mouse/GUI mode");
@@ -1125,7 +1125,7 @@ void createGUI()
 	ImGui::Text("Beat rate: %.2f ms", Node[PulsePointNode].beatPeriod);
 
 	//shows our current refractory period and conduction velocity multipliers
-	if(Simulation.isInAdjustMuscleAreaMode || Simulation.isInAdjustMuscleLineMode) 
+	if(SimulationSwitch.isInAdjustMuscleAreaMode || SimulationSwitch.isInAdjustMuscleLineMode) 
 	{
 		ImGui::Separator();
 		ImGui::Text("Refractory multiplier: %.3f", RefractoryPeriodAdjustmentMultiplier);

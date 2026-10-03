@@ -1,0 +1,106 @@
+!!!Important: In this file, do not use the equal sign in a comment, as it triggers the reading of an input.
+
+The units we use in the code are: length in millimeters (mm), mass in grams (g), and time in milliseconds (ms). 
+Any value read from this file that is not in these units will be converted to these units in the code.
+
+The length of the left atrium's refractory period. 
+A standard value is around 289 milliseconds [I1]. 
+We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
+We suggest a value in the range of [0.0, 100.0]. Both should be floats.
+
+--BaseMusclerRefractoryPeriod = 300.0;
+--MuscleRefractoryPeriodSTD = 0.0;
+
+This is the portion of the refractory period that is absolute. 
+A standard value is 0.8 [I1]. 
+The relative refractory period will be what is left over and will be calculated in the code. 
+We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
+Keep this number small. We suggest a value in the range of [0.0, 0.1]. 
+Both should be floats.
+
+--AbsoluteRefractoryPeriodFraction = 0.8;
+--AbsoluteRefractoryPeriodFractionSTD = 0.0;
+
+The speed of the conduction velocity across a muscle. 
+This will be scaled by the muscle length to get the time it takes an impulse to travel across the muscle. 
+This should be around 0.3 millimeters/millisecond [I2]. 
+We added a standard deviation in case the user would like to introduce some randomness to the simulation. 
+Keep this number small. We suggest a value in the range of [0.0, 0.1]. 
+Both should be floats.
+
+--BaseMuscleConductionVelocity = 0.3;
+--MuscleConductionVelocitySTD = 0.0;
+
+This is a multiplier that adjusts the conduction velocity through a Bachmann's Bundle muscle a good value is 2.97. [I3]
+
+-- BachmannsBundleMultiplier = 2.97; 
+
+The length of time between heart beats. 
+A 1000 milliseconds is 60 beats per minute.
+Should be a float.
+
+--BeatPeriod = 600.0;
+
+How often you update the terminal, in milliseconds.
+Should be a float.
+
+--PrintRate = 100.0;
+
+How often you update the picture of the simulation to the screen. This is in iterations not time.
+Should be an int.
+
+--DrawRate = 250;
+
+Your time step, the fraction of the time unit for each iteration. 
+We suggest a value between 0.0001 and 0.001. 
+It should be a float.
+
+-- Dt = 0.001;
+
+Ready color. Where the muscle is rested and ready to contract: red, green, blue.
+All three should be floats.
+
+--ReadyRed = 1.0;
+--ReadyGreen = 0.0;
+--ReadyBlue = 0.0;
+
+Depolarization color: red, green, blue.
+All three should be floats.
+
+--DepolarizingRed = 1.0;
+--DepolarizingGreen = 1.0;
+--DepolarizingBlue = 0.0;
+
+Repolarization color (second portion of the absolute refractory period 
+Depolarization color took up the first part) color: red, green, blue.
+All three should be floats.
+
+--RepolarizingRed = 0.5451;
+--RepolarizingGreen = 0.2706;
+--RepolarizingBlue = 0.0745;
+
+Relative Refractory Period color (Where the muscle can depolarization but it usually does not): red, green, blue.
+All three should be floats.
+
+--RelativeRepolarizingRed = 1.0;
+--RelativeRepolarizingGreen = 0.0784;
+--RelativeRepolarizingBlue = 0.5765;
+
+Dead color (If a node is ablated or something went wrong in a muscle it is this color): red, green, blue.
+All three should be floats.
+
+--DeadRed = 1.0;
+--DeadGreen = 1.0;
+--DeadBlue = 1.0;
+
+References:
+I1) LA refractory Period is around 289 ms from this paper.
+    LA absolute Refractory Period is around 229 ms from this paper making it about 80% of the totla refractory period.
+	Thresholds, refractory periods, and conduction times of the normal and diseased human atrium
+	https://doi.org/10.1016/0002-8703(88)90163-9
+I2) Velocity of conduction in most atrial muscle is about 0.3 mm/ms 
+	Guyton and Hall Textbook of Medical Physiology, 12th Ed, CHAPTER 10, Rhythmical Excitation of the Heart
+	https://doctorlib.org/physiology/textbook-medical-physiology/10.html?utm_source=chatgpt.com
+I3) Bachmann's Bundle velocity of conduction is 0.89 mm/ms so the multiplier should be about 2.97
+	Relevance of Conduction Disorders in Bachmann’s Bundle During Sinus Rhythm in Humans 
+	https://www.ahajournals.org/doi/10.1161/CIRCEP.115.003972

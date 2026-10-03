@@ -12,7 +12,35 @@ int main(int argc, char** argv)
 	// Getting user inputs.
 	readBasicSimulationSetupParameters();
 	readIntermediateSimulationSetupParameters();
-	generalSimulationSetup();
+	setSimulationRunDefaults();
+	
+	// Create a new run input a previous run file.
+	if(NodesMusclesFileOrPreviousRunsFile == false)
+	{
+		createNewRun();
+	}
+	else if(NodesMusclesFileOrPreviousRunsFile == true)
+	{
+		uploadPreviousRun();
+	}
+	else
+	{
+		printf("\n\n Bad NodesMusclesFileOrPreviousRunsFile type %d.", NodesMusclesFileOrPreviousRunsFile);
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
+	}
+	RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
+	
+	// Setting parameters that are not initially read from the node and muscle binary or previous run file.
+	setRemainingParameters();
+	
+	setupCudaEnvironment();
+	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
+	copyNodesMusclesToGPU();
+	
+	printf("\n\n Have a good simulation.\n\n");
+	
+	//generalSimulationSetup();
 
 	if(!glfwInit()) // Initialize GLFW, check for failure
 	{
@@ -144,7 +172,7 @@ int main(int argc, char** argv)
 	float aspect = (float)XWindowSize / (float)YWindowSize;
 
 	// Set projection based on the view flag
-	if(Simulation.ViewFlag == 0) // Orthogonal view
+	if(SimulationSwitch.ViewFlag == 0) // Orthogonal view
 	{
 		glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0); // Orthographic projection
 	}
@@ -176,7 +204,7 @@ int main(int argc, char** argv)
 		ImGui::NewFrame();
 		
 		// Update physics --multiple steps per frame for performance
-		if (!Simulation.isPaused) 
+		if (!SimulationSwitch.isPaused) 
 		{
 			// Execute nBody DrawRate times before we draw
 			for (int i = 0; i < DrawRate; i++) 
@@ -376,6 +404,47 @@ void readIntermediateSimulationSetupParameters()
 }
 
 /*
+ This function:
+ Sets the simulation's default run settings. Most of these will get over written if you run an previuos run but they are all
+ set here for a new run and for safety if an existing file read did not set something.
+*/
+void setSimulationRunDefaults()
+{
+	RunTime = 0.0;
+		
+	RefractoryPeriodAdjustmentMultiplier = 1.0;
+	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
+
+	CenterOfSimulation.x = 0.0;
+	CenterOfSimulation.y = 0.0;
+	CenterOfSimulation.z = 0.0;
+	CenterOfSimulation.w = 0.0;
+
+	AngleOfSimulation.x = 0.0;
+	AngleOfSimulation.y = 1.0;
+	AngleOfSimulation.z = 0.0;
+	AngleOfSimulation.w = 0.0;
+
+	SimulationSwitch.isPaused = true;
+	SimulationSwitch.isInAblateMode = false;
+	SimulationSwitch.isInEctopicBeatMode = false;
+	SimulationSwitch.isInEctopicEventMode = false;
+	SimulationSwitch.isInAdjustMuscleAreaMode = false;
+	SimulationSwitch.isInAdjustMuscleLineMode = false;
+	SimulationSwitch.isInFindNodeMode = false;
+	SimulationSwitch.isInMouseFunctionMode = false;
+	SimulationSwitch.isRecording = false;
+	SimulationSwitch.ViewFlag = 1;
+	SimulationSwitch.DrawNodesFlag = 0;
+	SimulationSwitch.DrawFrontHalfFlag = 0;
+	SimulationSwitch.ShowMuscleTypesFlag = false;
+	SimulationSwitch.nodesFound = false;
+	SimulationSwitch.frontNodeIndex = -1;
+	SimulationSwitch.topNodeIndex = -1;
+	SimulationSwitch.guiCollapsed = false;
+}
+
+/*
  This function reads node and muscle data from a config-exported binary file.
  It appends the binary values into the existing model structs by filling fields
  that already exist in this model's node and muscle structures.
@@ -527,11 +596,30 @@ void readNodesAndMusclesFromBinaryFile()
 	fclose(inFile);
 	printf("\n Binary file %s has been read in.\n", fileName);
 }
+		
+// Run setup Functions *********************************************************************** 
+/*
+ This function:
+ Bla Bla BMW
+*/
+void createNewRun()
+{
+	// Seeding the random number generator.
+	time_t t;
+	srand((unsigned) time(&t));
+	
+	readNodesAndMusclesFromBinaryFile();
+	setRemainingNodeAndMuscleAttributes();
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{	
+		checkMuscle(i);
+	}
+}
 
 /*
  This function loads all the node and muscle attributes from a previous run file that was saved.
 */
-void getNodesandMusclesFromPreviousRun()
+void uploadPreviousRun()
 {
 	FILE *inFile;
 	char fileName[256];
@@ -580,7 +668,7 @@ void getNodesandMusclesFromPreviousRun()
 
   	// To keep the contraction state what was readin from the BasicSimulationSetup file not what the state was
   	// when the simulation was saved we save it in a temp, overwrite it then restore it.
-        fread(&Simulation, sizeof(Simulation), 1, inFile);
+        fread(&SimulationSwitch, sizeof(SimulationSwitch), 1, inFile);
   	
         fread(&PulsePointNode, sizeof(int), 1, inFile);
         fread(&UpNode, sizeof(int), 1, inFile);
@@ -601,52 +689,9 @@ void getNodesandMusclesFromPreviousRun()
         fread(&RunTime, sizeof(double), 1, inFile);
         
 	fclose(inFile);
+	RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
 	
 	printf("\n Nodes and Muscles have been read in from %s.\n", fileName);	
-}
-		
-// Run setup Functions *********************************************************************** 
-/*
- This function calls all the functions that are used to setup the nodes muscles and initial parameters 
- of the simulation.
-*/
-void generalSimulationSetup()
-{	
-	// Seeding the random number generator.
-	time_t t;
-	srand((unsigned) time(&t));
-		
-	// Getting nodes and muscle from files or a previous run file.
-	if(NodesMusclesFileOrPreviousRunsFile == 0)
-	{
-		printf("\n Rad = %lf.\n\n",RadiusOfLeftAtrium );
-		readNodesAndMusclesFromBinaryFile();
-		RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
-		setRemainingNodeAndMuscleAttributes();
-		for(int i = 0; i < NumberOfMuscles; i++)
-		{	
-			checkMuscle(i);
-		}
-	}
-	else if(NodesMusclesFileOrPreviousRunsFile == 1)
-	{
-		getNodesandMusclesFromPreviousRun();
-	}
-	else
-	{
-		printf("\n\n Bad NodesMusclesFileOrPreviousRunsFile type %d.", NodesMusclesFileOrPreviousRunsFile);
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-	
-	// Setting parameters that are not initially read from the node and muscle or previous run file.
-	setRemainingParameters();
-
-	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
-	setupCudaEnvironment();
-	copyNodesMusclesToGPU();
-	
-	printf("\n\n Have a good simulation.\n\n");
 }
 
 /*
@@ -682,43 +727,6 @@ void setRemainingParameters()
 	UpX = 0.0;
 	UpY = 1.0;
 	UpZ = 0.0;
-	
-	// If this is a new run these values are set hre. If it is a previous run these values will aready be read in.
-	if (NodesMusclesFileOrPreviousRunsFile == 0) 
-	{
-		RunTime = 0.0;
-
-		RefractoryPeriodAdjustmentMultiplier = 1.0;
-		MuscleConductionVelocityAdjustmentMultiplier = 1.0;
-
-		CenterOfSimulation.x = 0.0;
-		CenterOfSimulation.y = 0.0;
-		CenterOfSimulation.z = 0.0;
-		CenterOfSimulation.w = 0.0;
-
-		AngleOfSimulation.x = 0.0;
-		AngleOfSimulation.y = 1.0;
-		AngleOfSimulation.z = 0.0;
-		AngleOfSimulation.w = 0.0;
-
-		Simulation.isPaused = true;
-		Simulation.isInAblateMode = false;
-		Simulation.isInEctopicBeatMode = false;
-		Simulation.isInEctopicEventMode = false;
-		Simulation.isInAdjustMuscleAreaMode = false;
-		Simulation.isInAdjustMuscleLineMode = false;
-		Simulation.isInFindNodeMode = false;
-		Simulation.isInMouseFunctionMode = false;
-		Simulation.isRecording = false;
-		Simulation.ViewFlag = 1;
-		Simulation.DrawNodesFlag = 0;
-		Simulation.DrawFrontHalfFlag = 0;
-		Simulation.ShowMuscleTypesFlag = false;
-		Simulation.nodesFound = false;
-		Simulation.frontNodeIndex = -1;
-		Simulation.topNodeIndex = -1;
-		// Simulation.guiCollapsed = false; //This is set in viewDrawAndTerminalFuctions.h/createGUI().
-	}
 	
 	HitMultiplier = 0.03;
 	MouseZ = RadiusOfLeftAtrium;
@@ -761,47 +769,26 @@ void setupCudaEnvironment()
 
 /*
  In this function, we set the remaining value of the nodes and muscles.
- 1: Checking to make sure LA radius and mass are set before we use them to set Node and Muscle attributes.
- 2: Setting the pulse point node.
- 3: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
+ 1: Setting the pulse point node.
+ 2: Then, we find the length of each individual muscle and sum these up to find the total length of all muscles that represent
     the left atrium. 
- 4: This allows us to find the fraction of a single muscle's length compared to the total muscle lengths. We can now multiply this 
-    fraction by the mass of the left atrium to get the mass on an individual muscle. 
- 6: Here we set the base muscle attributes. 
+ 3: Here we set the base muscle attributes. 
     a: Setting the muscles conduction velocity. 
     b: Setting the muscles conduction duration (How long it takes for a signal to travel across the muscle).
     c: Setting the muscle's refractory period.
     d: Setting the muscle's absolute refractory period.
-    e: Setting the muscle's contraction strength.
-      The myocyte force per mass ratio is calculated by treating a myocyte as a cylinder. 
-      In the for loop we add some small random fluctuations to these values so the simulation can have some stochastic behavior. 
-      If you do not want any stochastic behavior simply set MyocyteForcePerMassSTD to zero in the simulationsetup file.
-      The strength is also scaled using the scaling read in from the simulationSetup file. The scaling is used so the user
-      can adjust the standard muscle attributes to perform as desired in their simulation. A value of 1.0 adds no scaling.
-    f: Setting the muscle's compression stop fraction (The max percent of the muscles length that is lost in contraction).
-     Note: Muscles do not have mass in the simulation. All the mass is carried in the nodes. Muscles were given mass here to be able to
-     generate the node masses and area. We carry the muscle masses forward in the event that we need to generate a muscle ratio in 
-     future updates to the program. 
  7: Setting all the atributes of BB. 
  8: Setting all the atributes of the LAA.
  9: Setting all the atributes of the PV.
 */
 void setRemainingNodeAndMuscleAttributes()
 {	
-	// 1:
-	if(RadiusOfLeftAtrium < 0.0) // It is intiallized at -1.0.
-	{
-	      printf("\n You are trying to set Node and Muscle attributes before LA radius has been set.");
-	      printf("\n The simulation has been terminated.\n\n");
-	      exit(0);
-	}
-	
-	// 2: This is the pulse point node that generates the beat.
+	// 1: This is the pulse point node that generates the beat.
 	Node[PulsePointNode].isBeatNode = true;
 	Node[PulsePointNode].beatPeriod = BeatPeriod;
 	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
 	
-	// 3:
+	// 2: BMW we do not need this.
 	double dx, dy, dz, d;
 	double totalLengthOfAllMuscles = 0.0;
 	for(int i = 0; i < NumberOfMuscles; i++)
@@ -814,7 +801,7 @@ void setRemainingNodeAndMuscleAttributes()
 		totalLengthOfAllMuscles += d;
 	}
 	
-	// 6:
+	// 4:
 	double stddev, left, right;
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
@@ -849,9 +836,10 @@ void setRemainingNodeAndMuscleAttributes()
 	int typeMV = 5;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		if(Node[i].type == typeLA)
+		if(Node[i].type == TypeBachmannBundle)
 		{
-			//LA.
+			//Do BB stuff
+			Node[i].isDrawNode = true;
 		}
 		else if(Node[i].type == typeBB)
 		{

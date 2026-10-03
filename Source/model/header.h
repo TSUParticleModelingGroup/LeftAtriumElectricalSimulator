@@ -145,7 +145,7 @@ muscleAttributesStructure *MuscleGPU;
 // This will hold all the simulation switches.
 // It is initialized in setNodesAndMuscles.h/setRemainingParameters().
 // *** Should be stored if a runfile is saved.
-simulationSwitchesStructure Simulation;
+simulationSwitchesStructure SimulationSwitch;
 
 // Used for videos and screenshots variables
 // CaptureWidth and CaptureHeight they are intially in Main().
@@ -180,6 +180,42 @@ int PulsePointNode = -1; // Set to -1 to flag it if it is used before it is set.
 // *** Should be stored if a runfile is saved.
 int UpNode = -1; // Set to -1 to flag it if it is used before it is set.
 int FrontNode = -1; // Set to -1 to flag it if it is used before it is set.
+
+
+// Node types: Assigns a number for the different types of tissue. 
+// The oder of the number they are assigned is also very important.
+// This is the priority that is used to break a tie if a muscle connects
+// two different tpyes of nodes. For example if a muscle connects a
+// member of the Bachmann's bundle to say a node of standard LA tissue
+// the muscle should act like a Bachmann's bundle musle not a standard muscle.
+// In the priority assignment the smaller number is the most important.
+// They are set here.
+const int TypeBachmannBundle = 1;
+const int TypePulmonaryVeins = 2;
+const int TypeBackWall = 3;
+const int TypeMitralValve = 4;
+const int TypeAppendage = 5;
+const int TypeStandardLA = 6;
+const int TypeScarTissue = 7;
+const int TypeExtraTissue = 8;
+// This is not a tissue type it is where we initiate the beat.
+// The tissue type of the pulseNode is BacchannBundle 
+// This node just has the extra task of oracstrating the beat.
+// We set it to be 100 so we can add addition tissue types above it 
+// in the future as needed.
+const int TypePulseNode = 100;
+
+// Color types: Assigns a color to each of the tissue type. They are set here.
+
+const float4 ColorBachmannsBundle = {0.2f, 0.2f, 1.0f, 0.0f}; // Blue for Bachmann's Bundle nodes and muscles by default.
+const float4 ColorPulmonaryVeins = {1.0f, 0.4f, 0.7f, 0.0f}; // Pink for pulmonary veins nodes and muscles by default.
+const float4 ColorBackWall = {0.0f, 1.0f, 0.0f, 0.0f}; // Green for back wall nodes and muscles by default.
+const float4 ColorMitralValve = {0.5f, 0.0f, 0.5f, 0.0f}; // Purple for mitral valve nodes and muscles by default.
+const float4 ColorAppendage = {1.0f, 0.8f, 0.3f, 0.0f}; // Orange for left atrial appendage nodes and muscles by default.
+const float4 ColorStandardLA = {1.0f, 0.0f, 0.0f, 0.0f}; // Red for standard nodes (to reduce contrast)
+const float4 ColorScarTissue = {0.6f, 0.6f, 0.6f, 0.0f}; // Gray for scar tissue nodes and muscles by default.
+const float4 ColorExtraTissue = {1.0f, 1.0f, 1.0f, 0.0f}; // White for extra tissue nodes and muscles by default.
+
 
 // Holds the name of the medical view you are in for displaying in the terminal print.
 // It is initialized here.
@@ -268,11 +304,14 @@ int main(int, char**);
 // System input and output functions ********************************************************
 void readBasicSimulationSetupParameters();
 void readIntermediateSimulationSetupParameters();
+void setSimulationRunDefaults();
 void readNodesAndMusclesFromBinaryFile();
-void getNodesandMusclesFromPreviuosRun();
+//void getNodesandMusclesFromPreviuosRun();
+void uploadPreviousRun();
 
 // Run setup Functions ***********************************************************************
-void generalSimulationSetup();
+//void generalSimulationSetup();
+void createNewRun();
 void setRemainingParameters();
 void setupCudaEnvironment();
 void setRemainingNodeAndMuscleAttributes();
@@ -316,7 +355,7 @@ void createGUI();
  void movieOn();
  void movieOff();
  void screenShot();
- void saveSettings();
+ void saveRun();
  void saveState();
  void loadState();
  void findNodes();
