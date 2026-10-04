@@ -281,7 +281,7 @@ void screenShot()
 	string ts = getTimeStamp();
 	// Reuse the same preset size for screenshots so the output matches the chosen quality.
 	sprintf(cmd, "ffmpeg -loglevel error -f rawvideo -pix_fmt rgba -s %dx%d -i - -frames:v 1 -vf \"scale=%d:%d,vflip\" -c:v png \"%s.png\"", 
-				CaptureWidth, CaptureHeight, targetWidth, targetHeight, ts.c_str());
+		CaptureWidth, CaptureHeight, targetWidth, targetHeight, ts.c_str());
 	
 	ScreenShotFile = popen(cmd, "w");
 	buffer = (unsigned char*)malloc(4 * CaptureWidth * CaptureHeight);
@@ -305,16 +305,8 @@ void screenShot()
 	
 	pclose(ScreenShotFile);
 	free(buffer);
-
 	printf("\nScreenshot Captured: \n");
-	cout << "Saved as " << ts << ".png" << endl;
-
-	
-	//system("ffmpeg -i output1.mp4 screenShot.jpeg");
-	//system("rm output1.mp4");
-
 	SimulationSwitch.isPaused = savedPauseState; //restore the pause state before we took the screenshot
-	//ffmpeg -i output1.mp4 output_%03d.jpeg
 }
 
 /*

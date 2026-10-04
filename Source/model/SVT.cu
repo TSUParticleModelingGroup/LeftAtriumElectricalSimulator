@@ -777,8 +777,6 @@ void setSimulationRunDefaults()
 	SimulationSwitch.DrawFrontHalfFlag = 0;
 	SimulationSwitch.ShowMuscleTypesFlag = false;
 	SimulationSwitch.nodesFound = false;
-	SimulationSwitch.frontNodeIndex = -1;
-	SimulationSwitch.topNodeIndex = -1;
 	SimulationSwitch.guiCollapsed = false;
 }
 

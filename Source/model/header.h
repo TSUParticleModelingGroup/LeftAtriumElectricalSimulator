@@ -113,8 +113,8 @@ struct simulationSwitchesStructure
 	// For Find Nodes functionality
 	//These need to be globals or they get wiped when the GUI redraws
 	bool nodesFound;       // Whether nodes have been identified
-	int frontNodeIndex;    // Index of the frontmost node (max Z)
-	int topNodeIndex;      // Index of the topmost node (max Y)
+	//int frontNodeIndex;    // Index of the frontmost node (max Z)
+	//int topNodeIndex;      // Index of the topmost node (max Y)
 	//GUI related
 	bool guiCollapsed; // for hotkey to collapse GUI
 };

@@ -6,13 +6,11 @@ Any value read from this file that is not in these units will be converted to th
 Read from NodesMuscles file (0) or read from a previous run file (1).
 Should be a 0 or a 1.
 
---NodesMusclesFileOrPreviousRunsFile = 0;
+--NodesMusclesFileOrPreviousRunsFile = 1;
 
 Name of the files that holds the nodes and muscles. 
 
-CSphere340.bin
-IdealLeftAtrium2.3Kdemo.bin
-Test.bin
+CCactus.bin
 
 Place the Nodes and Muscle file you would like to run here.
 
