@@ -314,7 +314,7 @@ void setRemainingParameters();
 void setupCudaEnvironment();
 void setRemainingNodeAndMuscleAttributes();
 
-// Function called by the idle callback. *************************************************
+// Function called to move the simulation forward in time. *************************************************
 void nBody(double);
 
 // CUDA Functions ***********************************************************************
@@ -338,24 +338,29 @@ void drawPicture();
 void createGUI();
 
 // Callback Functions ***********************************************************************
- void reshape(GLFWwindow* window, int width, int height);
+ void reshapeCallback(GLFWwindow*, int, int);
+ void KeyPressedCallback(GLFWwindow*, int, int, int, int);
+ void mousePassiveMotionCallback(GLFWwindow*, double, double);
+ void scrollWheelCallback(GLFWwindow*, double, double);
+ void myMouseCallback(GLFWwindow*, int, int, int);
+ 
+// Mouse action functions *******************************************************************
  void mouseFunctionsOff();
  void mouseAblateMode();
  void mouseEctopicBeatMode();
- void mouseAdjustMusclesAreaMode();
- void mouseAdjustMusclesLineMode();
+ void mouseEctopicEventMode();
+ void mouseAdjustMusclesAreaModeMultiplier();
+ void mouseAdjustMusclesLineModeMultiplier();
  void mouseIdentifyNodeMode();
  void mouseIdentifyMuscleMode();
- bool setMouseMuscleAttributes();
+ void identifyMuscleAtIndex(int);
  void setEctopicBeat(int nodeId);
+ 
+ // Movie and screen shot functions ********************************************************
+ static void getQualityPresetDimensions(int, int&, int&);
  void movieOn();
  void movieOff();
  void screenShot();
- void KeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
- // BMW void keyHeld(GLFWwindow* window);
- void mousePassiveMotionCallback(GLFWwindow* window, double x, double y);
- void myMouse(GLFWwindow* window, int button, int state, double x, double y);
- void scrollWheel(GLFWwindow*, double, double);
  
  // Utility Functions ***********************************************************************
  double findAverageRadiusOfLeftAtrium();
@@ -363,6 +368,7 @@ void createGUI();
  double croppedRandomNumber(double, double, double);
  float4 findCenterOfObject(); // BMW not used but we may in the future
  void centerObject();         // BMW not used but we may in the future
+ int centerMouse(GLFWwindow*, double*, double*, double*);
  void translateObject(float, float, float);
  void rotateXAxis(float);
  void rotateYAxis(float);
