@@ -265,7 +265,8 @@ double RadiusOfLeftAtrium = -1.0; // Set to -1.0 to flag it if it is used before
 // They are initialized in setNodesAndMuscles.h/setRemainingParameters().
 double MouseX, MouseY, MouseZ;
 int MouseWheelPos;
-float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
+//float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
+float MouseSelectionRadius; // How big the mouse selection shpere is.
 int ScrollSpeedToggle; // Sets slow or fast scroll speed.
 double ScrollSpeed; // How fast your scroll moves.
 

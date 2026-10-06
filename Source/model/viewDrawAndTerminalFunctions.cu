@@ -409,12 +409,7 @@ void drawPicture()
 		}	
 	}
 	
-	// BMW
-// Just stuck this in to track the Action Potintial it will need cleaning up
-// It does all muscle and is not turned off if you are only looking at the front half.
-// It has not on off button in the simulationSwitchesStructure or a button on the GUI.
-// Start ******************
-	
+	// Tracking the action potintial.
 	SimulationSwitch.isDrawAP = 1;
 	float distance;
 	float x,y,z,dx,dy,dz,d;
@@ -453,7 +448,6 @@ void drawPicture()
 		}
 	}
 	glEnd();
-// STop *****************************
 
 	// Puts a ball at the location of the mouse if a mouse function is on.
 	if(SimulationSwitch.isInMouseFunctionMode)
@@ -466,7 +460,7 @@ void drawPicture()
 		glPushMatrix();
 		glTranslatef(MouseX, MouseY, MouseZ);
 		
-		renderSphere(HitMultiplier*RadiusOfLeftAtrium,20,20);
+		renderSphere(MouseSelectionRadius,20,20);
 		//renderSphere(5.0*NodeRadiusAdjustment*RadiusOfAtria,20,20);
 		glPopMatrix();
 		glDisable(GL_BLEND);
@@ -828,7 +822,7 @@ void createGUI()
 			ImGui::Text("Rotate Y-axis: Ctrl y/Y");
 			ImGui::Text("Rotate Z-axis: Ctrl z/Z");
 			ImGui::NewLine();
-			ImGui::Text("Selection Sphere Size Adjustment: Ctrl ScrollWhell");
+			ImGui::Text("Selection Sphere Size Adjustment: +/-");
 			ImGui::NewLine();
 			ImGui::Text("Toggle GUI/Mouse mode: Tab");		
 			ImGui::NewLine();

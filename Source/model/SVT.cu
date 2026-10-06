@@ -194,8 +194,6 @@ int main(int argc, char** argv)
 	{
 		glfwPollEvents();
 
-		//keyHeld(Window); // Handle key hold events BMW
-
 		// Start ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -781,7 +779,7 @@ void setSimulationRunDefaults()
 
 /*
  This function:
- Bla Bla BMW
+ Sets up a new run.
 */
 void createNewRun()
 {
@@ -831,7 +829,8 @@ void setRemainingParameters()
 	UpY = 1.0;
 	UpZ = 0.0;
 	
-	HitMultiplier = 0.03;
+	
+	MouseSelectionRadius = 0.1*RadiusOfLeftAtrium;
 	MouseZ = RadiusOfLeftAtrium;
 	MouseX = 0.0;
 	MouseY = 0.0;
@@ -1225,14 +1224,14 @@ void cudaErrorCheck(const char *file, int line)
 */
 void copyNodesMusclesToGPU()
 {
-    cudaMemcpyAsync(MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
-    cudaErrorCheck(__FILE__, __LINE__);
-    
-    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
-    cudaErrorCheck(__FILE__, __LINE__);
-    
-    // Synchronize memory stream to ensure transfer is complete
-    cudaStreamSynchronize(MemoryStream);
+	cudaMemcpyAsync(MuscleGPU, Muscle, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	// Synchronize memory stream to ensure transfer is complete
+	cudaStreamSynchronize(MemoryStream);
 }
 
 /*
@@ -1241,14 +1240,14 @@ void copyNodesMusclesToGPU()
  */
 void copyNodesMusclesFromGPU()
 {
-    cudaMemcpyAsync(Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
-    cudaErrorCheck(__FILE__, __LINE__);
-    
-    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
-    cudaErrorCheck(__FILE__, __LINE__);
-    
-    // Synchronize memory stream to ensure transfer is complete
-    cudaStreamSynchronize(MemoryStream);
+	cudaMemcpyAsync(Muscle, MuscleGPU, NumberOfMuscles*sizeof(muscleAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
+	cudaErrorCheck(__FILE__, __LINE__);
+
+	// Synchronize memory stream to ensure transfer is complete
+	cudaStreamSynchronize(MemoryStream);
 }
 
 /*
@@ -1257,11 +1256,11 @@ void copyNodesMusclesFromGPU()
  */
 void copyNodesFromGPU()
 {
-    cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
-    cudaErrorCheck(__FILE__, __LINE__);
+	cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
+	cudaErrorCheck(__FILE__, __LINE__);
 
 	// Synchronize memory stream to ensure transfer is complete
-    cudaStreamSynchronize(MemoryStream);
+	cudaStreamSynchronize(MemoryStream);
 }
 
 /*
@@ -1271,11 +1270,11 @@ void copyNodesFromGPU()
  */
 void copyNodesToGPU()
 {
-    cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
-    cudaErrorCheck(__FILE__, __LINE__);
+	cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
+	cudaErrorCheck(__FILE__, __LINE__);
 
 	// Synchronize memory stream to ensure transfer is complete
-    cudaStreamSynchronize(MemoryStream);
+	cudaStreamSynchronize(MemoryStream);
 }
 
 // Callback Functions ***********************************************************************
@@ -1350,6 +1349,19 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		}
 		return;
 	}
+	
+	 // Mouse selection area adjustment increase.
+        if(key == GLFW_KEY_KP_ADD && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+        	MouseSelectionRadius *= 1.01f;
+        }
+        
+        // Mouse selection area adjustment decrease.
+        if(key == GLFW_KEY_KP_SUBTRACT && (action == GLFW_PRESS || action == GLFW_REPEAT))
+        {
+        	MouseSelectionRadius *= 0.99f;
+		if(MouseSelectionRadius <= (0.01*RadiusOfLeftAtrium)) MouseSelectionRadius = 0.01*RadiusOfLeftAtrium;
+        }
 
 	// X-axis Translations and Rotations
         if(key == GLFW_KEY_X && (action == GLFW_PRESS || action == GLFW_REPEAT))
@@ -1442,39 +1454,18 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 /* 
  This function:
  Is called when a mouse scroll whell action is detected.
+ We use it here to adjust the mouse selection volume.
 */
 void scrollWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	bool ctrlHeld = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
-    
-	if(ctrlHeld)
+	if(yoffset > 0) // Scroll up
 	{
-		// Ctrl+Scroll functionality - adjust selector size
-		if(yoffset > 0) // Scroll up - increase selector size
-		{
-			HitMultiplier += 0.025;
-			if(HitMultiplier > 0.5) HitMultiplier = 0.5;
-		}
-		else if(yoffset < 0) // Scroll down - decrease selector size
-		{
-			HitMultiplier -= 0.01;
-			if(HitMultiplier < 0.01) HitMultiplier = 0.01;
-		}
+		MouseZ -= ScrollSpeed;
 	}
-	else
+	else if(yoffset < 0) // Scroll down
 	{
-		// Normal Scroll functionality
-		if(yoffset > 0) // Scroll up
-		{
-			MouseZ -= ScrollSpeed;
-		}
-		else if(yoffset < 0) // Scroll down
-		{
-			MouseZ += ScrollSpeed;
-		}
+		MouseZ += ScrollSpeed;
 	}
-	// printf("MouseZ = %f\n", MouseZ);
-	drawPicture();
 }
 
 /*
@@ -1485,11 +1476,11 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 {	
 
 	//Add this if we want the GUI to only accept GUI handling until you ckick off of it
-    // Get ImGui IO to check if it's capturing input
-    ImGuiIO& io = ImGui::GetIO();
-    
-    // If ImGui is handling this mouse event, return
-    if (io.WantCaptureMouse) return;
+	// Get ImGui IO to check if it's capturing input
+	ImGuiIO& io = ImGui::GetIO();
+
+	// If ImGui is handling this mouse event, return
+	if (io.WantCaptureMouse) return;
 	
 	float d, dx, dy, dz;
 	float hit;
@@ -1511,7 +1502,7 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 
 		copyNodesMusclesFromGPU();
 		
-		hit = HitMultiplier*RadiusOfLeftAtrium;
+		hit = MouseSelectionRadius;
 		
 		if(button == GLFW_MOUSE_BUTTON_LEFT)
 		{	
@@ -1885,16 +1876,6 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 		//printf("\nSNx = %f SNy = %f SNz = %f\n", NodePosition[0].x, NodePosition[0].y, NodePosition[0].z);
 	}
 }
-
-
-
-
-
-
-
-
-
-
 
 // Mouse action functions *******************************************************************
 
