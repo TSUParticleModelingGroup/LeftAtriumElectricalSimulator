@@ -592,7 +592,7 @@ void createGUI()
 		{
 			//bound slider values
 			if (DrawRate < 1) DrawRate = 1;
-			if (DrawRate > 15000) DrawRate = 5000;
+			if (DrawRate > 5000) DrawRate = 5000;
 		}
 		 
 		// Mouse mode selection
@@ -649,42 +649,35 @@ void createGUI()
 				mouseFunctionsOff();
 				SimulationSwitch.isInMouseFunctionMode = false;
 			}
-
 			if (ImGui::Button("Ablate Mode")) 
 			{
 				mouseAblateMode();
 			}
-
-			if (ImGui::Button("Adjust Area"))
-			{
-				mouseAdjustMusclesAreaModeMultiplier();
-			}
-
-			if (ImGui::Button("Adjust Line")) 
-			{
-				mouseAdjustMusclesLineModeMultiplier();
-			}
-
 			if (ImGui::Button("Ectopic Trigger")) 
 			{
 				mouseEctopicEventMode();
 			}
-
 			if (ImGui::Button("Ectopic Beat")) 
 			{
 				mouseEctopicBeatMode();
 			}
-
-			if (ImGui::Button("Identify Muscle")) 
+			if (ImGui::Button("Adjust Area"))
 			{
-				mouseIdentifyMuscleMode();
+				mouseAdjustMusclesAreaModeMultiplier();
 			}
-
 			ImGui::SameLine();
-
+			if (ImGui::Button("Adjust Line")) 
+			{
+				mouseAdjustMusclesLineModeMultiplier();
+			}
 			if (ImGui::Button("Identify Node")) 
 			{
 				mouseIdentifyNodeMode();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Identify Muscle")) 
+			{
+				mouseIdentifyMuscleMode();
 			}
 
 			// Display identified nodes in a window when in find node mode
@@ -699,86 +692,29 @@ void createGUI()
 				ShowIdentifiedMusclesBox();
 			}
 
-			// Selection area slider
-			float hitMult = HitMultiplier;
-			if (ImGui::SliderFloat("Selection Area", &hitMult, 0.0f, 0.2f, "%.3f", ImGuiSliderFlags_AlwaysClamp))
-			{
-				HitMultiplier = hitMult;
-			}
-			ShowTooltip("(-/=): decrease/increase selection area\nAdjusts the size of the selection area\nLarger values affect more nodes");
-
-			//Muscle adjustment sliders; shows when in adjust line or adjust area mode
+			//Muscle adjustments
 			if (SimulationSwitch.isInAdjustMuscleAreaMode || SimulationSwitch.isInAdjustMuscleLineMode)
 			{
-				ImGui::Separator(); //add a line to separate the sections
-				ImGui::Text("Muscle Adjustment Parameters");
-				ImGui::NewLine(); //add a new line for spacing
-				
-				//refractory period slider
 				ImGui::Text("Refractory Period Multiplier");
-				float refractoryMultiplier = RefractoryPeriodAdjustmentMultiplier;
-				ImGui::SetNextItemWidth(150); // Narrower slider to make room for input
-				if (ImGui::SliderFloat("##refractoryMultiplier", &refractoryMultiplier, 0.001f, 20.0f, "%.3f")) 
-				{
-					RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
-				}
-				ShowTooltip("Adjusts the refractory period of the muscle\n\nDrag the slider or enter a precise value in the input box");
-
-				//refactory period input box
+				//Refactory Period Multiplier input box
 				ImGui::SameLine();
 				ImGui::SetNextItemWidth(60); // Fixed width for input box
-				float originalRefMultiplier = refractoryMultiplier;
-				if (ImGui::InputFloat("##refractoryInput", &refractoryMultiplier, 0, 0, "%.3f"))
+				if (ImGui::InputFloat("##refractoryInput", &RefractoryPeriodAdjustmentMultiplier, 0, 0, "%.3f"))
 				{
 					// Clamp to valid range
-					refractoryMultiplier = (refractoryMultiplier < 0.001f) ? 0.001f : (refractoryMultiplier > 20.0f ? 20.0f : refractoryMultiplier);
-					
-					// Update if changed
-					if (refractoryMultiplier != originalRefMultiplier)
-					{
-						RefractoryPeriodAdjustmentMultiplier = refractoryMultiplier;
-					}
-				}
-			
-				//reset button for refractory period multiplier
-				ImGui::SameLine();
-				if (ImGui::Button("Reset##1")) 
-				{
-					RefractoryPeriodAdjustmentMultiplier = 1.0f;
+					if(RefractoryPeriodAdjustmentMultiplier < 0.001f) RefractoryPeriodAdjustmentMultiplier = 0.001f;
+					else if(20.0f < RefractoryPeriodAdjustmentMultiplier) RefractoryPeriodAdjustmentMultiplier = 20.0f;
 				}
 
-				// For the Conduction Velocity Multiplier slider:
+				//Conduction Velocity Multiplier input box
 				ImGui::Text("Conduction Velocity Multiplier");
-				float conductionMultiplier = MuscleConductionVelocityAdjustmentMultiplier;
-				ImGui::SetNextItemWidth(150); // Narrower slider to make room for input
-				if (ImGui::SliderFloat("##conductionVelocityMultiplier", &conductionMultiplier, 0.001f, 20.0f, "%.3f")) 
-				{
-					MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
-				}
-				ShowTooltip("Adjusts the refractory period of the muscle\n\nDrag the slider or enter a precise value in the input box");
-
 				ImGui::SameLine();
-
-				// For the Conduction Velocity Multiplier input box:
 				ImGui::SetNextItemWidth(60); // Fixed width for input box
-				float originalConductionMultiplier = conductionMultiplier;
-				if (ImGui::InputFloat("##conductionInput", &conductionMultiplier, 0, 0, "%.3f"))
+				if (ImGui::InputFloat("##CVInput", &MuscleConductionVelocityAdjustmentMultiplier, 0, 0, "%.3f"))
 				{
 					// Clamp to valid range
-					conductionMultiplier = (conductionMultiplier < 0.001f) ? 0.001f : (conductionMultiplier > 20.0f ? 20.0f : conductionMultiplier);
-					
-					// Update if changed
-					if (conductionMultiplier != originalConductionMultiplier)
-					{
-						MuscleConductionVelocityAdjustmentMultiplier = conductionMultiplier;
-					}
-				}
-			
-				//reset button for conduction velocity multiplier
-				ImGui::SameLine();
-				if (ImGui::Button("Reset##2"))
-				{
-					MuscleConductionVelocityAdjustmentMultiplier = 1.0f;
+					if(MuscleConductionVelocityAdjustmentMultiplier < 0.001f) MuscleConductionVelocityAdjustmentMultiplier = 0.001f;
+					else if(20.0f < MuscleConductionVelocityAdjustmentMultiplier) MuscleConductionVelocityAdjustmentMultiplier = 20.0f;
 				}
 			}
 		}
@@ -786,66 +722,25 @@ void createGUI()
 		// Heartbeat controls
 		if (ImGui::CollapsingHeader("Heartbeat Controls"))
 		{
-			//Slider for beat period of the Pulse Node
 			ImGui::Text("Beat Period (ms)");
-			float beatPeriod = Node[PulsePointNode].beatPeriod;
-			float beatPeriodMin = 10.0f; // Minimum value for beat period
-			float beatPeriodMax = 1000.0f; // Maximum value for beat period
-
-			if (ImGui::SliderFloat("##beatPeriodSlider", &beatPeriod, beatPeriodMin, beatPeriodMax, "%.1f ms")) 
-			{
-				Node[PulsePointNode].beatPeriod = beatPeriod;
-				cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-				cudaErrorCheck(__FILE__, __LINE__);
-			}
-			ShowTooltip("(Ctrl + -/=): decrease/increase\nAdjust period of time between beats from the pulse node\n\nDrag the slider or enter a precise value in the input box");
-
 			ImGui::SameLine();
 
 			//Input field for beat period of the Pulse Node
 			ImGui::SetNextItemWidth(60);  // Make the input field smaller, fixed 60 pixels
-			float originalBeatPeriod = beatPeriod; //Store the original value to check if it changed
-			if (ImGui::InputFloat("##beatPeriodInput", &beatPeriod, 0, 0, "%.1f")) 
+			if (ImGui::InputFloat("##beatPeriodInput", &Node[PulsePointNode].beatPeriod, 0, 0, "%.1f")) 
 			{
-				//make sure input is valid
-				beatPeriod = (beatPeriod < beatPeriodMin) ? beatPeriodMin : (beatPeriod >  beatPeriodMax ?  beatPeriodMax : beatPeriod); //if the input is less than the min, set it to the min, if its greater than the max, set it to the max
-				
-				// If value actually changed, update
-				if (beatPeriod != originalBeatPeriod) 
-				{
-					Node[PulsePointNode].beatPeriod = beatPeriod;
-					cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-					cudaErrorCheck(__FILE__, __LINE__);
-				}
-			}
-        
-			//button to add 10ms to the beat period
-			if (ImGui::Button("+ 10ms")) 
-			{
-				Node[PulsePointNode].beatPeriod += 10;
+				// Clamp to valid range
+				if(Node[PulsePointNode].beatPeriod < 5.0f) Node[PulsePointNode].beatPeriod = 5.0f;
+				else if(2000.0f < Node[PulsePointNode].beatPeriod) Node[PulsePointNode].beatPeriod = 2000.0f;
 				cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
 				cudaErrorCheck(__FILE__, __LINE__);
+					
 			}
-
-			ImGui::SameLine();
-
-			//button to subtract 10ms from the beat period
-			if (ImGui::Button("- 10ms")) 
-			{
-				Node[PulsePointNode].beatPeriod -= 10;
-				if(Node[PulsePointNode].beatPeriod < 0) // Prevent negative beat period 
-				{
-					Node[PulsePointNode].beatPeriod = 0;
-				}
-				cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-				cudaErrorCheck(__FILE__, __LINE__);
-			}
-        
-			//Ectopic beat Sliders
+       
 			ImGui::Separator();
 			ImGui::Text("Ectopic Beats");
 
-			// Show sliders for each ectopic beat node
+			// Show each ectopic beat node
 			bool hasEctopicBeats = false; // flag to see if we have any ectopic beats; consider adding to simulation struct?
 			for(int i = 0; i < NumberOfNodes; i++) 
 			{
@@ -858,71 +753,34 @@ void createGUI()
 		
 					if (ImGui::TreeNode(nodeName))  //a tree node is a collapsible section, so we can have multiple ectopic beats in the same window
 					{
-						ImGui::NewLine(); //add a new line for spacing
-
 						ImGui::Text("Ectopic Beat Period (ms)");
-						float beatPeriod = Node[i].beatPeriod;
-
-						ImGui::SetNextItemWidth(150); // Narrower slider so the input box fits better
-
-						// Slider for ectopic beat period
-						if (ImGui::SliderFloat("##EctopicBeatPeriod", &beatPeriod, 10.0f, 1000.0f, "%.1f ms")) 
-						{
-							Node[i].beatPeriod = beatPeriod;
-							cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-							cudaErrorCheck(__FILE__, __LINE__);
-						}
-						ShowTooltip("Controls how often this node beats\n\nDrag the slider or enter a precise value in the input box");
-
 						ImGui::SameLine();
 						ImGui::SetNextItemWidth(60); // Fixed width for input box
-
 						// Input field for ectopic beat period
-						float originalBeatPeriod = beatPeriod;
-						if (ImGui::InputFloat("##beatPeriodInput", &beatPeriod, 0, 0, "%.1f"))
+						if (ImGui::InputFloat("##beatPeriodInput", &Node[i].beatPeriod, 0, 0, "%.1f"))
 						{
 							// Clamp to valid range
-							beatPeriod = (beatPeriod < 10.0f) ? 10.0f : (beatPeriod > 1000.0f ? 1000.0f : beatPeriod);
-							
-							// Update if changed
-							if (beatPeriod != originalBeatPeriod)
-							{
-								Node[i].beatPeriod = beatPeriod;
-								cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-								cudaErrorCheck(__FILE__, __LINE__);
-							}
-						}
-
-						// Delay/time until next beat slider for ectopic beats
-						ImGui::Text("Time Until Next Beat (ms)");
-						float timeDelay = Node[i].beatPeriod - Node[i].beatTimer;
-						ImGui::SetNextItemWidth(150); // Narrower slider
-						if (ImGui::SliderFloat("##ectopicBeatPeriodDelay", &timeDelay, 0.0f, Node[i].beatPeriod, "%.1f ms")) 
-						{
-							// Convert back to beatTimer when storing
-							Node[i].beatTimer = Node[i].beatPeriod - timeDelay;
+							if(Node[i].beatPeriod < 5.0f) Node[i].beatPeriod = 5.0f;
+							else if(2000.0f < Node[i].beatPeriod) Node[i].beatPeriod = 2000.0f;
 							cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
 							cudaErrorCheck(__FILE__, __LINE__);
 						}
-						ShowTooltip("Controls how long until this node beats\n\nDrag the slider or enter a precise value in the input box");
 
+						ImGui::Text("Time Until Next Beat (ms)");
+						float timeDelay = Node[i].beatPeriod - Node[i].beatTimer;
 						ImGui::SameLine();
 						ImGui::SetNextItemWidth(60);
-
 						// Input field for ectopic beat delay
-						float originalTimeDelay = timeDelay;
 						if (ImGui::InputFloat("##timeDelayInput", &timeDelay, 0, 0, "%.1f"))
 						{
 							// Clamp to valid range
 							timeDelay = (timeDelay < 0.0f) ? 0.0f : (timeDelay > Node[i].beatPeriod ? Node[i].beatPeriod : timeDelay);
+							if(timeDelay < 0.0f) timeDelay = 0.0f;
+							else if(Node[i].beatPeriod < timeDelay) timeDelay = Node[i].beatPeriod;
 							
-							// Update if changed
-							if (timeDelay != originalTimeDelay)
-							{
-								Node[i].beatTimer = Node[i].beatPeriod - timeDelay;
-								cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
-								cudaErrorCheck(__FILE__, __LINE__);
-							}
+							Node[i].beatTimer = Node[i].beatPeriod - timeDelay;
+							cudaMemcpy(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice);
+							cudaErrorCheck(__FILE__, __LINE__);
 						}
 		    
 						//button to remove ectopic beat nodes
@@ -943,7 +801,6 @@ void createGUI()
 			if (!hasEctopicBeats) //if there are no ectopic beats, show a message
 			{
 				ImGui::TextDisabled("No ectopic beats configured."); //TextDisabled makes it greyed out
-				ImGui::Text("Use the Ectopic Beat button to add one.");
 			}
 		}
 
@@ -961,16 +818,23 @@ void createGUI()
 		//Display movement controls
 		if (ImGui::CollapsingHeader("Keyboard Controls"))
 		{
-
-			ImGui::Text("Quit: Shift + Esc");
-			ImGui::NewLine(); //add a new line for spacing
-			ImGui::Text("Rotate X-axis: a/d; Left/Right");
-			ImGui::Text("Rotate Y-axis: w/s; Up/Down");
-			ImGui::Text("Rotate Z-axis: z/Z; Shift + Left/Right");
-			ImGui::Text("Zoom In/Out: e/E; Shift + Up/Down");
-			ImGui::Text("Collapse/Expand GUI: h/H");
-			ImGui::Text("Toggle Mouse/GUI Mode: Tab");
-			
+			ImGui::Text("Quit: esc");
+			ImGui::NewLine();
+			ImGui::Text("Translate Left/Right: x/X");
+			ImGui::Text("Translate Up/Down:    y/Y");
+			ImGui::Text("Translate In/Out:     z/Z");
+			ImGui::NewLine();
+			ImGui::Text("Rotate X-axis: Ctrl x/X");
+			ImGui::Text("Rotate Y-axis: Ctrl y/Y");
+			ImGui::Text("Rotate Z-axis: Ctrl z/Z");
+			ImGui::NewLine();
+			ImGui::Text("Selection Sphere Size Adjustment: Ctrl ScrollWhell");
+			ImGui::NewLine();
+			ImGui::Text("Toggle GUI/Mouse mode: Tab");		
+			ImGui::NewLine();
+			ImGui::Text("Left Mouse: Change.");
+			ImGui::Text("Right Mouse: Revert.");
+			ImGui::Text("Middle Mouse: Toggles scroll speed.");
 		}
 	ImGui::End(); //end the main controls window
     

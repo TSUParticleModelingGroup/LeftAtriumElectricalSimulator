@@ -1,6 +1,5 @@
 // Local include files
 #include "./header.h"
-//#include "./callBackFunctions.cu"
 #include "./viewDrawAndTerminalFunctions.cu"
 
 /*
@@ -1347,6 +1346,7 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 			SimulationSwitch.isInMouseFunctionMode = true;
 			SimulationSwitch.guiCollapsed = true;
 			glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			centerMouse(window, &MouseX, &MouseY, &MouseZ);
 		}
 		return;
 	}
@@ -1445,36 +1445,36 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 */
 void scrollWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    bool ctrlHeld = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
+	bool ctrlHeld = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS);
     
-    if(ctrlHeld)
-    {
-        // Ctrl+Scroll functionality - adjust selector size
-        if(yoffset > 0) // Scroll up - increase selector size
-        {
-            HitMultiplier += 0.025;
-            if(HitMultiplier > 0.5) HitMultiplier = 0.5;
-        }
-        else if(yoffset < 0) // Scroll down - decrease selector size
-        {
-            HitMultiplier -= 0.01;
-            if(HitMultiplier < 0.01) HitMultiplier = 0.01;
-        }
-    }
-    else
-    {
-        // Normal Scroll functionality
-        if(yoffset > 0) // Scroll up
-        {
-            MouseZ -= ScrollSpeed;
-        }
-        else if(yoffset < 0) // Scroll down
-        {
-            MouseZ += ScrollSpeed;
-        }
-    }
-    // printf("MouseZ = %f\n", MouseZ);
-    drawPicture();
+	if(ctrlHeld)
+	{
+		// Ctrl+Scroll functionality - adjust selector size
+		if(yoffset > 0) // Scroll up - increase selector size
+		{
+			HitMultiplier += 0.025;
+			if(HitMultiplier > 0.5) HitMultiplier = 0.5;
+		}
+		else if(yoffset < 0) // Scroll down - decrease selector size
+		{
+			HitMultiplier -= 0.01;
+			if(HitMultiplier < 0.01) HitMultiplier = 0.01;
+		}
+	}
+	else
+	{
+		// Normal Scroll functionality
+		if(yoffset > 0) // Scroll up
+		{
+			MouseZ -= ScrollSpeed;
+		}
+		else if(yoffset < 0) // Scroll down
+		{
+			MouseZ += ScrollSpeed;
+		}
+	}
+	// printf("MouseZ = %f\n", MouseZ);
+	drawPicture();
 }
 
 /*
