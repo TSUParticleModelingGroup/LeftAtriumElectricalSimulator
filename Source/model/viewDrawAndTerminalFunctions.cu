@@ -500,7 +500,7 @@ void drawPicture()
 	 For buttons and checkboxes, its best to use ternary operators when posssible
 */
 void createGUI()
-{ 
+{
 	// Get actual viewport size -- this is the size of the window, not the size of the the openGL viewport
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -535,8 +535,10 @@ void createGUI()
 		if (ImGui::CollapsingHeader("Simulation Controls", ImGuiTreeNodeFlags_DefaultOpen)) //open by default
 		{
 			// View controls
-			bool frontHalf = SimulationSwitch.DrawFrontHalfFlag == 1; //Needed because ImGui needs a bool for a checkbox, can make a dropbox if more display options are needed
-			if(ImGui::Checkbox("Draw Front Half Only", &frontHalf)) //checkbox for if we only want to draw the first half of the nodes
+			//Needed because ImGui needs a bool for a checkbox, can make a dropbox if more display options are needed
+			bool frontHalf = SimulationSwitch.DrawFrontHalfFlag == 1; 
+			//checkbox for if we only want to draw the first half of the nodes
+			if(ImGui::Checkbox("Draw Front Half Only", &frontHalf)) 
 			{
 				//when the button is pressed it will change the value of frontHalf to the opposite of what it was before
 				SimulationSwitch.DrawFrontHalfFlag = frontHalf ? 1 : 0;
@@ -581,27 +583,18 @@ void createGUI()
 			{
 				screenShot();
 			}
-				ShowTooltip("(F5)");
 		}
 
 		//Draw Rate Slider
 		ImGui::Separator();
 		ImGui::Text("Simulation Speed");
-		if (ImGui::SliderInt("##DrawRateSlider", &DrawRate, 100, 5000, "%d")) //slider for setting the simulation rate
+		if (ImGui::SliderInt("##DrawRateSlider", &DrawRate, 1, 5000, "%d")) //slider for setting the simulation rate
 		{
 			//bound slider values
 			if (DrawRate < 1) DrawRate = 1;
-			if (DrawRate > 5000) DrawRate = 5000;
+			if (DrawRate > 15000) DrawRate = 5000;
 		}
-		ShowTooltip("(Shift + -/=)\nAdjust the speed of the simulation.\nHigher values are faster.\n\nSlider: 100 to 5000\nInput Box: 100 to 5000");
-		//Input box for simulation speed
-		if (ImGui::InputInt("##DrawRateinput", &DrawRate, 50, 100)) //input box for setting the simulation rate
-		{
-			//bound input values
-			if (DrawRate < 100) DrawRate = 100;
-			if (DrawRate > 5000) DrawRate = 5000;
-		}
-		    
+		 
 		// Mouse mode selection
 		if (ImGui::CollapsingHeader("Mouse Functions", ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -611,51 +604,43 @@ void createGUI()
 			if (SimulationSwitch.isInAblateMode) 
 			{
 				ImGui::SameLine();
-				ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Ablate Mode");
-				ImGui::Text("Tab to exit mouse mode");
-				ImGui::Text("(Left Click: Ablate, Right Click: Undo)");
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Ablate Mode");
+				//ImGui::Text("(Left Click: Ablate, Right Click: Undo)");
 			}
 			else if (SimulationSwitch.isInEctopicBeatMode) 
 			{
 				ImGui::SameLine();
 				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Ectopic Beat");
-				ImGui::Text("Tab to exit mouse mode");
 			} 
 			else if (SimulationSwitch.isInEctopicEventMode) 
 			{
 				ImGui::SameLine();
-				ImGui::TextColored(ImVec4(0.0f, 0.5f, 1.0f, 1.0f), "Ectopic Trigger");
-				ImGui::Text("Tab to exit mouse mode");
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Ectopic Trigger");
 			} 
 			else if (SimulationSwitch.isInAdjustMuscleAreaMode) 
 			{
 				ImGui::SameLine();
-				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Adjust Area");
-				ImGui::Text("Tab to exit mouse mode");
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Adjust Area");
 			} 
 			else if (SimulationSwitch.isInAdjustMuscleLineMode) 
 			{
 				ImGui::SameLine();
-				ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Adjust Line");
-				ImGui::Text("Tab to exit mouse mode");
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Adjust Line");
 			} 
 			else if (SimulationSwitch.isInFindNodeMode) 
 			{
 				ImGui::SameLine();
-				ImGui::TextColored(ImVec4(0.5f, 0.0f, 1.0f, 1.0f), "Identify Node");
-				ImGui::Text("Tab to exit mouse mode");
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 1.0f, 1.0f), "Identify Node");
 			}
 			else if (SimulationSwitch.isInFindMuscleMode)
 			{
 				ImGui::SameLine();
-				ImGui::TextColored(ImVec4(0.0f, 0.3f, 1.0f, 1.0f), "Identify Muscle");
-				ImGui::Text("Tab to exit mouse mode");
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Identify Muscle");
 			}
 			else //not in a mode
 			{
 				ImGui::SameLine();
-				ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "None");
-				ImGui::Text("No mouse function mode active");
+				ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "None");
 			}
 
 			// Mouse mode buttons
@@ -664,43 +649,36 @@ void createGUI()
 				mouseFunctionsOff();
 				SimulationSwitch.isInMouseFunctionMode = false;
 			}
-			ShowTooltip("(Tab)\nDisables all mouse interaction with the model");
 
 			if (ImGui::Button("Ablate Mode")) 
 			{
 				mouseAblateMode();
 			}
-			ShowTooltip("(F6)\nLeft-click to ablate nodes\nRight-click to undo ablation");
 
 			if (ImGui::Button("Adjust Area"))
 			{
 				mouseAdjustMusclesAreaModeMultiplier();
 			}
-			ShowTooltip("(F7)\nLeft-click to adjust muscle properties in an area\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
 			if (ImGui::Button("Adjust Line")) 
 			{
 				mouseAdjustMusclesLineModeMultiplier();
 			}
-			ShowTooltip("(Shift + F7)\nLeft-click to adjust muscle properties along a line\nAffects refractory period and conduction velocity\n\nRight-click to undo adjustment");
 
 			if (ImGui::Button("Ectopic Trigger")) 
 			{
 				mouseEctopicEventMode();
 			}
-			ShowTooltip("(F8)\nLeft-click to trigger a single pulse at a node");
 
 			if (ImGui::Button("Ectopic Beat")) 
 			{
 				mouseEctopicBeatMode();
 			}
-			ShowTooltip("(Shift + F8)\nLeft-click to set a node as an ectopic beat node\nwith a constant beat period");
 
 			if (ImGui::Button("Identify Muscle")) 
 			{
 				mouseIdentifyMuscleMode();
 			}
-			ShowTooltip("(F9)\nLeft-click to display the conduction velocity \nand refractory period multipliers of a muscle");
 
 			ImGui::SameLine();
 
@@ -708,7 +686,6 @@ void createGUI()
 			{
 				mouseIdentifyNodeMode();
 			}
-			ShowTooltip("(Shift + F9)\nLeft-click to display the ID of a node");
 
 			// Display identified nodes in a window when in find node mode
 			if (SimulationSwitch.isInFindNodeMode)
@@ -969,7 +946,7 @@ void createGUI()
 				ImGui::Text("Use the Ectopic Beat button to add one.");
 			}
 		}
-    
+
 		// Utility functions
 		if (ImGui::CollapsingHeader("Utilities"))
 		{
@@ -1053,5 +1030,5 @@ void createGUI()
 				ImGui::Text("Ectopic Beat Node %d: %.2f ms", i, Node[i].beatPeriod);
 			}
 		}
-	ImGui::End(); //end of stats window
+	ImGui::End(); //end of stats window 
 }
