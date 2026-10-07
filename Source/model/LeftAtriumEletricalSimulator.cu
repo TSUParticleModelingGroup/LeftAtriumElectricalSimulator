@@ -5,7 +5,7 @@
 // Main *************************************************************************************
 
 /*
- The main function:
+ The main function: BMW go over main slowly.
  Reads to user setup file inputs, setsup the invoronment and kicks off the GUI loop.
 */
 int main(int argc, char** argv)
@@ -172,15 +172,7 @@ int main(int argc, char** argv)
 	// Calculate aspect ratio using the render size
 	float aspect = (float)XWindowSize / (float)YWindowSize;
 
-	// Set projection based on the view flag
-	if(SimulationSwitch.ViewFlag == 0) // Orthogonal view
-	{
-		glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0); // Orthographic projection
-	}
-	else // Frustum view
-	{
-		glFrustum(-aspect, aspect, -1.0, 1.0, Near, Far); // Perspective projection
-	}
+	glFrustum(-aspect, aspect, -1.0, 1.0, Near, Far); // Perspective projection
 	
    	// Reset modelview matrix
 	// MODELVIEW MATRIX - this controls camera position
@@ -254,7 +246,8 @@ int main(int argc, char** argv)
 // System input and output functions ********************************************************
 
 /*
- This function reads in all the user defined parameters in the BasicSimulationSetup file.
+ This function:
+ Reads in all the user defined parameters in the BasicSimulationSetup file.
 */
 void readBasicSimulationSetupParameters()
 {
@@ -303,7 +296,8 @@ void readBasicSimulationSetupParameters()
 }
 
 /*
- This function reads in all the user defined parameters in the IntermediateSimulationSetup file.
+ This function: 
+ Reads in all the user defined parameters in the IntermediateSimulationSetup file.
 */
 void readIntermediateSimulationSetupParameters()
 {
@@ -403,9 +397,8 @@ void readIntermediateSimulationSetupParameters()
 }
 
 /*
- This function reads node and muscle data from a config-exported binary file.
- It appends the binary values into the existing model structs by filling fields
- that already exist in this model's node and muscle structures.
+ This function:
+ Reads node and muscle data from a exported binary file from the LA mapping program.
 */
 void readNodesAndMusclesFromBinaryFile()
 {
@@ -542,8 +535,9 @@ void readNodesAndMusclesFromBinaryFile()
 }
 
 /*
- This function saves all the node and muscle values set in the run to a file. This file can then be used at a
- later date to start a run with the exact settings used at the time of capture.
+ This function: 
+ Saves all the node and muscle values set in the run to a file. 
+ This file can then be used at a later date to start a run with the exact settings used at the time of capture.
  So if the user has spent a great deal of time setting up a scenario, they can save the scenario and use it again later.
  We use it to create scenarios that have arrhythmias preprogrammed into them and have members from a class we are
  presenting to come up and see if they can use the ablation tool to eliminate the arythmia.
@@ -571,7 +565,9 @@ void saveRun()
 	}
 	else
 	{
-		printf("\n Error creating directory '%s'.\n", directoryName); // BMW kill the sim here.
+		printf("\n Error creating directory '%s'.\n", directoryName);
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
 	}
 	
 	// Moving into the directory
@@ -639,7 +635,7 @@ void saveRun()
 	free(buffer);
 
 	//INTERMEDIATE sim setup file
-	fileIn = fopen("../../IntermediateSimulationSetup", "rb");
+	fileIn = fopen("../../InterThis function:mediateSimulationSetup", "rb");
 
 	if(fileIn == NULL)
 	{
@@ -670,7 +666,8 @@ void saveRun()
 }
 
 /*
- This function loads all the node and muscle attributes from a previous run file that was saved.
+ This function: 
+ Loads all the node and muscle attributes from a previous run file that was saved.
 */
 void uploadPreviousRun()
 {
@@ -796,7 +793,8 @@ void createNewRun()
 }
 
 /*
- This function sets any remaining parameters that are not part of the nodes or muscles structures.
+ This function: 
+ Sets any remaining parameters that are not part of the nodes or muscles structures.
  It also sets or initializes the run parameters for this run.
 */
 void setRemainingParameters()
@@ -839,7 +837,8 @@ void setRemainingParameters()
 }
 
 /*
- Setting up the CUDA environment. We have three:
+ This function:
+ Setting up the CUDA environment.
  1: Node based
  2: Muscle based
 */
@@ -869,8 +868,9 @@ void setupCudaEnvironment()
 }
 
 /*
- In this function, we set the remaining value of the nodes and muscles.
- 1: Setting the pulse point node.
+ This function:
+ Sets the remaining value of the nodes and muscles.
+ 1: Setting the pulse point node's initial values.
  2: Here we set the base muscle attributes. 
     a: Setting the muscles conduction velocity. 
     b: Setting the muscles conduction duration (How long it takes for a signal to travel across the muscle).
@@ -998,42 +998,16 @@ void setRemainingNodeAndMuscleAttributes()
 		}
 	}
 	
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{
-		if(Muscle[i].type == TypeAppendage)
-		{
-			// Adjust speed on LAA vector
-		}
-		else
-		{
-			// Adjust speed on LA vector
-		}
-	}
-
 	printf("\n All node and muscle attributes have been set.\n");
 }
 
-// Function called to move the simulation forward in time. ************************************************* BMW update this
+// Nbody Function ************************************************************************
 /*
- This function is called by the openGL idle function. Hence this function is called every time openGL is not doing anything else,
- which is most of the time.
- This function orchestrates the simulation by;
- 1: Calling the getForces function which gets all the forces except the drag force on all nodes.
- 2: Calling the upDateNodes function which moves the nodes based off of the forces from the getForces function.
-    It uses the leap-frog formulas to integrate the nodes forward in time. It also sees if a node is a beat node  
-    and if it needs to send out a signal.
- 3: Calling the updateMuscles function to adjust where they are in their cycle and react accordingly.
- 4: Sees if it is time to recenter the simulation.
- 5: Sees if simulation needs to be redrawn to the screen.
- 6: Sees if the terminal screen needs to be updated.
- 
- Note: If Pause is on it skips all this and if Contraction is not on it skips all of its moving calculations
- and only performs calculations that deal with electrical conduction and muscle timing. 
+ This function:
+ Moves the simulation forward in time by one dt. 
 */
 void nBody(double dt)
 {	
-	//no need to check if we're paused because we handle that in main
-
 	updateNodes<<<GridNodes, BlockNodes, 0, ComputeStream>>>(NodeGPU, NumberOfNodes, MUSCLES_PER_NODE, MuscleGPU, dt, RunTime);
 	cudaErrorCheck(__FILE__, __LINE__);
 
@@ -1047,7 +1021,8 @@ void nBody(double dt)
 // CUDA Functions **************************************************************************
 
 /*
- This CUDA function tries to turn on every muscle that is connected to a node.
+ This CUDA function: 
+ Tries to turn on every muscle that is connected to a selected node.
  It loops through all the muscle connected to the node with index = nodeToTurnOn.
  1: Checks to see if it really is a muscle (muscle number not equal to -1).
     and Checks to see if the muscle is on or off. If it is off it is ready to turn on. 
@@ -1077,7 +1052,8 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
 
 
 /*
- This CUDA function first moves the nodes then checks to see if the node is a beat node, if it is, it updates its time 
+ This CUDA function: 
+ First moves the nodes then checks to see if the node is a beat node, if it is, it updates its time 
  and if its time is past the beat period it sends out a signal then zeros out its timer to start a new period.
  
  We also add some drag to the system to remove energy buildup.
@@ -1090,7 +1066,6 @@ __global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, in
 	{
 		if(!node[i].isAblated) // If node is not ablated do some work on it.
 		{
-		
 			if(node[i].isBeatNode)
 			{
 				if(node[i].beatPeriod < node[i].beatTimer) // If the time is past its period set it to fire and reset it internal clock.
@@ -1104,7 +1079,12 @@ __global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, in
 				}
 			}
 			
-			// Turning on the muscle to any node that is ready to fire. Then setting fire to false so it will not fire again until it is ready.
+			// Turning on the muscle to any node that been triggered to fire.
+			// This could be because it was hit with signal coming down a muscle,
+			// or it is a beat node that was set in the if statement above.
+			// Then the node is set with fire equal to false so it will not fire again until 
+			// it is trigger by a muscle or if it is a beat node when it's timer hits it's
+			// beat period.
 			if(node[i].isFiring)
 			{
 				turnOnNodeMusclesGPU(i, numberOfNodes, musclesPerNode, muscle, node);
@@ -1115,11 +1095,11 @@ __global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, in
 }
 
 /*
- This function triggers the next node when its signal reaches the end of the muscle.
- Then it colors the muscle depending on where the muscle is in its cycle.
-
- If a muscle reaches the end of its cycle it is turned off, its timer is set to zero,
- and its transmittion direction set to undetermined by setting apNode to -1. (do you mean transition or transmission-kyla ? Second this -Mason)
+ This function: 
+ Triggers the next node if its signal reaches the end of the muscle.
+ Sets it's colors depending on where the muscle is in its cycle.
+ If a muscle reaches the end of its cycle it is turned off, its timer is set to zero, 
+ and it's AP direction is set to -1 (direction unknown).
 */
 __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesStructure *node, int numberOfMuscles, int numberOfNodes, float dt, float4 readyColor, float4 depolarizingColor, float4 repolarizingColor, float4 relativeRepolarizingColor)
 {
@@ -1135,7 +1115,7 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 			// and this would make this call happen every time step past conductionDuration until it was reset.
 			if((muscle[i].conductionDuration - dt < muscle[i].timer) && (muscle[i].timer < muscle[i].conductionDuration + dt))
 			{
-				// Making the AP wave move forward through the muscle.
+				// Finding the direction the AP wave traveled. Then setting the apropriate node to fire.
 				if(muscle[i].apNode == muscle[i].nodeA)
 				{
 					nodeId = muscle[i].nodeB;
@@ -1188,7 +1168,7 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 			}
 			else
 			{
-				// Set color and turning the muscle off, reset timer, and apNode to unknown.
+				// Set color and turning the muscle to resting state, reset timer, and apNode to unknown.
 				muscle[i].color.x = readyColor.x;
 				muscle[i].color.y = readyColor.y;
 				muscle[i].color.z = readyColor.z;
@@ -1203,6 +1183,7 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 }
 
 /*
+ This function:
  Checks to see if an error occurred in a CUDA call and returns the file name and line number where the error occurred.
 */
 void cudaErrorCheck(const char *file, int line)
@@ -1219,7 +1200,8 @@ void cudaErrorCheck(const char *file, int line)
 }
 
 /*
- Copies nodes and muscle attributes up to the GPU.
+ This function:
+ Copies nodes and muscles up to the GPU.
 */
 void copyNodesMusclesToGPU()
 {
@@ -1234,8 +1216,8 @@ void copyNodesMusclesToGPU()
 }
 
 /*
-
- * Copies nodes and muscle attributes down from the GPU.
+ This function:
+ Copies nodes and muscles down from the GPU.
  */
 void copyNodesMusclesFromGPU()
 {
@@ -1250,9 +1232,9 @@ void copyNodesMusclesFromGPU()
 }
 
 /*
-
- * Copies node attributes down from the GPU
- */
+ This function:
+ Copies nodes down from the GPU
+*/
 void copyNodesFromGPU()
 {
 	cudaMemcpyAsync(Node, NodeGPU, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyDeviceToHost, MemoryStream);
@@ -1263,10 +1245,9 @@ void copyNodesFromGPU()
 }
 
 /*
-
- * Copies node attributes up to the GPU
-
- */
+ This function:
+ Copies nodes up to the GPU
+*/
 void copyNodesToGPU()
 {
 	cudaMemcpyAsync(NodeGPU, Node, NumberOfNodes*sizeof(nodeAttributesStructure), cudaMemcpyHostToDevice, MemoryStream);
@@ -1279,7 +1260,7 @@ void copyNodesToGPU()
 // Gui functions ****************************************************************************
 
 /* 
-	 This function creates the GUI using ImGui.
+	 This function creates the GUI using ImGui. BMW Look at this function closer.
 	 This is where the actual window is built
 
 	 All ImGui fields need to be in an if statement to check if the value has changed.
@@ -1619,11 +1600,14 @@ void createGUI()
 		//Display movement controls
 		if (ImGui::CollapsingHeader("Keyboard Controls"))
 		{
-			ImGui::Text("Quit: esc");
+			ImGui::Text("Toggle GUI/Mouse mode: Tab");
+			ImGui::Text("Toggle Run/Pause:      r");
+			ImGui::Text("Toggle Movie on/off:   m");
+			ImGui::Text("Screenshot:            s");
 			ImGui::NewLine();
-			ImGui::Text("Translate Left/Right: x/X");
-			ImGui::Text("Translate Up/Down:    y/Y");
-			ImGui::Text("Translate In/Out:     z/Z");
+			ImGui::Text("Translate Left/Right:  x/X");
+			ImGui::Text("Translate Up/Down:     y/Y");
+			ImGui::Text("Translate In/Out:      z/Z");
 			ImGui::NewLine();
 			ImGui::Text("Rotate X-axis: Ctrl x/X");
 			ImGui::Text("Rotate Y-axis: Ctrl y/Y");
@@ -1631,11 +1615,11 @@ void createGUI()
 			ImGui::NewLine();
 			ImGui::Text("Selection Sphere Size Adjustment: +/-");
 			ImGui::NewLine();
-			ImGui::Text("Toggle GUI/Mouse mode: Tab");		
-			ImGui::NewLine();
 			ImGui::Text("Left Mouse: Change.");
 			ImGui::Text("Right Mouse: Revert.");
 			ImGui::Text("Middle Mouse: Toggles scroll speed.");
+			ImGui::NewLine();
+			ImGui::Text("Quit: esc");
 		}
 	ImGui::End(); //end the main controls window
     
@@ -1698,7 +1682,10 @@ void createGUI()
 	ImGui::End(); //end of stats window 
 }
 
-// Display box for identified nodes in FindNodeMode
+/*
+ This function:
+ Creates a display box for identified nodes in FindNodeMode
+*/
 void ShowIdentifiedNodesBox()
 {
 	ImGui::TextColored(ImVec4(1.0f, 0.5f, 1.0f, 1.0f), "Click on nodes to identify them");
@@ -1741,7 +1728,10 @@ void ShowIdentifiedNodesBox()
 	}
 }
 
-// Display box for identified muscles in FindMuscleMode
+/*
+ This function:
+ Creates a display box for identified muscles in FindMuscleMode
+*/
 void ShowIdentifiedMusclesBox()
 {
 	ImGui::TextColored(ImVec4(0.3f, 0.3f, 1.0f, 1.0f), "Click on muscles to identify them");
@@ -1774,7 +1764,10 @@ void ShowIdentifiedMusclesBox()
 	}
 }
 
-// Helper function to show a tooltip in ImGui
+/*
+ This function:
+ Creates a helper function to show a tooltip in ImGui
+*/
 void ShowTooltip(const char* text) 
 {
 	if (ImGui::IsItemHovered()) 
@@ -1788,7 +1781,8 @@ void ShowTooltip(const char* text)
 // Callback Functions ***********************************************************************
 
 /*
- OpenGL callback when the window is reshaped.
+ This function:
+ Is the OpenGL callback when the window is reshaped.
 */
 void reshapeCallback(GLFWwindow* window, int width, int height)
 {
@@ -1810,22 +1804,13 @@ void reshapeCallback(GLFWwindow* window, int width, int height)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	//now we need to maintain the same aspect ratio for both orthogonal and frustum view
-	if(SimulationSwitch.ViewFlag == 0) // Orthogonal view
-	{
-		glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0); // Orthogonal projection
-	}
-	else // Frustum view
-	{
-		glFrustum(-aspect, aspect, -1.0, 1.0, Near, Far); // Frustum projection
-	}
-
+	glFrustum(-aspect, aspect, -1.0, 1.0, Near, Far); // Frustum projection
 	glMatrixMode(GL_MODELVIEW);
 }
 
 /*
- This function directs the action that needs to be taken if a user hits a key on the key board.
- The terminal screen lists out all the keys and what they will do.
+ This function: 
+ Directs the action that needs to be taken if a user hits a key on the key board.
 */
 void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -1898,12 +1883,14 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		else translateObject(0.0, 0.0, -dz);
         }
         
+        // Terminates the run
         if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 		return;
 	}
 	
+	// Run/pause toggle
 	if(key == GLFW_KEY_R && action == GLFW_PRESS)
 	{
 		if(SimulationSwitch.isPaused) SimulationSwitch.isPaused = false;
@@ -1911,6 +1898,7 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		return;
 	}
 	
+	// Movie on/off toggle
 	if(key == GLFW_KEY_M && action == GLFW_PRESS)
 	{
 		if(SimulationSwitch.isRecording) movieOff();
@@ -1918,6 +1906,7 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		return;
 	}
 	
+	// Take a srceenshot
 	if(key == GLFW_KEY_S && action == GLFW_PRESS)
 	{
 		screenShot();
@@ -1936,12 +1925,11 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 {
 	// Get ImGui IO to check if mouse is over ImGui windows
-    ImGuiIO& io = ImGui::GetIO();
+	ImGuiIO& io = ImGui::GetIO();
 
 	//Show cursor when highlighting over IMGUI elements
 	if (SimulationSwitch.isInMouseFunctionMode)
 	{
-		//Uncomment this to have the cursor show when it hovers the GUI in mouse function mode
 		if (io.WantCaptureMouse)
 		{
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -1954,15 +1942,14 @@ void mousePassiveMotionCallback(GLFWwindow* window, double x, double y)
 		
 	}
 	
-	float sensitivityMultiplier = 1.2; // Sensitivity multiplier for mouse movement
-	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
-	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium *sensitivityMultiplier;
+	MouseX = ( 2.0*x/XWindowSize - 1.0)*RadiusOfLeftAtrium;
+	MouseY = (-2.0*y/YWindowSize + 1.0)*RadiusOfLeftAtrium;
 }
 
 /* 
  This function:
  Is called when a mouse scroll whell action is detected.
- We use it here to adjust the mouse selection volume.
+ We use it here to adjust the mouses z value.
 */
 void scrollWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -1977,13 +1964,11 @@ void scrollWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 /*
- This function:
+ This function: BMW go over slowly
  Does an action based on the mode the viewer is in and which mouse button the user pressed.
 */
 void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 {	
-
-	//Add this if we want the GUI to only accept GUI handling until you ckick off of it
 	// Get ImGui IO to check if it's capturing input
 	ImGuiIO& io = ImGui::GetIO();
 
@@ -1991,26 +1976,17 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 	if (io.WantCaptureMouse) return;
 	
 	float d, dx, dy, dz;
-	float hit;
 	int muscleId;
 	
 	if(action == GLFW_PRESS)
 	{
-		// Check for Ctrl+Click to center mouse
-		if(mods & GLFW_MOD_CONTROL)
-		{
-			centerMouse(window, &MouseX, &MouseY, &MouseZ);
-		}
-		
 		// Only allow mode actions when in mouse function mode
-		if(!SimulationSwitch.isInMouseFunctionMode)
+		if(!SimulationSwitch.isInMouseFunctionMode) 
 		{
 			return;
 		}
 
 		copyNodesMusclesFromGPU();
-		
-		hit = MouseSelectionRadius;
 		
 		if(button == GLFW_MOUSE_BUTTON_LEFT)
 		{	
@@ -2113,7 +2089,7 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 					float dy = MouseY - my;
 					float dz = MouseZ - mz;
 					float dist = sqrt(dx*dx + dy*dy + dz*dz);
-					if(dist < minDist && dist < hit) // Only select if within hit radius
+					if(dist < minDist && dist < MouseSelectionRadius) // Only select if within MouseSelectionRadius
 					{
 						minDist = dist;
 						closestMuscle = m;
@@ -2133,7 +2109,7 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 					dy = MouseY - Node[i].position.y;
 					dz = MouseZ - Node[i].position.z;
 					
-					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
+					if(sqrt(dx*dx + dy*dy + dz*dz) < MouseSelectionRadius)
 					{
 						if(SimulationSwitch.isInAblateMode)
 						{
@@ -2309,7 +2285,7 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 					dx = MouseX - Node[i].position.x;
 					dy = MouseY - Node[i].position.y;
 					dz = MouseZ - Node[i].position.z;
-					if(sqrt(dx*dx + dy*dy + dz*dz) < hit)
+					if(sqrt(dx*dx + dy*dy + dz*dz) < MouseSelectionRadius)
 					{
 						if(SimulationSwitch.isInAblateMode)
 						{
@@ -2368,31 +2344,28 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 			if(ScrollSpeedToggle == 0)
 			{
 				ScrollSpeedToggle = 1;
-				ScrollSpeed = 1.0;
-				// printf("\n speed = %f\n", ScrollSpeed);
+				ScrollSpeed = 1.5;
 			}
 			else
 			{
 				ScrollSpeedToggle = 0;
 				ScrollSpeed = 0.1;
-				// printf("\n speed = %f\n", ScrollSpeed);
 			}
 			
 		}
 		drawPicture();
 		copyNodesMusclesToGPU();
-		//printf("\nSNx = %f SNy = %f SNz = %f\n", NodePosition[0].x, NodePosition[0].y, NodePosition[0].z);
 	}
 }
 
 // Mouse action functions *******************************************************************
 
 /*
+ This function:
  Turns off all the user interactions.
 */
 void mouseFunctionsOff()
 {
-	//SimulationSwitch.isPaused = true;
 	SimulationSwitch.isInAblateMode = false;
 	SimulationSwitch.isInEctopicBeatMode = false;
 	SimulationSwitch.isInEctopicEventMode = false;
@@ -2407,6 +2380,7 @@ void mouseFunctionsOff()
 }
 
 /*
+ This function:
  Puts the user in ablate mode.
 */
 void mouseAblateMode()
@@ -2418,6 +2392,7 @@ void mouseAblateMode()
 }
 
 /*
+ This function:
  Puts the user in ectopic beat mode.
 */
 void mouseEctopicBeatMode()
@@ -2429,6 +2404,7 @@ void mouseEctopicBeatMode()
 }
 
 /*
+ This function:
  Puts the user in ectopic event mode.
 */
 void mouseEctopicEventMode()
@@ -2440,6 +2416,7 @@ void mouseEctopicEventMode()
 }
 
 /*
+ This function:
  Puts the user in area muscle adjustment mode.
 */
 void mouseAdjustMusclesAreaModeMultiplier()
@@ -2451,6 +2428,7 @@ void mouseAdjustMusclesAreaModeMultiplier()
 }
 
 /*
+ This function:
  Puts the user in line muscle adjustment mode.
 */
 void mouseAdjustMusclesLineModeMultiplier()
@@ -2462,8 +2440,8 @@ void mouseAdjustMusclesLineModeMultiplier()
 }
 
 /*
+ This function:
  Puts the user in identify node mode.
-
 */
 void mouseIdentifyNodeMode()
 {
@@ -2473,16 +2451,22 @@ void mouseIdentifyNodeMode()
 	drawPicture();
 }
 
+/*
+ This function:
+ Puts the user in identify muscle mode.
+*/
 void mouseIdentifyMuscleMode()
 {
 	mouseFunctionsOff();
 	SimulationSwitch.isPaused = true;
 	SimulationSwitch.isInFindMuscleMode = true;
-	//glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	drawPicture();
 }
 
-// Helper for Identify Muscle mode: only one muscle can be blue at a time
+/* 
+ This function:
+ Is a helper for Identify Muscle mode: only one muscle can be blue at a time
+*/
 void identifyMuscleAtIndex(int muscleIndex)
 {
 	//set the selected muscle to blue (marking it as an identified muscle)
@@ -2494,7 +2478,8 @@ void identifyMuscleAtIndex(int muscleIndex)
 }
 
 /*
- This function sets up a node (nodeId) to be an ectopic beat node.
+ This function:
+ Sets up a node (nodeId) to be an ectopic beat node.
 */
 void setEctopicBeat(int nodeId)
 {
@@ -2513,7 +2498,6 @@ void setEctopicBeat(int nodeId)
 	Node[nodeId].beatPeriod = BeatPeriod; // Default to same as main beat
 	Node[nodeId].beatTimer = 0; // Default to start immediately
 	
-	
 	// We only let you set 1 ectopic beat at a time.
 	SimulationSwitch.isInEctopicBeatMode = false;
 }
@@ -2521,9 +2505,10 @@ void setEctopicBeat(int nodeId)
 // Viewing Functions ***********************************************************************
 
 /*
- This function sets your view to frustum.This is the view the your eyes actually see. Where train tracks pull in 
- towards each other as they move off in the distance. It is how we see but can cause problems when using the mouse
- which lives in 2D to locate an object that lives in 3D.
+ This function: 
+ Sets your view to frustum.This is the view the your eyes actually see. Where train tracks pull in 
+ towards each other as they move off in the distance. It is how we see but can cause problems when 
+ using the mouse which lives in 2D to locate an object that lives in 3D.
 */
 void frustumView()
 {
@@ -2536,11 +2521,11 @@ void frustumView()
 }
 
 /*
- This function draws the LA to the screen. It also saves movie frames if a movie is being recorded.
+ This function: 
+ Draws the LA to the screen. It also saves movie frames if a movie is being recorded.
 */
 void drawPicture()
 {
-	//int nodeNumber;
 	int muscleNumber;
 	int k;
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -2550,8 +2535,8 @@ void drawPicture()
 	//else glColor3d(1.0,0.0,0.0); // Red is paused	
 	glColor3d(Node[PulsePointNode].color.x, Node[PulsePointNode].color.y, Node[PulsePointNode].color.z);
 	glPushMatrix();
-	glTranslatef(Node[PulsePointNode].position.x, Node[PulsePointNode].position.y, Node[PulsePointNode].position.z);
-	renderSphereVBO();
+		glTranslatef(Node[PulsePointNode].position.x, Node[PulsePointNode].position.y, Node[PulsePointNode].position.z);
+		renderSphereVBO();
 	glPopMatrix();
 	
 	// Drawing center node
@@ -2560,8 +2545,8 @@ void drawPicture()
 	{
 		glColor3d(0.0,0.0,1.0);
 		glPushMatrix();
-		glTranslatef(CenterOfSimulation.x, CenterOfSimulation.y, CenterOfSimulation.z);
-		renderSphereVBO();
+			glTranslatef(CenterOfSimulation.x, CenterOfSimulation.y, CenterOfSimulation.z);
+			renderSphereVBO();
 		glPopMatrix();
 	}
 	
@@ -2576,8 +2561,8 @@ void drawPicture()
 				{
 					glColor3d(Node[i].color.x, Node[i].color.y, Node[i].color.z);
 					glPushMatrix();
-					glTranslatef(Node[i].position.x, Node[i].position.y, Node[i].position.z);
-					renderSphereVBO();
+						glTranslatef(Node[i].position.x, Node[i].position.y, Node[i].position.z);
+						renderSphereVBO();
 					glPopMatrix();
 				}
 			}
@@ -2671,36 +2656,36 @@ void drawPicture()
 	glColor3d(0.0, 0.0, 1.0);
 	glPointSize(5.0);
 	glBegin(GL_POINTS);
-	if(SimulationSwitch.isDrawAP)
-	{
-		for(int i = 0; i < NumberOfMuscles; i++)
+		if(SimulationSwitch.isDrawAP)
 		{
-			if(0.0 < Muscle[i].timer && Muscle[i].timer < Muscle[i].conductionDuration)
+			for(int i = 0; i < NumberOfMuscles; i++)
 			{
-				distance = Muscle[i].conductionVelocity*Muscle[i].timer;
-				if(Muscle[i].apNode == Muscle[i].nodeA)
+				if(0.0 < Muscle[i].timer && Muscle[i].timer < Muscle[i].conductionDuration)
 				{
-					id1 = Muscle[i].nodeA;
-					id2 = Muscle[i].nodeB;
+					distance = Muscle[i].conductionVelocity*Muscle[i].timer;
+					if(Muscle[i].apNode == Muscle[i].nodeA)
+					{
+						id1 = Muscle[i].nodeA;
+						id2 = Muscle[i].nodeB;
+					}
+					else
+					{
+						id1 = Muscle[i].nodeB;
+						id2 = Muscle[i].nodeA;
+					}
+					dx = Node[id2].position.x - Node[id1].position.x;
+					dy = Node[id2].position.y - Node[id1].position.y;
+					dz = Node[id2].position.z - Node[id1].position.z;
+					d = sqrt(dx*dx + dy*dy + dz*dz);
+					
+					x = Node[id1].position.x + distance*(dx/d);
+					y = Node[id1].position.y + distance*(dy/d);
+					z = Node[id1].position.z + distance*(dz/d);
+					
+					glVertex3f(x, y, z);
 				}
-				else
-				{
-					id1 = Muscle[i].nodeB;
-					id2 = Muscle[i].nodeA;
-				}
-				dx = Node[id2].position.x - Node[id1].position.x;
-				dy = Node[id2].position.y - Node[id1].position.y;
-				dz = Node[id2].position.z - Node[id1].position.z;
-				d = sqrt(dx*dx + dy*dy + dz*dz);
-				
-				x = Node[id1].position.x + distance*(dx/d);
-				y = Node[id1].position.y + distance*(dy/d);
-				z = Node[id1].position.z + distance*(dz/d);
-				
-				glVertex3f(x, y, z);
 			}
 		}
-	}
 	glEnd();
 
 	// Puts a ball at the location of the mouse if a mouse function is on.
@@ -2729,7 +2714,11 @@ void drawPicture()
 	}
 }
 
-// Add this to a utility file, only used for the mouse selection since it's just 1 object
+/*
+ This function: BMW take a closer look at this.
+ Creates the mouse selection sphere.
+ Add this to a utility file, only used for the mouse selection since it's just 1 object
+*/
 void renderSphere(float radius, int slices, int stacks) 
 {
     // Sphere geometry parameters
@@ -2763,14 +2752,13 @@ void renderSphere(float radius, int slices, int stacks)
     }
 }
 
-/*
-	Function to render a sphere using a VBO
-	This function creates a VBO for a sphere and binds it for rendering.
-
-	This code creates vertices and indices to make a sphere using triangle strips.
-
-	It uses OpenGL functions to create and bind the VBO and IBO (what makes up the sphere).
-	The sphere stays in the GPU memory and is faster to render and puts less load on the CPU.
+/* BMW look at this closer
+ This function: 
+ Renders a sphere using a VBO
+ This function creates a VBO for a sphere and binds it for rendering.
+ This code creates vertices and indices to make a sphere using triangle strips.
+ It uses OpenGL functions to create and bind the VBO and IBO (what makes up the sphere).
+ The sphere stays in the GPU memory and is faster to render and puts less load on the CPU.
 */
 void createSphereVBO(float radius, int slices, int stacks)
 {
@@ -2864,6 +2852,10 @@ void createSphereVBO(float radius, int slices, int stacks)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+/* Bmw look at this closer.
+ This function:
+ ???
+*/
 void renderSphereVBO() 
 {
     // Bind the VBO and IBO
@@ -2891,6 +2883,7 @@ void renderSphereVBO()
 }
 
 // Movie and screenshot functions **********************************************************
+
 /*
  This function:
  Sets the screen for different qualities used by both video and screenshots.
@@ -3052,7 +3045,7 @@ double findAverageRadiusOfLeftAtrium()
 }
 
 /*
- This code 
+ This function: 
  1: Checks to see if the electrical signal goes through the muscle faster than the refractory period.
     If it does not a muscle could fire itself and the signal would just bounce back and forth in the muscle.
     If this is true we just kill the muscle and move on.
@@ -3159,12 +3152,11 @@ float4 findCenterOfObject()
 
 /*
  This function: 
- Centers the LA bassed on it's center of mass and resets the center of view to (0, 0, 0).
- It is called periodically in a running simulation to center the LA, because the LA is not symmetrical 
- and will wander off over time.
+ Centers the LA center and resets the center of the simulation to (0, 0, 0).
 */
 void centerObject()
 {
+	copyNodesFromGPU();
 	float4 centerOfObject = findCenterOfObject();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
