@@ -10,9 +10,7 @@ Should be a 0 or a 1.
 
 Name of the files that holds the nodes and muscles. 
 
-CSphere340.bin
-IdealLeftAtrium2.3Kdemo.bin
-Test.bin
+Cactus.bin
 
 Place the Nodes and Muscle file you would like to run here.
 
@@ -27,7 +25,7 @@ run that you want to share on GitHub for everyone to use, you will need to manua
  
 Place the name of the previous run file you would like to execute here.
 
---PreviousRunFileName = test
+--PreviousRunFileName = test2
 
 Note: You will only read from a (nodes and muscle file) or a (previous run file), not both.
 

@@ -1,0 +1,1 @@
+github hates empty folders, but we need this folder for saving screenshots. So incase there are no screenshots saved yet leave this file in here.

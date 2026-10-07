@@ -3,7 +3,7 @@
  All the functions are prototyped in this file as well.
 */
 
-// External include files
+// Include files **************************************************
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -17,29 +17,22 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <vector> //needed for VBOs
-
-// Needed to make 
 #include <cuda_runtime.h>
-
 // OpenGL headers - GLAD must come BEFORE GLFW
 #include "../include/glad/glad.h"
 #include <GL/glu.h>
 #include <GLFW/glfw3.h>
-
-// ImGui headers - use quotes for local includes, not angle brackets
+// ImGui headers
 #include "../third_party/imgui/imgui.h"
 #include "../third_party/imgui/imgui_impl_glfw.h"
 #include "../third_party/imgui/imgui_impl_opengl3.h"
 
 using namespace std;
 
+// Defines ********************************************************************
 // Cuda defines
 #define BLOCKNODES 256
 #define BLOCKMUSCLES 256
-
-// Defines for terminal print
-#define BOLD_ON  "\e[1m"
-#define BOLD_OFF   "\e[m"
 
 // Math defines.
 #define PI 3.141592654
@@ -47,11 +40,10 @@ using namespace std;
 #define FLOATMAX 3.4028235e+38f
 #define INTMAX 2147483647
 
-// Structure defines. 
 // This sets how many muscle can be connected to a node.
 #define MUSCLES_PER_NODE 20
 
-// Structures
+// Structures *****************************************************************
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
 struct nodeAttributesStructure
 {
@@ -86,7 +78,6 @@ struct muscleAttributesStructure
 };
 
 // This structure will contain all the switches that control the actions in the code.
-// 
 struct simulationSwitchesStructure
 {
 	bool isPaused;
@@ -100,51 +91,37 @@ struct simulationSwitchesStructure
 	bool isInMouseFunctionMode;
 	bool isRecording;
 	int ViewFlag; 
-	// Draws where the AP signal is along a muscle strand.
-	bool isDrawAP;
+	bool isDrawAP; // Draws where the AP signal is along a muscle strand.
 	// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  0 = off, 1 = front half, 2 = all
 	int DrawNodesFlag; 
 	// Tells the program to draw the front half of the simulation or the full simulation.
-	// We put it in because sometimes it is hard to tell if you are looking at the front of the simulation
-	// or looking through a hole to the back of the simulation. By turning the back off it allows you to
-	// orient yourself.
 	int DrawFrontHalfFlag;
-	bool ShowMuscleTypesFlag;
-	// For Find Nodes functionality
-	//These need to be globals or they get wiped when the GUI redraws
-	bool nodesFound;       // Whether nodes have been identified
-	//int frontNodeIndex;    // Index of the frontmost node (max Z)
-	//int topNodeIndex;      // Index of the topmost node (max Y)
-	//GUI related
 	bool guiCollapsed; // for hotkey to collapse GUI
 };
 
-// Globals Start ******************************************
-// Make sure any globals that are not initialived in one of the simulation setup files
-// (AdvancedSimulationSetup, IntermediateSimulationSetup, BasicSimulationSetup) are save
+// Globals *******************************************************************************
+// Make sure any globals that are not initialized in one of the simulation setup files
+// (IntermediateSimulationSetup, BasicSimulationSetup) are save
 // when a simulation is saved in the previuos runs file.
 
 // How many nodes and muscle the simulation contains.
-// They are initially read in form files in the NodesMuscles folder.
-// *** Should be stored if a runfile is saved.
+// They are initially read in form files in the NodesMuscles folder or previous runs folder.
+// They are set to zero here for error checking.
 int NumberOfNodes = -1;
 int NumberOfMuscles = -1;
 
 // This will hold all the nodes.
-// It is initially read in form files in the NodesMuscles folder.
-// *** The Nodes (CPU values) should be stored if a runfile is saved.
+// It is initially read in form files in the NodesMuscles folderor previous runs folder.
 nodeAttributesStructure *Node;
 nodeAttributesStructure *NodeGPU;
 
 // This will hold all the muscles.
-// It is initially read in form files in the NodesMuscles folder.
-// *** The Muscles (CPU values) should be stored if a runfile is saved.
+// It is initially read in form files in the NodesMuscles folder or previous runs folder.
 muscleAttributesStructure *Muscle;
 muscleAttributesStructure *MuscleGPU;
 
 // This will hold all the simulation switches.
-// It is initialized in setNodesAndMuscles.h/setRemainingParameters().
-// *** Should be stored if a runfile is saved.
+// It is initialized in setNodesAndMuscles.h/setRemainingParameters(). BMW
 simulationSwitchesStructure SimulationSwitch;
 
 // Used for videos and screenshots variables
@@ -174,15 +151,8 @@ GLuint NumSphereVertices, NumSphereIndices; // Number of vertices and indices in
 // *** Should be stored if a runfile is saved.
 int PulsePointNode = -1; // Set to -1 to flag it if it is used before it is set.
 
-// Nodes that orient the simulation. 
-// If the node's center of mass is at <0,0,0> and the UpNode is up and FrontNode is in the front looking at you, you should be in the standard view.
-// They are initially read in form files in the NodesMuscles folder.
-// *** Should be stored if a runfile is saved.
-int UpNode = -1; // Set to -1 to flag it if it is used before it is set.
-int FrontNode = -1; // Set to -1 to flag it if it is used before it is set.
-
 // Node types: Assigns a number for the different types of tissue. 
-// The oder of the number they are assigned is also very important.
+// The order of the number they are assigned is also very important.
 // This is the priority that is used to break a tie if a muscle connects
 // two different tpyes of nodes. For example if a muscle connects a
 // member of the Bachmann's bundle to say a node of standard LA tissue
@@ -205,7 +175,6 @@ const int TypeExtraTissue = 8;
 const int TypePulseNode = 100;
 
 // Color types: Assigns a color to each of the tissue type. They are set here.
-
 const float4 ColorBachmannsBundle = {0.2f, 0.2f, 1.0f, 0.0f}; // Blue for Bachmann's Bundle nodes and muscles by default.
 const float4 ColorPulmonaryVeins = {1.0f, 0.4f, 0.7f, 0.0f}; // Pink for pulmonary veins nodes and muscles by default.
 const float4 ColorBackWall = {0.0f, 1.0f, 0.0f, 0.0f}; // Green for back wall nodes and muscles by default.
@@ -214,12 +183,6 @@ const float4 ColorAppendage = {1.0f, 0.8f, 0.3f, 0.0f}; // Orange for left atria
 const float4 ColorStandardLA = {1.0f, 0.0f, 0.0f, 0.0f}; // Red for standard nodes (to reduce contrast)
 const float4 ColorScarTissue = {0.6f, 0.6f, 0.6f, 0.0f}; // Gray for scar tissue nodes and muscles by default.
 const float4 ColorExtraTissue = {1.0f, 1.0f, 1.0f, 0.0f}; // White for extra tissue nodes and muscles by default.
-
-
-// Holds the name of the medical view you are in for displaying in the terminal print.
-// It is initialized here.
-// *** Should be stored if a runfile is saved.
-char ViewName[256] = "no view set"; 
 
 // These two variable get user input to adjust muscle refractory periods and conduction velocities when you are
 // in AdjustMuscleAreaMode or AdjustMuscleLineMode modes. Once they are read in, they are multiplied by the muscles 
@@ -265,19 +228,16 @@ double RadiusOfLeftAtrium = -1.0; // Set to -1.0 to flag it if it is used before
 // They are initialized in setNodesAndMuscles.h/setRemainingParameters().
 double MouseX, MouseY, MouseZ;
 int MouseWheelPos;
-//float HitMultiplier; // Adjusts how big of a region the mouse covers when you are selecting with it.
-float MouseSelectionRadius; // How big the mouse selection shpere is.
+float MouseSelectionRadius; // How big the mouse selection sphere is.
 int ScrollSpeedToggle; // Sets slow or fast scroll speed.
 double ScrollSpeed; // How fast your scroll moves.
 
 // Keeps track of the time into the simulation.
 // It is initialized in setNodesAndMuscles.h/setRemainingParameters().
-// *** Should be stored if a runfile is saved.
 double RunTime = -1.0; // Set to -1.0 to flag it if it is used before it is set.
 
 // These keep track of where the view is as you zoom in and out and rotate.
 // These are initialized in setNodesAndMuscles.h/setRemainingParameters().
-// *** Should be stored if a runfile is saved.
 float4 CenterOfSimulation;
 float4 AngleOfSimulation;
 
@@ -299,6 +259,8 @@ double UpY;
 double UpZ;
 	
 // Prototyping functions
+
+// Main *************************************************************************************
 int main(int, char**);
 
 // System input and output functions ********************************************************
@@ -327,16 +289,12 @@ void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
 void copyNodesFromGPU();
 void copyNodesToGPU();
- 
-// Viewing Functions ***********************************************************************
-void showMuscleTypes();
-void showTooltip(const char *);
-void renderSphere(float, int, int);
-void createSphereVBO(float, int, int);
-void renderSphereVBO();
-void frustumView();
-void drawPicture();
+
+// Gui functions ****************************************************************************
 void createGUI();
+void ShowIdentifiedNodesBox();
+void ShowIdentifiedMusclesBox();
+void ShowTooltip(const char *);
 
 // Callback Functions ***********************************************************************
  void reshapeCallback(GLFWwindow*, int, int);
@@ -345,7 +303,7 @@ void createGUI();
  void scrollWheelCallback(GLFWwindow*, double, double);
  void myMouseCallback(GLFWwindow*, int, int, int);
  
-// Mouse action functions *******************************************************************
+ // Mouse action functions *******************************************************************
  void mouseFunctionsOff();
  void mouseAblateMode();
  void mouseEctopicBeatMode();
@@ -357,6 +315,14 @@ void createGUI();
  void identifyMuscleAtIndex(int);
  void setEctopicBeat(int nodeId);
  
+// Viewing Functions ***********************************************************************
+void drawPicture();
+void frustumView();
+void renderSphere(float, int, int);
+void createSphereVBO(float, int, int);
+void renderSphereVBO();
+void showMuscleTypes();
+
  // Movie and screen shot functions ********************************************************
  static void getQualityPresetDimensions(int, int&, int&);
  void movieOn();
@@ -375,6 +341,4 @@ void createGUI();
  void rotateYAxis(float);
  void rotateZAxis(float);
  string getTimeStamp();
- 
- //*****************************************************************************************************************************************
 	
