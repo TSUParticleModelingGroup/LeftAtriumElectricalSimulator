@@ -960,7 +960,8 @@ void setRemainingNodeAndMuscleAttributes()
 	{
 		if(Muscle[i].type == TypeBachmannBundle)
 		{
-			Muscle[i].conductionDuration /= BachmannsBundleMultiplier;
+			//Muscle[i].conductionDuration /= BachmannsBundleMultiplier;
+			Muscle[i].conductionDuration *= 0.1;
 		}
 		else if(Muscle[i].type == TypePulmonaryVeins)
 		{
@@ -976,7 +977,7 @@ void setRemainingNodeAndMuscleAttributes()
 		}
 		else if(Muscle[i].type == TypeAppendage)
 		{
-			//
+			Muscle[i].conductionDuration *= 2.0;
 		}
 		else if(Muscle[i].type == TypeStandardLA)
 		{
@@ -3212,6 +3213,9 @@ void translateObject(float dx, float dy, float dz)
 */
 void rotateXAxis(float angle)
 {
+	float4 centerOfObject = findCenterOfObject();
+	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
+	
 	float temp;
 	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
@@ -3222,6 +3226,8 @@ void rotateXAxis(float angle)
 	}
 	copyNodesToGPU();
 	AngleOfSimulation.x += angle;
+	
+	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
 }
 
 /*
@@ -3230,6 +3236,9 @@ void rotateXAxis(float angle)
 */
 void rotateYAxis(float angle)
 {
+	float4 centerOfObject = findCenterOfObject();
+	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
+	
 	float temp;
 	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
@@ -3240,6 +3249,8 @@ void rotateYAxis(float angle)
 	}
 	copyNodesToGPU();
 	AngleOfSimulation.y += angle;
+	
+	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
 }
 
 /*
@@ -3248,6 +3259,9 @@ void rotateYAxis(float angle)
 */
 void rotateZAxis(float angle)
 {
+	float4 centerOfObject = findCenterOfObject();
+	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
+	
 	float temp;
 	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
@@ -3258,6 +3272,8 @@ void rotateZAxis(float angle)
 	}
 	copyNodesToGPU();
 	AngleOfSimulation.z += angle;
+	
+	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
 }
 
 /*
