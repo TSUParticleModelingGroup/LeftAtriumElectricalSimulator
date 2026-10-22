@@ -13,41 +13,27 @@ int main(int argc, char** argv)
 	// Getting user inputs.
 	readBasicSimulationSetupParameters();
 	readIntermediateSimulationSetupParameters();
-	setSimulationRunDefaults();
 	
-	// Create a new run input a previous run file.
+	// Create a new run or input a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == false)
 	{
 		createNewRun();
+		copyNodesMusclesToGPU();
 	}
-	else if(NodesMusclesFileOrPreviousRunsFile == true)
+	else //(NodesMusclesFileOrPreviousRunsFile == true)
 	{
 		uploadPreviousRun();
+		setupCudaEnvironment();
+		copyNodesMusclesToGPU();
 	}
-	else
-	{
-		printf("\n\n Bad NodesMusclesFileOrPreviousRunsFile type %d.", NodesMusclesFileOrPreviousRunsFile);
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-	RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
-	
-	// Setting parameters that are not initially read from the node and muscle binary or previous run file.
-	setRemainingParameters();
-	
-	setupCudaEnvironment();
-	// Sending all the info that we have just created to the GPU so it can start crunching numbers.
-	copyNodesMusclesToGPU();
-	
 	printf("\n\n Have a good simulation.\n\n");
 	
-	//generalSimulationSetup();
 
 	if(!glfwInit()) // Initialize GLFW, check for failure
 	{
-	fprintf(stderr, "Failed to initialize GLFW\n");
-	return -1;
-}
+		fprintf(stderr, "Failed to initialize GLFW\n");
+		return -1;
+	}
 
 	// Set compatibility mode to allow legacy OpenGL (this is just standard)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2); //these 2 lines are for compatibility with older versions of OpenGL (2.1+) ensures backwards compatibility
@@ -587,7 +573,6 @@ void saveRun()
 	fwrite(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, runFile);
 	fwrite(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, runFile);
 	fwrite(&CenterOfSimulation, sizeof(float4), 1, runFile);
-	fwrite(&AngleOfSimulation, sizeof(float4), 1, runFile);
 	fwrite(&PulsePointNode, sizeof(int), 1, runFile);
 	fwrite(&RadiusOfLeftAtrium, sizeof(double), 1, runFile);
 	
@@ -705,7 +690,6 @@ void uploadPreviousRun()
 	fread(&RefractoryPeriodAdjustmentMultiplier, sizeof(float), 1, inFile);
 	fread(&MuscleConductionVelocityAdjustmentMultiplier, sizeof(float), 1, inFile);
 	fread(&CenterOfSimulation, sizeof(float4), 1, inFile);
-	fread(&AngleOfSimulation, sizeof(float4), 1, inFile);
 	fread(&PulsePointNode, sizeof(int), 1, inFile);
 	fread(&RadiusOfLeftAtrium, sizeof(double), 1, inFile);
 	
@@ -739,6 +723,79 @@ void uploadPreviousRun()
 // Setup Functions *********************************************************************** 
 /*
  This function:
+ Sets up a new run.
+*/
+void createNewRun()
+{	
+	// Seeding the random number generator.
+	time_t t;
+	srand((unsigned) time(&t));
+	
+	setSimulationRunDefaults();
+	readNodesAndMusclesFromBinaryFile();
+	//setRemainingNodeAndMuscleAttributes();
+	
+	setupCudaEnvironment();
+	copyNodesMusclesToGPU();
+	centerObject();
+	RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
+	setRemainingParameters();
+	
+	int numberOfStandardLANodes = 0;
+	int numberOfBachmannBundleNodes = 0;
+	int numberOfPulmonaryVeinLSNodes = 0;
+	int numberOfPulmonaryVeinLINodes = 0;
+	int numberOfPulmonaryVeinRSNodes = 0;
+	int numberOfPulmonaryVeinRINodes = 0;
+	int numberOfBackWallNodes = 0;
+	int numberOfMitralValveOpeningNodes = 0;
+	int numberOfAppendageNodes = 0;
+	int numberOfScarTissueNodes = 0;
+	int numberOfExtraTissueNodes = 0;
+	
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if     (Node[i].type == TypeStandardLA) numberOfStandardLANodes++;
+		else if(Node[i].type == TypeBachmannBundle) numberOfBachmannBundleNodes++;
+		else if(Node[i].type == TypePulmonaryVeinLS) numberOfPulmonaryVeinLSNodes++;
+		else if(Node[i].type == TypePulmonaryVeinLI) numberOfPulmonaryVeinLINodes++;
+		else if(Node[i].type == TypePulmonaryVeinRS) numberOfPulmonaryVeinRSNodes++;
+		else if(Node[i].type == TypePulmonaryVeinRI) numberOfPulmonaryVeinRINodes++;
+		else if(Node[i].type == TypeBackWall) numberOfBackWallNodes++;
+		else if(Node[i].type == TypeMitralValveOpening) numberOfMitralValveOpeningNodes++;
+		else if(Node[i].type == TypeAppendage) numberOfAppendageNodes++;
+		else if(Node[i].type == TypeScarTissue) numberOfScarTissueNodes++;
+		else if(Node[i].type == TypeExtraTissue) numberOfExtraTissueNodes++;
+		else
+		{
+			printf("\n Bad node type.");
+			printf("\n The simulation has been terminated.\n");
+			exit(0);
+		}
+		
+	}
+	
+	initializeAllNodesAndMuscles();
+	setPulseNode();
+	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle();
+	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVeinLS();
+	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVeinLI();
+	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVeinRS();
+	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVeinRI();
+	if(numberOfBackWallNodes != 0) setBackWall();
+	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening();
+	if(numberOfAppendageNodes != 0) setAppendage();
+	if(numberOfScarTissueNodes != 0) setScarTissue();
+	if(numberOfExtraTissueNodes != 0) setExtraTissue();
+	
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{	
+		checkMuscle(i);
+	}
+}
+
+/*
+ This function:
  Sets the simulation's default run settings. Most of these will get over written if you run an previuos run but they are all
  set here for a new run and for safety if an existing file read did not set something.
 */
@@ -748,16 +805,6 @@ void setSimulationRunDefaults()
 		
 	RefractoryPeriodAdjustmentMultiplier = 1.0;
 	MuscleConductionVelocityAdjustmentMultiplier = 1.0;
-
-	CenterOfSimulation.x = 0.0;
-	CenterOfSimulation.y = 0.0;
-	CenterOfSimulation.z = 0.0;
-	CenterOfSimulation.w = 0.0;
-
-	AngleOfSimulation.x = 0.0;
-	AngleOfSimulation.y = 1.0;
-	AngleOfSimulation.z = 0.0;
-	AngleOfSimulation.w = 0.0;
 
 	SimulationSwitch.isPaused = true;
 	SimulationSwitch.isInAblateMode = false;
@@ -772,24 +819,6 @@ void setSimulationRunDefaults()
 	SimulationSwitch.DrawNodesFlag = 0;
 	SimulationSwitch.DrawFrontHalfFlag = 0;
 	SimulationSwitch.guiCollapsed = false;
-}
-
-/*
- This function:
- Sets up a new run.
-*/
-void createNewRun()
-{
-	// Seeding the random number generator.
-	time_t t;
-	srand((unsigned) time(&t));
-	
-	readNodesAndMusclesFromBinaryFile();
-	setRemainingNodeAndMuscleAttributes();
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{	
-		checkMuscle(i);
-	}
 }
 
 /*
@@ -815,7 +844,7 @@ void setRemainingParameters()
 	//Where your eye is located
 	EyeX = 0.0*RadiusOfLeftAtrium;
 	EyeY = 0.0*RadiusOfLeftAtrium;
-	EyeZ = 2.0*RadiusOfLeftAtrium;
+	EyeZ = 3.0*RadiusOfLeftAtrium;
 
 	//Where you are looking
 	CenterX = 0.0;
@@ -867,25 +896,13 @@ void setupCudaEnvironment()
 	cudaStreamCreate(&MemoryStream);
 }
 
-/*
- This function:
- Sets the remaining value of the nodes and muscles.
- 1: Setting the pulse point node's initial values.
- 2: Here we set the base muscle attributes. 
-    a: Setting the muscles conduction velocity. 
-    b: Setting the muscles conduction duration (How long it takes for a signal to travel across the muscle).
-    c: Setting the muscle's refractory period.
-    d: Setting the muscle's absolute refractory period.
- 3: Setting all the node and muscle atributes based on type. 
-*/
-void setRemainingNodeAndMuscleAttributes()
-{	
-	// 1: This is the pulse point node that generates the beat.
-	Node[PulsePointNode].isBeatNode = true;
-	Node[PulsePointNode].beatPeriod = BeatPeriod;
-	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
+void initializeAllNodesAndMuscles()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		Node[i].isDrawNode = true;
+	}
 	
-	// 2:
 	double stddev, left, right;
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{	
@@ -895,8 +912,12 @@ void setRemainingNodeAndMuscleAttributes()
 		right = MuscleConductionVelocitySTD;
 		Muscle[i].conductionVelocity = BaseMuscleConductionVelocity + croppedRandomNumber(stddev, left, right);
 		
+		//printf("\n vel = %f.\n", Muscle[i].conductionVelocity);
+		
 		// b: Setting the muscles conduction duration (How long it takes for a signal to travel across the muscle).
 		Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+		
+		//printf("\n vel = %f.\n", Muscle[i].conductionDuration);
 		
 		// c: Setting the muscle's refractory period.
 		stddev = MuscleRefractoryPeriodSTD;
@@ -904,105 +925,195 @@ void setRemainingNodeAndMuscleAttributes()
 		right = MuscleRefractoryPeriodSTD;	
 		Muscle[i].refractoryPeriod = BaseMuscleRefractoryPeriod + croppedRandomNumber(stddev, left, right);
 		
+		//printf("\n vel = %f.\n", Muscle[i].refractoryPeriod);
+		
 		// d: Setting the muscle's absolute refractory period.
 		stddev = AbsoluteRefractoryPeriodFractionSTD;
 		left = -AbsoluteRefractoryPeriodFractionSTD;
 		right = AbsoluteRefractoryPeriodFractionSTD;
 		Muscle[i].absoluteRefractoryPeriodFraction = BaseAbsoluteRefractoryPeriodFraction + croppedRandomNumber(stddev, left, right);
 	}
-	
-	// 3:
+}
+
+void setPulseNode()
+{
+	// 1: This is the pulse point node that generates the beat.
+	Node[PulsePointNode].isBeatNode = true;
+	Node[PulsePointNode].beatPeriod = BeatPeriod;
+	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
+}
+
+void setBachmannsBundle()
+{
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		if(Node[i].type == TypeBachmannBundle)
 		{
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == TypePulmonaryVeins)
+	}
+	BachmannsBundleMultiplier = 10.0; // BMW overwriting setup
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypeBachmannBundle)
+		{
+			Muscle[i].conductionDuration /= BachmannsBundleMultiplier;
+		}
+	}
+}
+
+void setPulmonaryVeinLS()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypePulmonaryVeinLS)
 		{
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == TypeBackWall)
+	}
+	float PulmonaryVeinLSMultiplier = 0.5; // BMW should go in setup
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypePulmonaryVeinLS)
+		{
+			Muscle[i].conductionDuration /= PulmonaryVeinLSMultiplier;
+		}
+	}
+}
+
+void setPulmonaryVeinLI()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypePulmonaryVeinLI)
 		{
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == TypeMitralValve)
+	}
+	float PulmonaryVeinLIMultiplier = 0.5; // BMW should go in setup
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypePulmonaryVeinLI)
+		{
+			Muscle[i].conductionDuration /= PulmonaryVeinLIMultiplier;
+		}
+	}
+}
+
+void setPulmonaryVeinRS()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypePulmonaryVeinRS)
 		{
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == TypeAppendage)
+	}
+	float PulmonaryVeinRSMultiplier = 0.5; // BMW should go in setup
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypePulmonaryVeinRS)
+		{
+			Muscle[i].conductionDuration /= PulmonaryVeinRSMultiplier;
+		}
+	}
+}
+
+void setPulmonaryVeinRI()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypePulmonaryVeinRI)
 		{
 			Node[i].isDrawNode = true;
 		}
-		else if(Node[i].type == TypeStandardLA)
+	}
+	float PulmonaryVeinRIMultiplier = 0.5; // BMW should go in setup
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypePulmonaryVeinRI)
+		{
+			Muscle[i].conductionDuration /= PulmonaryVeinRIMultiplier;
+		}
+	}
+}
+
+void setBackWall()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypeBackWall)
 		{
 			Node[i].isDrawNode = true;
-		}
-		else if(Node[i].type == TypeScarTissue)
-		{
-			Node[i].isAblated = true;
-			Node[i].isDrawNode = true;
-		}
-		else if(Node[i].type == TypeExtraTissue)
-		{
-			Node[i].isAblated = true;
-			Node[i].isDrawNode = true;
-		}
-		else
-		{
-			printf("\n\n Unknown tissue type.");
-			printf("\n The simulation has been terminated.\n\n");
-			exit(0);
 		}
 	}
 	
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
-		if(Muscle[i].type == TypeBachmannBundle)
+		if(Muscle[i].type == TypeBackWall)
 		{
-			//Muscle[i].conductionDuration /= BachmannsBundleMultiplier;
-			Muscle[i].conductionDuration *= 0.1;
+			// Currently we are doing nothing with the back wall.
 		}
-		else if(Muscle[i].type == TypePulmonaryVeins)
+	}
+}
+
+void setMitralValveOpening()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypeMitralValveOpening)
 		{
-			
+			Node[i].isDrawNode = true;
+			Node[i].isAblated = true;
 		}
-		else if(Muscle[i].type == TypeBackWall)
+	}
+}
+
+void setAppendage()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypeAppendage)
 		{
-			//
-		}
-		else if(Muscle[i].type == TypeMitralValve)
-		{
-			//
-		}
-		else if(Muscle[i].type == TypeAppendage)
-		{
-			Muscle[i].conductionDuration *= 2.0;
-		}
-		else if(Muscle[i].type == TypeStandardLA)
-		{
-			//
-		}
-		else if(Muscle[i].type == TypeScarTissue)
-		{
-			//
-		}
-		else if(Muscle[i].type == TypeExtraTissue)
-		{
-			//
-		}
-		else
-		{
-			printf("\n\n Unknown tissue type.");
-			printf("\n The simulation has been terminated.\n\n");
-			exit(0);
+			Node[i].isDrawNode = true;
 		}
 	}
 	
-	printf("\n All node and muscle attributes have been set.\n");
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypeAppendage)
+		{
+			//Muscle[i].conductionDuration /= AppendageMultiplier;
+			Muscle[i].conductionDuration *= 1.5;
+		}
+	}
 }
 
-// Nbody Function ************************************************************************
+void setScarTissue()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypeScarTissue)
+		{
+			Node[i].isDrawNode = true;
+			Node[i].isAblated = true;
+		}
+	}
+}
+
+void setExtraTissue()
+{
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypeExtraTissue)
+		{
+			Node[i].isDrawNode = true;
+			Node[i].isAblated = true;
+		}
+	}
+}
+
+// *************************************************** Nbody Function ************************************************************************
 /*
  This function:
  Moves the simulation forward in time by one dt. 
@@ -1018,8 +1129,7 @@ void nBody(double dt)
 	RunTime += dt;
 }
 
-
-// CUDA Functions **************************************************************************
+// *************************************************** CUDA Functions **************************************************************************
 
 /*
  This CUDA function: 
@@ -1913,6 +2023,12 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 		screenShot();
 		return;
 	}
+	
+	if(key == GLFW_KEY_K && action == GLFW_PRESS) // BMW
+	{
+		centerObject();
+		return;
+	}
 }
 
 /*
@@ -2627,7 +2743,7 @@ void drawPicture()
 				
 				if(SimulationSwitch.DrawFrontHalfFlag == 1)
 				{
-					if(CenterOfSimulation.z - 0.001 < Node[i].position.z && CenterOfSimulation.z - 0.001 < Node[k].position.z)  // Only drawing the nodes in the front half.
+					if(CenterOfSimulation.z - 0.001 < Node[i].position.z && CenterOfSimulation.z - 0.001 < Node[k].position.z)  // Only drawing the muscle in the front half.
 					{
 						glColor3d(Muscle[muscleNumber].color.x, Muscle[muscleNumber].color.y, Muscle[muscleNumber].color.z);
 						glBegin(GL_LINES);
@@ -2949,7 +3065,7 @@ void movieOn()
 	{
 		// Standard presets keep a lighter encode while still scaling to the selected size.
 		sprintf(baseCommand, "ffmpeg -loglevel error -f rawvideo -pix_fmt rgba -s %dx%d -r 60 -i - "
-			"-c:v libx264 -pix_fmt yuv420p -profile:v high -level 4.0 -crf 14 -preset slow -tune film -threads 0 -movflags +faststart -y -vf \"scale=%d:%d,pad=%d:%d:%d:%d\" \"%s\"", 
+			"-c:v libx264 -pix_fmt yuv420p -profile:v high -level 4.0 -crf 14 -preset slow -tune film -threads 0 -movflags +faststart -y -vf \"scale=%d:%d,vflip,pad=%d:%d:%d:%d\" \"%s\"", 
 			CaptureWidth, CaptureHeight, targetWidth, targetHeight, outW, outH, padX, padY, ts.c_str());
 	}
 
@@ -3028,6 +3144,9 @@ void screenShot()
 */
 double findAverageRadiusOfLeftAtrium()
 {
+	float4 centerOfObject = findCenterOfObject();
+	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
+	
 	if(NumberOfNodes == 0)
 	{
 		printf("\n There seems to be no nodes to find the average radius of.");
@@ -3042,6 +3161,8 @@ double findAverageRadiusOfLeftAtrium()
 	averageRadius /= (double)NumberOfNodes;
 	printf("\n RadiusOfLeftAtrium = %f millimeters", averageRadius);
 	printf("\n LA radius has been set.\n");
+	
+	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
 	return(averageRadius);
 }
 
@@ -3153,7 +3274,7 @@ float4 findCenterOfObject()
 
 /*
  This function: 
- Centers the LA center and resets the center of the simulation to (0, 0, 0).
+ Centers the LA and resets the center of the simulation to (0, 0, 0).
 */
 void centerObject()
 {
@@ -3193,7 +3314,7 @@ int centerMouse(GLFWwindow* window, double* mx, double* my, double* mz)
 */
 void translateObject(float dx, float dy, float dz)
 {
-	copyNodesFromGPU();
+	//copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		Node[i].position.x += dx;
@@ -3217,7 +3338,7 @@ void rotateXAxis(float angle)
 	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
 	
 	float temp;
-	copyNodesFromGPU();
+	//copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp = cos(angle)*Node[i].position.y - sin(angle)*Node[i].position.z;
@@ -3225,7 +3346,6 @@ void rotateXAxis(float angle)
 		Node[i].position.y  = temp;
 	}
 	copyNodesToGPU();
-	AngleOfSimulation.x += angle;
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
 }
@@ -3240,7 +3360,7 @@ void rotateYAxis(float angle)
 	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
 	
 	float temp;
-	copyNodesFromGPU();
+	//copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp =  cos(-angle)*Node[i].position.x + sin(-angle)*Node[i].position.z;
@@ -3248,7 +3368,6 @@ void rotateYAxis(float angle)
 		Node[i].position.x  = temp;
 	}
 	copyNodesToGPU();
-	AngleOfSimulation.y += angle;
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
 }
@@ -3263,7 +3382,7 @@ void rotateZAxis(float angle)
 	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
 	
 	float temp;
-	copyNodesFromGPU();
+	//copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp = cos(angle)*Node[i].position.x - sin(angle)*Node[i].position.y;
@@ -3271,7 +3390,6 @@ void rotateZAxis(float angle)
 		Node[i].position.x  = temp;
 	}
 	copyNodesToGPU();
-	AngleOfSimulation.z += angle;
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
 }

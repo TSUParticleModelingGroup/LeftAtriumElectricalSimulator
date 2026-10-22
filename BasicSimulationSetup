@@ -11,11 +11,11 @@ Should be a 0 or a 1.
 Name of the files that holds the nodes and muscles. 
 
 Cactus.bin
-CW_MW_LAA.bin
+BMW_Test.bin
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = CW_MW_LAA.bin
+--InputFileName = BMW_Test.bin
 
 Name of previous run files that were stored in GitHub.
 test

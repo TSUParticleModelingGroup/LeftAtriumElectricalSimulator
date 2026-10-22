@@ -99,7 +99,7 @@ struct simulationSwitchesStructure
 	bool guiCollapsed; // for hotkey to collapse GUI
 };
 
-// Globals *******************************************************************************
+// ********************************************** Globals *******************************************************************************
 // Make sure any globals that are not initialized in one of the simulation setup files
 // (IntermediateSimulationSetup, BasicSimulationSetup) are save
 // when a simulation is saved in the previuos runs file.
@@ -160,13 +160,17 @@ int PulsePointNode = -1; // Set to -1 to flag it if it is used before it is set.
 // In the priority assignment the smaller number is the most important.
 // They are set here.
 const int TypeBachmannBundle = 1;
-const int TypePulmonaryVeins = 2;
+const int TypePulmonaryVeinLS = 2;
+const int TypePulmonaryVeinLI = 21;
+const int TypePulmonaryVeinRS = 22;
+const int TypePulmonaryVeinRI = 23;
 const int TypeBackWall = 3;
-const int TypeMitralValve = 4;
+const int TypeMitralValveOpening = 4;
 const int TypeAppendage = 5;
 const int TypeStandardLA = 6;
 const int TypeScarTissue = 7;
 const int TypeExtraTissue = 8;
+
 // This is not a tissue type it is where we initiate the beat.
 // The tissue type of the pulseNode is BacchannBundle 
 // This node just has the extra task of oracstrating the beat.
@@ -178,7 +182,7 @@ const int TypePulseNode = 100;
 const float4 ColorBachmannsBundle = {0.2f, 0.2f, 1.0f, 0.0f}; // Blue for Bachmann's Bundle nodes and muscles by default.
 const float4 ColorPulmonaryVeins = {1.0f, 0.4f, 0.7f, 0.0f}; // Pink for pulmonary veins nodes and muscles by default.
 const float4 ColorBackWall = {0.0f, 1.0f, 0.0f, 0.0f}; // Green for back wall nodes and muscles by default.
-const float4 ColorMitralValve = {0.5f, 0.0f, 0.5f, 0.0f}; // Purple for mitral valve nodes and muscles by default.
+const float4 ColorMitralValveOpening = {0.5f, 0.0f, 0.5f, 0.0f}; // Purple for mitral valve nodes and muscles by default.
 const float4 ColorAppendage = {1.0f, 0.8f, 0.3f, 0.0f}; // Orange for left atrial appendage nodes and muscles by default.
 const float4 ColorStandardLA = {1.0f, 0.0f, 0.0f, 0.0f}; // Red for standard nodes (to reduce contrast)
 const float4 ColorScarTissue = {0.6f, 0.6f, 0.6f, 0.0f}; // Gray for scar tissue nodes and muscles by default.
@@ -239,7 +243,7 @@ double RunTime = -1.0; // Set to -1.0 to flag it if it is used before it is set.
 // These keep track of where the view is as you zoom in and out and rotate.
 // These are initialized in setNodesAndMuscles.h/setRemainingParameters().
 float4 CenterOfSimulation;
-float4 AngleOfSimulation;
+//float4 AngleOfSimulation;
 
 // Window globals 
 // They are all initialized in main().
@@ -258,7 +262,7 @@ double UpX; // What up means to the viewer
 double UpY;
 double UpZ;
 	
-// Prototyping functions
+// ***************************** Prototyping functions *************************************************************************
 
 // Main *************************************************************************************
 int main(int, char**);
@@ -271,11 +275,23 @@ void saveRun();
 void uploadPreviousRun();
 
 // Setup Functions ***********************************************************************
-void setSimulationRunDefaults();
 void createNewRun();
+void setSimulationRunDefaults();
 void setRemainingParameters();
 void setupCudaEnvironment();
-void setRemainingNodeAndMuscleAttributes();
+void initializeAllNodesAndMuscles();
+void setPulseNode();
+void setBachmannsBundle();
+void setPulmonaryVeinLS();
+void setPulmonaryVeinLI();
+void setPulmonaryVeinRS();
+void setPulmonaryVeinRI();
+void setBackWall();
+void setMitralValveOpening();
+void setAppendage();
+void setScarTissue();
+void setExtraTissue();
+//void setRemainingNodeAndMuscleAttributes();
 
 // Function called to move the simulation forward in time. *************************************************
 void nBody(double);
