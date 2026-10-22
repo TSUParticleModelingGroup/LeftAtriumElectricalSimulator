@@ -30,6 +30,31 @@ Place the name of the previous run file you would like to execute here.
 
 Note: You will only read from a (nodes and muscle file) or a (previous run file), not both.
 
+Will you be using a conduction velocity vector in the left atrial appendage to simulate fiber direction?
+Note: If you enable this option, make sure the model you are running includes a mapped left atrial appendage (LAA). 
+This vector will be used to determine the direction of maximum conduction velocity.
+The first variable is a Boolean that indicates whether this feature is enabled.
+The second variable is a float that specifies the reduction factor for a muscle running perpendicular to this vector. 
+All other muscles will have their conduction velocities scaled between 1.0 and this value, depending on the angle 
+between the muscle and the vector.
+--UseLAApendageVelocityScaling ~ ###
+--MaxLAApendageVelocityReduction ~ ###
+
+Will you be using a conduction velocity vector in the left atrial body to simulate fiber direction?
+This vector will be used to determine the direction of maximum conduction velocity.
+The first variable is a Boolean that indicates whether this feature is enabled.
+The second variable is an integer that specifies the model type:
+1: Flat sheet
+2: Sphere
+3: Idealized model or anatomically accurate model generated from CT scans
+If you select model type 3, make sure the model has its pulmonary veins mapped.
+The third variable is a float that specifies the reduction factor for a muscle running perpendicular to this vector. 
+All other muscles will have their conduction velocities scaled between 1.0 and this value, 
+depending on the angle between the muscle and the vector.
+--UseLABodyVelocityScaling ~ ###
+--LABodyType ~ ###
+--MaxLABodyVelocityReduction ~ ###
+
 Connection line width for the lines that represent muscles connecting the nodes:
 1.0 to 3.0 works well for simulations with many nodes, and 5.0 to 10.0 is suitable for simulations with fewer nodes.
 It should be a float.
