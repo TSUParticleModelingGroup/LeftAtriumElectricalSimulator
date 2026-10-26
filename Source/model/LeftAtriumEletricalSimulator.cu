@@ -778,10 +778,18 @@ void createNewRun()
 	initializeAllNodesAndMuscles();
 	setPulseNode();
 	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle();
-	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVeinLS(numberOfPulmonaryVeinLSNodes);
-	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVeinLI(numberOfPulmonaryVeinLINodes);
-	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVeinRS(numberOfPulmonaryVeinRSNodes);
-	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVeinRI(numberOfPulmonaryVeinRINodes);
+	//setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCV, float endingCV, float startingRP, float endingRP, float transitionDistance)
+	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, 0.775, 0.625, 276.0, 214.0, 9.4);
+	
+	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, 0.01, 0.2, 0.1, 0.1, 10.0);
+	//if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, 0.930, 0.750, 263.0, 211.0, 6.6);
+	
+	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, 0.850, 0.650, 278.0, 228.0, 6.0);
+	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, 0.905, 0.735, 282.0, 226.0, 5.0);
+	//if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVeinLS(numberOfPulmonaryVeinLSNodes);
+	//if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVeinLI(numberOfPulmonaryVeinLINodes);
+	//if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVeinRS(numberOfPulmonaryVeinRSNodes);
+	//if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVeinRI(numberOfPulmonaryVeinRINodes);
 	if(numberOfBackWallNodes != 0) setBackWall();
 	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening();
 	if(numberOfAppendageNodes != 0) setAppendage();
@@ -957,31 +965,40 @@ void setBachmannsBundle()
 	}
 }
 
-void setPulmonaryVeinLS(int numberOfPVLSNodes)
+void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCV, float endingCV, float startingRP, float endingRP, float transitionDistance)
 {
 	struct nodeInfo
 	{
 	    int number;
 	    bool border;
+	    float distance;
+	    int order;
 	};
 	
-	nodeInfo PVLSNode[numberOfPVLSNodes];
+	int id, idA, idB;
 	
+	nodeInfo nodePV[numberOfPVNodes];
+	
+	// Finding all the boarder nodes
 	int k = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
-		if(Node[i].type == TypePulmonaryVeinLS)
+		if(Node[i].type == nodeType)
 		{
 			Node[i].isDrawNode = true;
 			
-			PVLSNode[k].number = i;
-			PVLSNode[k].border = false;
+			nodePV[k].number = i;
+			nodePV[k].border = false;
 			int j = 0;
-			while(Node[i].muscle[j] != -1)
+			while(Node[i].muscle[j] != -1 && j < MUSCLES_PER_NODE)
 			{
-				if(Node[Muscle[Node[i].muscle[j]].nodeA].type == TypeStandardLA || Node[Muscle[Node[i].muscle[j]].nodeB].type == TypeStandardLA) 
+				id = Node[i].muscle[j];
+				idA = Muscle[id].nodeA;
+				idB = Muscle[id].nodeB;
+				if(Node[idA].type == TypeStandardLA || Node[idB].type == TypeStandardLA) 
 				{
-					PVLSNode[k].border = true;
+					nodePV[k].border = true;
+					Node[nodePV[k].number].color = {0.0f, 1.0f, 0.902f, 0.0f};
 				}
 				j++;
 			}
@@ -989,126 +1006,106 @@ void setPulmonaryVeinLS(int numberOfPVLSNodes)
 		}
 	}
 	
-	for(int i = 0; i < numberOfPVLSNodes; i++)
+	// Finding the distance from a node to it's closest boarder node.
+	float dx, dy, dz, d2, minDis;
+	for(int i = 0; i < numberOfPVNodes; i++)
 	{
-		if(PVLSNode[i].border == true)
+		if(nodePV[i].border == false)
 		{
-			Node[PVLSNode[i].number].color = {0.0f, 1.0f, 0.902f, 0.0f};
+			minDis = FLOATMAX;
+			for(int j = 0; j < numberOfPVNodes; j++)
+			{
+				if(nodePV[j].border == true)
+				{
+					dx = Node[nodePV[j].number].position.x - Node[nodePV[i].number].position.x;
+					dy = Node[nodePV[j].number].position.y - Node[nodePV[i].number].position.y;
+					dz = Node[nodePV[j].number].position.z - Node[nodePV[i].number].position.z;
+					d2 = dx*dx + dy*dy + dz*dz;
+					if(d2 < minDis) minDis = d2; 
+				}
+			}
+			nodePV[i].distance = sqrt(minDis);
+			//if(3.0 < nodePV[i].distance) Node[nodePV[i].number].color = {0.2f, 1.0f, 0.0f, 0.0f};setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCV, float endingCV, float startingRP, float endingRP, float transitionDistance)
+		}
+		else
+		{
+			nodePV[i].distance = 0.0f;
+		}
+		nodePV[i].order = -1;
+	}
+	
+	// Finding a nodes order from the boarder.
+	k = 0;
+	while(k < numberOfPVNodes)
+	{
+		for(int i = 0; i < numberOfPVNodes; i++)
+		{
+			if(nodePV[i].order == -1)
+			{
+				bool test = true;
+				int j = 0;
+				while(test == true && j < numberOfPVNodes)
+				{
+					if(nodePV[j].order == -1 && nodePV[j].distance < nodePV[i].distance) test = false;
+					j++;
+				}
+				if(test == true) 
+				{
+					nodePV[i].order = k;
+					k++;
+				}
+			}
 		}
 	}
 	
-	float PulmonaryVeinLSMultiplier = 0.5; // BMW should go in setup
-	for(int i = 0; i < NumberOfMuscles; i++)
+	// Ordering the nodes.
+	nodeInfo tempNode;
+	k = 0;
+	while(k < numberOfPVNodes)
 	{
-		if(Muscle[i].type == TypePulmonaryVeinLS)
+		for(int i = 0; i < numberOfPVNodes; i++)
 		{
-			Muscle[i].conductionVelocity *= PulmonaryVeinLSMultiplier;
-			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+			if(nodePV[i].order == k) 
+			{
+				tempNode = nodePV[k];
+				nodePV[k] = nodePV[i];
+				nodePV[i] = tempNode;
+				break;
+			}
 		}
+		k++;
+	}
+	
+	// Setting the nodes' muscle conduction velocity and refractory period.
+	float slopeCV = (endingCV - startingCV)/transitionDistance;
+	float slopeRP = (endingRP - startingRP)/transitionDistance;
+	for(int i = 0; i < numberOfPVNodes; i++)
+	{
+		if(nodePV[i].distance <= transitionDistance)
+		{
+			for(int j = 0; j < MUSCLES_PER_NODE; j++)
+			{
+				id = Node[nodePV[i].number].muscle[j];
+				if(id != -1)
+				{
+					Muscle[id].conductionVelocity = slopeCV*nodePV[i].distance + startingCV;
+					Muscle[id].conductionDuration = Muscle[id].naturalLength/Muscle[id].conductionVelocity;
+					Muscle[id].refractoryPeriod = slopeRP*nodePV[i].distance + startingRP;
+				}
+			}
+		}
+		else
+		{
+			id = nodePV[i].number;
+			Node[id].isAblated = true;
+			Node[id].color = {1.0f, 1.0f, 1.0f, 0.0f};
+		}
+		//printf("\n nodePV[%d].order = %d nodePV[%d].distance = %f", i, nodePV[i].order, i, nodePV[i].distance); 
 	}
 }
 
-void setPulmonaryVeinLI(int numberOfPVLINodes)
-{
-	struct nodeInfo
-	{
-	    int number;
-	    bool border;
-	};
-	
-	nodeInfo PVLINode[numberOfPVLINodes];
-	
-	int k = 0;
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		if(Node[i].type == TypePulmonaryVeinLI)
-		{
-			Node[i].isDrawNode = true;
-			
-			PVLINode[k].number = i;
-			PVLINode[k].border = false;
-			int j = 0;
-			while(Node[i].muscle[j] != -1)
-			{
-				if(Node[Muscle[Node[i].muscle[j]].nodeA].type == TypeStandardLA || Node[Muscle[Node[i].muscle[j]].nodeB].type == TypeStandardLA) 
-				{
-					PVLINode[k].border = true;
-				}
-				j++;
-			}
-			k++;
-		}
-	}
-	
-	for(int i = 0; i < numberOfPVLINodes; i++)
-	{
-		if(PVLINode[i].border == true)
-		{
-			Node[PVLINode[i].number].color = {0.0f, 1.0f, 0.902f, 0.0f};
-		}
-	}
-	
-	float PulmonaryVeinLIMultiplier = 0.5; // BMW should go in setup
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{
-		if(Muscle[i].type == TypePulmonaryVeinLI)
-		{
-			Muscle[i].conductionVelocity *= PulmonaryVeinLIMultiplier;
-			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
-		}
-	}
-}
 
-void setPulmonaryVeinRS(int numberOfPVRSNodes)
-{
-	struct nodeInfo
-	{
-	    int number;
-	    bool border;
-	};
-	
-	nodeInfo PVRSNode[numberOfPVRSNodes];
-	
-	int k = 0;
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		if(Node[i].type == TypePulmonaryVeinRS)
-		{
-			Node[i].isDrawNode = true;
-			
-			PVRSNode[k].number = i;
-			PVRSNode[k].border = false;
-			int j = 0;
-			while(Node[i].muscle[j] != -1)
-			{
-				if(Node[Muscle[Node[i].muscle[j]].nodeA].type == TypeStandardLA || Node[Muscle[Node[i].muscle[j]].nodeB].type == TypeStandardLA) 
-				{
-					PVRSNode[k].border = true;
-				}
-				j++;
-			}
-			k++;
-		}
-	}
-	
-	for(int i = 0; i < numberOfPVRSNodes; i++)
-	{
-		if(PVRSNode[i].border == true)
-		{
-			Node[PVRSNode[i].number].color = {0.0f, 1.0f, 0.902f, 0.0f};
-		}
-	}
-	
-	float PulmonaryVeinRSMultiplier = 0.5; // BMW should go in setup
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{
-		if(Muscle[i].type == TypePulmonaryVeinRS)
-		{
-			Muscle[i].conductionVelocity *= PulmonaryVeinRSMultiplier;
-			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
-		}
-	}
-}
+/*
 
 void setPulmonaryVeinRI(int numberOfPVRINodes)
 {
@@ -1160,6 +1157,8 @@ void setPulmonaryVeinRI(int numberOfPVRINodes)
 		}
 	}
 }
+*/
+
 
 void setBackWall()
 {
@@ -3337,7 +3336,6 @@ void checkMuscle(int muscleId)
 	 	printf("\n Muscle %d will be disabled. \n", muscleId);
 	 	Muscle[muscleId].isEnabled = false;
 	 	Muscle[muscleId].color.x = DeadColor.x;
-
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
 		Muscle[muscleId].color.w = 1.0;
