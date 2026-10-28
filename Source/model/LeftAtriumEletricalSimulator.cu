@@ -776,16 +776,58 @@ void createNewRun()
 	}
 	
 	initializeAllNodesAndMuscles();
+	
 	setPulseNode();
-	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle();
-	// These numbers are CVstart, CVfinish, RPstart, RPfinish, Length of trnsition.
-	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, 0.775, 0.625, 276.0, 214.0, 9.4); 
-	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, 0.930, 0.750, 263.0, 211.0, 6.6);
-	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, 0.850, 0.650, 278.0, 228.0, 6.0);
-	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, 0.905, 0.735, 282.0, 226.0, 5.0);
-	if(numberOfBackWallNodes != 0) setBackWall();
+	
+	// These will go in the setup file. BMW
+	float CVMultiplierBachmannBundle = 0.935f/BaseMuscleConductionVelocity;
+	float RPMultiplierBachmannBundle = 200.0f/BaseMuscleRefractoryPeriod;
+	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle(CVMultiplierBachmannBundle, RPMultiplierBachmannBundle);
+	
+	// These will go in the setup file. BMW
+	float StartingCVMultiplierLSPV = 0.775f/BaseMuscleConductionVelocity;
+	float EndingCVMultiplierLSPV = 0.625f/BaseMuscleConductionVelocity;
+	float StartingRPMultiplierLSPV = 276.0f/BaseMuscleRefractoryPeriod;
+	float EndingRPMultiplierLSPV = 214.0f/BaseMuscleRefractoryPeriod;
+	float TransitionLengthLSPV = 9.4f;
+	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, StartingCVMultiplierLSPV, EndingCVMultiplierLSPV, StartingRPMultiplierLSPV, EndingRPMultiplierLSPV, TransitionLengthLSPV); 
+	
+	// These will go in the setup file. BMW
+	float StartingCVMultiplierLIPV = 0.930f/BaseMuscleConductionVelocity;
+	float EndingCVMultiplierLIPV = 0.750f/BaseMuscleConductionVelocity;
+	float StartingRPMultiplierLIPV = 263.0f/BaseMuscleRefractoryPeriod;
+	float EndingRPMultiplierLIPV = 211.0f/BaseMuscleRefractoryPeriod;
+	float TransitionLengthLIPV = 6.6f;
+	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, StartingCVMultiplierLIPV, EndingCVMultiplierLIPV, StartingRPMultiplierLIPV, EndingRPMultiplierLIPV, TransitionLengthLIPV);
+	
+	// These will go in the setup file. BMW
+	float StartingCVMultiplierRSPV = 0.850f/BaseMuscleConductionVelocity;
+	float EndingCVMultiplierRSPV = 0.650f/BaseMuscleConductionVelocity;
+	float StartingRPMultiplierRSPV = 278.0f/BaseMuscleRefractoryPeriod;
+	float EndingRPMultiplierRSPV = 228.0f/BaseMuscleRefractoryPeriod;
+	float TransitionLengthRSPV = 6.0f;
+	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, StartingCVMultiplierRSPV, EndingCVMultiplierRSPV, StartingRPMultiplierRSPV, EndingRPMultiplierRSPV, TransitionLengthRSPV);
+	
+	// These will go in the setup file. BMW
+	float StartingCVMultiplierRIPV = 0.905f/BaseMuscleConductionVelocity;
+	float EndingCVMultiplierRIPV = 0.735f/BaseMuscleConductionVelocity;
+	float StartingRPMultiplierRIPV = 282.0f/BaseMuscleRefractoryPeriod;
+	float EndingRPMultiplierRIPV = 226.0f/BaseMuscleRefractoryPeriod;
+	float TransitionLengthRIPV = 5.0f;
+	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, StartingCVMultiplierRIPV, EndingCVMultiplierRIPV, StartingRPMultiplierRIPV, EndingRPMultiplierRIPV, TransitionLengthRIPV);
+	
+	// These will go in the setup file. BMW
+	float CVMultiplierBackWall = 1.1f/BaseMuscleConductionVelocity;
+	float RPMultiplierBackWall = 265.0f/BaseMuscleRefractoryPeriod;
+	if(numberOfBackWallNodes != 0) setBackWall(CVMultiplierBackWall, RPMultiplierBackWall);
+	
 	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening();
-	if(numberOfAppendageNodes != 0) setAppendage();
+	
+	// These will go in the setup file. BMW
+	float CVMultiplierAppendage = 0.55f/BaseMuscleConductionVelocity;
+	float RPMultiplierAppendage = 210.0f/BaseMuscleRefractoryPeriod;
+	if(numberOfAppendageNodes != 0) setAppendage(CVMultiplierAppendage, RPMultiplierAppendage);
+	
 	if(numberOfScarTissueNodes != 0) setScarTissue();
 	if(numberOfExtraTissueNodes != 0) setExtraTissue();
 	
@@ -938,7 +980,7 @@ void setPulseNode()
 	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
 }
 
-void setBachmannsBundle()
+void setBachmannsBundle(float multiplierCV, float multiplierRP)
 {
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
@@ -947,18 +989,21 @@ void setBachmannsBundle()
 			Node[i].isDrawNode = true;
 		}
 	}
-	BachmannsBundleMultiplier = 10.0; // BMW overwriting setup
+	
+	//BachmannsBundleMultiplier = 10.0; // BMW overwriting setup
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		if(Muscle[i].type == TypeBachmannBundle)
 		{	
-			Muscle[i].conductionVelocity *= BachmannsBundleMultiplier;
+			Muscle[i].conductionVelocity *= multiplierCV;
 			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+			
+			Muscle[i].refractoryPeriod *= multiplierRP;
 		}
 	}
 }
 
-void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCV, float endingCV, float startingRP, float endingRP, float transitionDistance)
+void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultiplier, float endingCVMultiplier, float startingRPMultiplier, float endingRPMultiplier, float transitionDistance)
 {
 	struct nodeInfo
 	{
@@ -967,12 +1012,6 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCV, float
 	    float distance;
 	    int order;
 	};
-	
-	float startingCVMultiplier = startingCV/BaseMuscleConductionVelocity;
-	float endingCVMultiplier = endingCV/BaseMuscleConductionVelocity;
-	
-	float startingRPMultiplier = startingRP/BaseMuscleRefractoryPeriod;
-	float endingRPMultiplier = endingRP/BaseMuscleRefractoryPeriod;
 	
 	int id, idA, idB;
 	
@@ -1104,7 +1143,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCV, float
 	}
 }
 
-void setBackWall()
+void setBackWall(float multiplierCV, float multiplierRP)
 {
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
@@ -1118,7 +1157,10 @@ void setBackWall()
 	{
 		if(Muscle[i].type == TypeBackWall)
 		{
-			// Currently we are doing nothing with the back wall.
+			Muscle[i].conductionVelocity *= multiplierCV;
+			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+			
+			Muscle[i].refractoryPeriod *= multiplierRP;
 		}
 	}
 }
@@ -1144,7 +1186,7 @@ void setMitralValveOpening()
 	}
 }
 
-void setAppendage()
+void setAppendage(float multiplierCV, float multiplierRP)
 {
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
@@ -1155,7 +1197,6 @@ void setAppendage()
 	}
 	
 	// Should put fiber direction off of vector running down the center of the LAA. BMW
-	float AppendageMultiplier = 0.5; // BMW should go in setup
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		if(Muscle[i].type == TypeAppendage)
@@ -1164,11 +1205,15 @@ void setAppendage()
 			{
 				// This is a transition muscle with one end connected to a LA node and the other connected to a LAA node.
 				// We will give it a value that is half way between the LA and the LAA value.
-				Muscle[i].conductionVelocity *= ((1.0f + AppendageMultiplier)/2.0f);
+				Muscle[i].conductionVelocity *= ((1.0f + multiplierCV)/2.0f);
 				Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+				
+				Muscle[i].refractoryPeriod *= ((1.0f + multiplierRP)/2.0f);
 			}
-			Muscle[i].conductionVelocity *= AppendageMultiplier;
+			Muscle[i].conductionVelocity *= multiplierCV;
 			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+			
+			Muscle[i].refractoryPeriod *= multiplierRP;
 		}
 	}
 }
