@@ -261,6 +261,11 @@ double CenterZ;
 double UpX; // What up means to the viewer
 double UpY;
 double UpZ;
+
+float4 CenterPVLS;
+float4 CenterPVLI;
+float4 CenterPVRS;
+float4 CenterPVRI;
 	
 // ***************************** Prototyping functions *************************************************************************
 
@@ -282,7 +287,6 @@ void setupCudaEnvironment();
 void initializeAllNodesAndMuscles();
 void setPulseNode();
 void setBachmannsBundle(float, float);
-//void setPulmonaryVein(int, int, float, float, float);
 void setPulmonaryVein(int, int, float, float, float, float, float);
 void setBackWall(float, float);
 void setMitralValveOpening();
@@ -303,7 +307,6 @@ void copyNodesMusclesToGPU();
 void copyNodesMusclesFromGPU();
 void copyNodesFromGPU();
 void copyNodesToGPU();
-
 // Gui functions ****************************************************************************
 void createGUI();
 void ShowIdentifiedNodesBox();
@@ -355,4 +358,7 @@ void showMuscleTypes();
  void rotateYAxis(float);
  void rotateZAxis(float);
  string getTimeStamp();
-	
+ float4 crossProduct(float4, float4);
+ float dotProduct(float4, float4);
+ float4 addFloat4(float4, float4);
+ float4 subtractFloat4(float4, float4);

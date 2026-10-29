@@ -929,7 +929,7 @@ void setupCudaEnvironment()
 	BlockMuscles.x = BLOCKMUSCLES;
 	BlockMuscles.y = 1;
 	BlockMuscles.z = 1;
-	
+
 	GridMuscles.x = (NumberOfMuscles - 1)/BlockMuscles.x + 1;
 	GridMuscles.y = 1;
 	GridMuscles.z = 1;
@@ -957,7 +957,7 @@ void initializeAllNodesAndMuscles()
 		
 		// Setting the muscles conduction duration (How long it takes for a signal to travel across the muscle).
 		Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
-		
+	
 		// Setting the muscle's refractory period.
 		stddev = MuscleRefractoryPeriodSTD;
 		left = -MuscleRefractoryPeriodSTD;
@@ -1012,10 +1012,11 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	    float distance;
 	    int order;
 	};
-	
-	int id, idA, idB;
-	
 	nodeInfo nodePV[numberOfPVNodes];
+	int id, idA, idB;
+	int numberOfBorderNodes =0;
+	
+	
 	
 	// Finding all the boarder nodes
 	int k = 0;
@@ -1037,6 +1038,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 				{
 					nodePV[k].border = true;
 					Node[nodePV[k].number].color = {0.0f, 1.0f, 0.902f, 0.0f};
+					numberOfBorderNodes++;
 				}
 				j++;
 			}
@@ -1141,6 +1143,23 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 		}
 		//printf("\n nodePV[%d].order = %d nodePV[%d].distance = %f", i, nodePV[i].order, i, nodePV[i].distance); 
 	}
+	
+	float4 center = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < numberOfBorderNodes; i++)
+	{
+		center.x += Node[nodePV[i].number].position.x;
+		center.y += Node[nodePV[i].number].position.y;
+		center.z += Node[nodePV[i].number].position.z;
+	}
+	center.x /= numberOfBorderNodes;
+	center.y /= numberOfBorderNodes;
+	center.z /= numberOfBorderNodes;
+	center.w = 0.0f;
+	
+	if(nodeType == TypePulmonaryVeinLS) CenterPVLS = center;
+	if(nodeType == TypePulmonaryVeinLI) CenterPVLI = center;
+	if(nodeType == TypePulmonaryVeinRS) CenterPVRS = center;
+	if(nodeType == TypePulmonaryVeinRI) CenterPVRI = center;
 }
 
 void setBackWall(float multiplierCV, float multiplierRP)
@@ -2796,6 +2815,31 @@ void drawPicture()
 		glPopMatrix();
 	}
 	
+	glColor3d(0.0,1.0,1.0);
+	glPushMatrix();
+		glTranslatef(CenterPVLS.x, CenterPVLS.y, CenterPVLS.z);
+		renderSphereVBO();
+	glPopMatrix();
+	
+	glColor3d(0.0,1.0,1.0);
+	glPushMatrix();
+		glTranslatef(CenterPVLI.x, CenterPVLI.y, CenterPVLI.z);
+		renderSphereVBO();
+	glPopMatrix();
+	
+	glColor3d(0.0,1.0,1.0);
+	glPushMatrix();
+		glTranslatef(CenterPVRS.x, CenterPVRS.y, CenterPVRS.z);
+		renderSphereVBO();
+	glPopMatrix();
+	
+	glColor3d(0.0,1.0,1.0);
+	glPushMatrix();
+		glTranslatef(CenterPVRI.x, CenterPVRI.y, CenterPVRI.z);
+		renderSphereVBO();
+	glPopMatrix();
+	
+	
 	// Drawing nodes
 	if(SimulationSwitch.DrawNodesFlag == 1 || SimulationSwitch.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
 	{
@@ -3454,6 +3498,11 @@ void translateObject(float dx, float dy, float dz)
 	CenterOfSimulation.x += dx;
 	CenterOfSimulation.y += dy;
 	CenterOfSimulation.z += dz;
+	
+	CenterPVLS.x += dx; CenterPVLS.y += dy; CenterPVLS.z += dz;
+	CenterPVLI.x += dx; CenterPVLI.y += dy; CenterPVLI.z += dz;
+	CenterPVRS.x += dx; CenterPVRS.y += dy; CenterPVRS.z += dz;
+	CenterPVRI.x += dx; CenterPVRI.y += dy; CenterPVRI.z += dz;
 }
 
 /*
@@ -3476,6 +3525,32 @@ void rotateXAxis(float angle)
 	copyNodesToGPU();
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
+	
+	CenterPVLS = subtractFloat4(CenterPVLS, centerOfObject);
+	CenterPVLI = subtractFloat4(CenterPVLI, centerOfObject);
+	CenterPVRS = subtractFloat4(CenterPVRS, centerOfObject);
+	CenterPVRI = subtractFloat4(CenterPVRI, centerOfObject);
+	
+	temp = cos(angle)*CenterPVLS.y - sin(angle)*CenterPVLS.z;
+	CenterPVLS.z  = sin(angle)*CenterPVLS.y + cos(angle)*CenterPVLS.z;
+	CenterPVLS.y  = temp;
+	
+	temp = cos(angle)*CenterPVLI.y - sin(angle)*CenterPVLI.z;
+	CenterPVLI.z  = sin(angle)*CenterPVLI.y + cos(angle)*CenterPVLI.z;
+	CenterPVLI.y  = temp;
+	
+	temp = cos(angle)*CenterPVRS.y - sin(angle)*CenterPVRS.z;
+	CenterPVRS.z  = sin(angle)*CenterPVRS.y + cos(angle)*CenterPVRS.z;
+	CenterPVRS.y  = temp;
+	
+	temp = cos(angle)*CenterPVRI.y - sin(angle)*CenterPVRI.z;
+	CenterPVRI.z  = sin(angle)*CenterPVRI.y + cos(angle)*CenterPVRI.z;
+	CenterPVRI.y  = temp;
+		
+	CenterPVLS = addFloat4(CenterPVLS, centerOfObject);
+	CenterPVLI = addFloat4(CenterPVLI, centerOfObject);
+	CenterPVRS = addFloat4(CenterPVRS, centerOfObject);
+	CenterPVRI = addFloat4(CenterPVRI, centerOfObject);
 }
 
 /*
@@ -3498,6 +3573,32 @@ void rotateYAxis(float angle)
 	copyNodesToGPU();
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
+	
+	CenterPVLS = subtractFloat4(CenterPVLS, centerOfObject);
+	CenterPVLI = subtractFloat4(CenterPVLI, centerOfObject);
+	CenterPVRS = subtractFloat4(CenterPVRS, centerOfObject);
+	CenterPVRI = subtractFloat4(CenterPVRI, centerOfObject);
+	
+	temp =  cos(-angle)*CenterPVLS.x + sin(-angle)*CenterPVLS.z;
+	CenterPVLS.z  = -sin(-angle)*CenterPVLS.x + cos(-angle)*CenterPVLS.z;
+	CenterPVLS.x  = temp;
+	
+	temp =  cos(-angle)*CenterPVLI.x + sin(-angle)*CenterPVLI.z;
+	CenterPVLI.z  = -sin(-angle)*CenterPVLI.x + cos(-angle)*CenterPVLI.z;
+	CenterPVLI.x  = temp;
+	
+	temp =  cos(-angle)*CenterPVRS.x + sin(-angle)*CenterPVRS.z;
+	CenterPVRS.z  = -sin(-angle)*CenterPVRS.x + cos(-angle)*CenterPVRS.z;
+	CenterPVRS.x  = temp;
+	
+	temp =  cos(-angle)*CenterPVRI.x + sin(-angle)*CenterPVRI.z;
+	CenterPVRI.z  = -sin(-angle)*CenterPVRI.x + cos(-angle)*CenterPVRI.z;
+	CenterPVRI.x  = temp;
+		
+	CenterPVLS = addFloat4(CenterPVLS, centerOfObject);
+	CenterPVLI = addFloat4(CenterPVLI, centerOfObject);
+	CenterPVRS = addFloat4(CenterPVRS, centerOfObject);
+	CenterPVRI = addFloat4(CenterPVRI, centerOfObject);
 }
 
 /*
@@ -3520,6 +3621,32 @@ void rotateZAxis(float angle)
 	copyNodesToGPU();
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
+	
+	CenterPVLS = subtractFloat4(CenterPVLS, centerOfObject);
+	CenterPVLI = subtractFloat4(CenterPVLI, centerOfObject);
+	CenterPVRS = subtractFloat4(CenterPVRS, centerOfObject);
+	CenterPVRI = subtractFloat4(CenterPVRI, centerOfObject);
+	
+	temp = cos(angle)*CenterPVLS.x - sin(angle)*CenterPVLS.y;
+	CenterPVLS.y  = sin(angle)*CenterPVLS.x + cos(angle)*CenterPVLS.y;
+	CenterPVLS.x  = temp;
+	
+	temp = cos(angle)*CenterPVLI.x - sin(angle)*CenterPVLI.y;
+	CenterPVLI.y  = sin(angle)*CenterPVLI.x + cos(angle)*CenterPVLI.y;
+	CenterPVLI.x  = temp;
+	
+	temp = cos(angle)*CenterPVRS.x - sin(angle)*CenterPVRS.y;
+	CenterPVRS.y  = sin(angle)*CenterPVRS.x + cos(angle)*CenterPVRS.y;
+	CenterPVRS.x  = temp;
+	
+	temp = cos(angle)*CenterPVRI.x - sin(angle)*CenterPVRI.y;
+	CenterPVRI.y  = sin(angle)*CenterPVRI.x + cos(angle)*CenterPVRI.y;
+	CenterPVRI.x  = temp;
+		
+	CenterPVLS = addFloat4(CenterPVLS, centerOfObject);
+	CenterPVLI = addFloat4(CenterPVLI, centerOfObject);
+	CenterPVRS = addFloat4(CenterPVRS, centerOfObject);
+	CenterPVRI = addFloat4(CenterPVRI, centerOfObject);
 }
 
 /*
@@ -3559,6 +3686,47 @@ string getTimeStamp()
 	}
 
 	return timeStamp;
+}
+
+float4 crossProduct(float4 v1, float4 v2)
+{
+	float4 v;
+	v.x = v1.y*v2.z - v1.z*v2.y;
+	v.y = -(v1.x*v2.z - v1.z*v2.x);
+	v.z = v1.x*v2.y - v1.y*v2.x;
+	v.w = 0.0f;
+	return(v);
+}
+
+float dotProduct(float4 v1, float4 v2)
+{
+	float a;
+	a = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+	return(a);
+}
+
+float4 addFloat4(float4 a, float4 b)
+{
+    float4 result;
+
+    result.x = a.x + b.x;
+    result.y = a.y + b.y;
+    result.z = a.z + b.z;
+    result.w = a.w + b.w;
+
+    return result;
+}
+
+float4 subtractFloat4(float4 a, float4 b)
+{
+    float4 result;
+
+    result.x = a.x - b.x;
+    result.y = a.y - b.y;
+    result.z = a.z - b.z;
+    result.w = a.w - b.w;
+
+    return result;
 }
 
 
