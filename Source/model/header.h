@@ -223,6 +223,38 @@ float4 RepolarizingColor;
 float4 RelativeRepolarizingColor;
 float4 DeadColor;
 
+
+// These will go in the advanced setup file. BMW
+float CVMultiplierBachmannBundle;
+float RPMultiplierBachmannBundle;
+float StartingCVMultiplierLSPV;
+float EndingCVMultiplierLSPV;
+float StartingRPMultiplierLSPV;
+float EndingRPMultiplierLSPV;
+float TransitionLengthLSPV;
+float StartingCVMultiplierLIPV;
+float EndingCVMultiplierLIPV;
+float StartingRPMultiplierLIPV;
+float EndingRPMultiplierLIPV;
+float TransitionLengthLIPV;
+float StartingCVMultiplierRSPV;
+float EndingCVMultiplierRSPV;
+float StartingRPMultiplierRSPV;
+float EndingRPMultiplierRSPV;
+float TransitionLengthRSPV;
+float StartingCVMultiplierRIPV;
+float EndingCVMultiplierRIPV;
+float StartingRPMultiplierRIPV;
+float EndingRPMultiplierRIPV;
+float TransitionLengthRIPV;
+float CVMultiplierBackWall;
+float RPMultiplierBackWall;
+float CVMultiplierAppendage;
+float RPMultiplierAppendage;
+	
+	
+
+
 // This will hold the radius of the left atrium which we will use to scale the size of everything in the simulation.
 // It is calculated in setNodesAndMuscles.h/findRadiusAndMassOfLeftAtrium().
 // *** Should be stored if a runfile is saved.
@@ -262,10 +294,7 @@ double UpX; // What up means to the viewer
 double UpY;
 double UpZ;
 
-float4 CenterPVLS;
-float4 CenterPVLI;
-float4 CenterPVRS;
-float4 CenterPVRI;
+float4 OtherPoints[20];
 	
 // ***************************** Prototyping functions *************************************************************************
 
@@ -284,13 +313,14 @@ void createNewRun();
 void setSimulationRunDefaults();
 void setRemainingParameters();
 void setupCudaEnvironment();
+void boarderCleaning();
 void initializeAllNodesAndMuscles();
 void setPulseNode();
 void setBachmannsBundle(float, float);
 void setPulmonaryVein(int, int, float, float, float, float, float);
 void setBackWall(float, float);
 void setMitralValveOpening();
-void setAppendage(float, float);
+void setAppendage(int, float, float);
 void setScarTissue();
 void setExtraTissue();
 //void setRemainingNodeAndMuscleAttributes();

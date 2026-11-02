@@ -734,7 +734,8 @@ void createNewRun()
 	setSimulationRunDefaults();
 	readNodesAndMusclesFromBinaryFile();
 	//setRemainingNodeAndMuscleAttributes();
-	
+	boarderCleaning();
+	// BMW need to set the muscles here. Copy the code over from the mapper. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	setupCudaEnvironment();
 	copyNodesMusclesToGPU();
 	centerObject();
@@ -780,53 +781,53 @@ void createNewRun()
 	setPulseNode();
 	
 	// These will go in the setup file. BMW
-	float CVMultiplierBachmannBundle = 0.935f/BaseMuscleConductionVelocity;
-	float RPMultiplierBachmannBundle = 200.0f/BaseMuscleRefractoryPeriod;
+	CVMultiplierBachmannBundle = 0.935f/BaseMuscleConductionVelocity;
+	RPMultiplierBachmannBundle = 200.0f/BaseMuscleRefractoryPeriod;
 	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle(CVMultiplierBachmannBundle, RPMultiplierBachmannBundle);
 	
 	// These will go in the setup file. BMW
-	float StartingCVMultiplierLSPV = 0.775f/BaseMuscleConductionVelocity;
-	float EndingCVMultiplierLSPV = 0.625f/BaseMuscleConductionVelocity;
-	float StartingRPMultiplierLSPV = 276.0f/BaseMuscleRefractoryPeriod;
-	float EndingRPMultiplierLSPV = 214.0f/BaseMuscleRefractoryPeriod;
-	float TransitionLengthLSPV = 9.4f;
+	StartingCVMultiplierLSPV = 0.775f/BaseMuscleConductionVelocity;
+	EndingCVMultiplierLSPV = 0.625f/BaseMuscleConductionVelocity;
+	StartingRPMultiplierLSPV = 276.0f/BaseMuscleRefractoryPeriod;
+	EndingRPMultiplierLSPV = 214.0f/BaseMuscleRefractoryPeriod;
+	TransitionLengthLSPV = 9.4f;
 	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, StartingCVMultiplierLSPV, EndingCVMultiplierLSPV, StartingRPMultiplierLSPV, EndingRPMultiplierLSPV, TransitionLengthLSPV); 
 	
 	// These will go in the setup file. BMW
-	float StartingCVMultiplierLIPV = 0.930f/BaseMuscleConductionVelocity;
-	float EndingCVMultiplierLIPV = 0.750f/BaseMuscleConductionVelocity;
-	float StartingRPMultiplierLIPV = 263.0f/BaseMuscleRefractoryPeriod;
-	float EndingRPMultiplierLIPV = 211.0f/BaseMuscleRefractoryPeriod;
-	float TransitionLengthLIPV = 6.6f;
+	StartingCVMultiplierLIPV = 0.930f/BaseMuscleConductionVelocity;
+	EndingCVMultiplierLIPV = 0.750f/BaseMuscleConductionVelocity;
+	StartingRPMultiplierLIPV = 263.0f/BaseMuscleRefractoryPeriod;
+	EndingRPMultiplierLIPV = 211.0f/BaseMuscleRefractoryPeriod;
+	TransitionLengthLIPV = 6.6f;
 	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, StartingCVMultiplierLIPV, EndingCVMultiplierLIPV, StartingRPMultiplierLIPV, EndingRPMultiplierLIPV, TransitionLengthLIPV);
 	
 	// These will go in the setup file. BMW
-	float StartingCVMultiplierRSPV = 0.850f/BaseMuscleConductionVelocity;
-	float EndingCVMultiplierRSPV = 0.650f/BaseMuscleConductionVelocity;
-	float StartingRPMultiplierRSPV = 278.0f/BaseMuscleRefractoryPeriod;
-	float EndingRPMultiplierRSPV = 228.0f/BaseMuscleRefractoryPeriod;
-	float TransitionLengthRSPV = 6.0f;
+	StartingCVMultiplierRSPV = 0.850f/BaseMuscleConductionVelocity;
+	EndingCVMultiplierRSPV = 0.650f/BaseMuscleConductionVelocity;
+	StartingRPMultiplierRSPV = 278.0f/BaseMuscleRefractoryPeriod;
+	EndingRPMultiplierRSPV = 228.0f/BaseMuscleRefractoryPeriod;
+	TransitionLengthRSPV = 6.0f;
 	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, StartingCVMultiplierRSPV, EndingCVMultiplierRSPV, StartingRPMultiplierRSPV, EndingRPMultiplierRSPV, TransitionLengthRSPV);
 	
 	// These will go in the setup file. BMW
-	float StartingCVMultiplierRIPV = 0.905f/BaseMuscleConductionVelocity;
-	float EndingCVMultiplierRIPV = 0.735f/BaseMuscleConductionVelocity;
-	float StartingRPMultiplierRIPV = 282.0f/BaseMuscleRefractoryPeriod;
-	float EndingRPMultiplierRIPV = 226.0f/BaseMuscleRefractoryPeriod;
-	float TransitionLengthRIPV = 5.0f;
+	StartingCVMultiplierRIPV = 0.905f/BaseMuscleConductionVelocity;
+	EndingCVMultiplierRIPV = 0.735f/BaseMuscleConductionVelocity;
+	StartingRPMultiplierRIPV = 282.0f/BaseMuscleRefractoryPeriod;
+	EndingRPMultiplierRIPV = 226.0f/BaseMuscleRefractoryPeriod;
+	TransitionLengthRIPV = 5.0f;
 	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, StartingCVMultiplierRIPV, EndingCVMultiplierRIPV, StartingRPMultiplierRIPV, EndingRPMultiplierRIPV, TransitionLengthRIPV);
 	
 	// These will go in the setup file. BMW
-	float CVMultiplierBackWall = 1.1f/BaseMuscleConductionVelocity;
-	float RPMultiplierBackWall = 265.0f/BaseMuscleRefractoryPeriod;
+	CVMultiplierBackWall = 1.1f/BaseMuscleConductionVelocity;
+	RPMultiplierBackWall = 265.0f/BaseMuscleRefractoryPeriod;
 	if(numberOfBackWallNodes != 0) setBackWall(CVMultiplierBackWall, RPMultiplierBackWall);
 	
 	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening();
 	
 	// These will go in the setup file. BMW
-	float CVMultiplierAppendage = 0.55f/BaseMuscleConductionVelocity;
-	float RPMultiplierAppendage = 210.0f/BaseMuscleRefractoryPeriod;
-	if(numberOfAppendageNodes != 0) setAppendage(CVMultiplierAppendage, RPMultiplierAppendage);
+	CVMultiplierAppendage = 0.55f/BaseMuscleConductionVelocity;
+	RPMultiplierAppendage = 210.0f/BaseMuscleRefractoryPeriod;
+	if(numberOfAppendageNodes != 0) setAppendage(numberOfAppendageNodes, CVMultiplierAppendage, RPMultiplierAppendage);
 	
 	if(numberOfScarTissueNodes != 0) setScarTissue();
 	if(numberOfExtraTissueNodes != 0) setExtraTissue();
@@ -835,6 +836,8 @@ void createNewRun()
 	{	
 		checkMuscle(i);
 	}
+	
+	copyNodesMusclesToGPU();
 }
 
 /*
@@ -862,6 +865,8 @@ void setSimulationRunDefaults()
 	SimulationSwitch.DrawNodesFlag = 0;
 	SimulationSwitch.DrawFrontHalfFlag = 0;
 	SimulationSwitch.guiCollapsed = false;
+	
+	for(int i = 0; i < 20; i++) OtherPoints[i] = {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
 /*
@@ -907,7 +912,7 @@ void setRemainingParameters()
 	ScrollSpeed = 1.0;
 	MouseWheelPos = 0;
 }
-
+int id, idA, idB;
 /*
  This function:
  Setting up the CUDA environment.
@@ -937,6 +942,84 @@ void setupCudaEnvironment()
 	//create CUDA streams for async memory copy and compute
 	cudaStreamCreate(&ComputeStream);
 	cudaStreamCreate(&MemoryStream);
+}
+
+void boarderCleaning()
+{
+	int muscleId, nodeIdA, nodeIdB;
+	
+	bool change = true;
+	//while(change == true) //BMW I could not get this to quit when no more change was happening. So I put in 10 itereations. Look at it on a new day!
+	int ii = 0;
+	while(ii < 10 && change == true)
+	{
+		change = false;
+		for(int i = 0; i < NumberOfNodes; i++)
+		{
+			int countPVLS = 0;
+			int countPVLI = 0;
+			int countPVRS = 0;
+			int countPVRI = 0;
+			int countLAA = 0;
+			int countMVO = 0;
+			for(int j = 0; j < MUSCLES_PER_NODE; j++)
+			{
+				muscleId = Node[i].muscle[j];
+				if(muscleId != -1)
+				{
+					nodeIdA = Muscle[muscleId].nodeA;
+					nodeIdB = Muscle[muscleId].nodeB;
+					if(Node[i].type != TypePulmonaryVeinLS && (Node[nodeIdA].type == TypePulmonaryVeinLS || Node[nodeIdB].type == TypePulmonaryVeinLS)) countPVLS++;
+					if(Node[i].type != TypePulmonaryVeinLI && (Node[nodeIdA].type == TypePulmonaryVeinLI || Node[nodeIdB].type == TypePulmonaryVeinLI)) countPVLI++;
+					if(Node[i].type != TypePulmonaryVeinRS && (Node[nodeIdA].type == TypePulmonaryVeinRS || Node[nodeIdB].type == TypePulmonaryVeinRS)) countPVRS++;
+					if(Node[i].type != TypePulmonaryVeinLI && (Node[nodeIdA].type == TypePulmonaryVeinRI || Node[nodeIdB].type == TypePulmonaryVeinRI)) countPVRI++;
+					if(Node[i].type != TypeAppendage && (Node[nodeIdA].type == TypeAppendage || Node[nodeIdB].type == TypeAppendage)) countLAA++;
+					if(Node[i].type != TypeMitralValveOpening && (Node[nodeIdA].type == TypeMitralValveOpening || Node[nodeIdB].type == TypeMitralValveOpening)) countMVO++;
+				}
+			}
+			
+			if(Node[i].type != TypeBachmannBundle) // Do not mess with BB.
+			{
+				if(2 < countPVLS) 
+				{
+					Node[i].type = TypePulmonaryVeinLS;
+					Node[i].color = {1.0f, 0.4f, 0.7f, 0.0f};
+					change = true;
+				}
+				if(2 < countPVLI) 
+				{
+					Node[i].type = TypePulmonaryVeinLI;
+					Node[i].color = {1.0f, 0.4f, 0.7f, 0.0f};
+					change = true;
+				}
+				if(2 < countPVRS) 
+				{
+					Node[i].type = TypePulmonaryVeinRS;
+					Node[i].color = {1.0f, 0.4f, 0.7f, 0.0f};
+					change = true;
+				}
+				if(2 < countPVRI) 
+				{
+					Node[i].type = TypePulmonaryVeinRI;
+					Node[i].color = {1.0f, 0.4f, 0.7f, 0.0f};
+					change = true;
+				}
+				if(2 < countLAA) 
+				{
+					Node[i].type = TypeAppendage;
+					Node[i].color = {1.0f, 0.8f, 0.3f, 0.0f};
+					change = true;
+				}
+				if(2 < countMVO) 
+				{
+					Node[i].type = TypeMitralValveOpening;
+					Node[i].color = {0.5f, 0.0f, 0.5f, 0.0f};
+					change = true;
+				}
+			}
+		}
+		ii++;
+	}
 }
 
 void initializeAllNodesAndMuscles()
@@ -1014,9 +1097,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	};
 	nodeInfo nodePV[numberOfPVNodes];
 	int id, idA, idB;
-	int numberOfBorderNodes =0;
-	
-	
+	int numberOfBorderNodes = 0;
 	
 	// Finding all the boarder nodes
 	int k = 0;
@@ -1034,11 +1115,12 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 				id = Node[i].muscle[j];
 				idA = Muscle[id].nodeA;
 				idB = Muscle[id].nodeB;
-				if(Node[idA].type == TypeStandardLA || Node[idB].type == TypeStandardLA) 
+				if(Node[idA].type != nodeType || Node[idB].type != nodeType)
 				{
 					nodePV[k].border = true;
 					Node[nodePV[k].number].color = {0.0f, 1.0f, 0.902f, 0.0f};
 					numberOfBorderNodes++;
+					break;
 				}
 				j++;
 			}
@@ -1063,7 +1145,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 					d2 = dx*dx + dy*dy + dz*dz;
 					if(d2 < minDis) minDis = d2; 
 				}
-			}
+			}// BMW need to set the muscles here. Copy the code over from the mapper.
 			nodePV[i].distance = sqrt(minDis);
 		}
 		else
@@ -1119,6 +1201,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	// You may in the future put a muscle fiber direction off a vector running down the tube. BMW
 	float slopeCVMultiplier = (endingCVMultiplier - startingCVMultiplier)/transitionDistance;
 	float slopeRPMultiplier = (endingRPMultiplier - startingRPMultiplier)/transitionDistance;
+	int reductionCount = 0;
 	for(int i = 0; i < numberOfPVNodes; i++)
 	{
 		if(nodePV[i].distance <= transitionDistance)
@@ -1138,28 +1221,50 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 		else
 		{
 			id = nodePV[i].number;
+			Node[id].type = TypeExtraTissue;
 			Node[id].isAblated = true;
 			Node[id].color = {1.0f, 1.0f, 1.0f, 0.0f};
+			reductionCount++;
 		}
 		//printf("\n nodePV[%d].order = %d nodePV[%d].distance = %f", i, nodePV[i].order, i, nodePV[i].distance); 
 	}
 	
-	float4 center = {0.0f, 0.0f, 0.0f, 0.0f};
+	float4 centerOfBoarder = {0.0f, 0.0f, 0.0f, 0.0f};
 	for(int i = 0; i < numberOfBorderNodes; i++)
 	{
-		center.x += Node[nodePV[i].number].position.x;
-		center.y += Node[nodePV[i].number].position.y;
-		center.z += Node[nodePV[i].number].position.z;
+		centerOfBoarder.x += Node[nodePV[i].number].position.x;
+		centerOfBoarder.y += Node[nodePV[i].number].position.y;
+		centerOfBoarder.z += Node[nodePV[i].number].position.z;
 	}
-	center.x /= numberOfBorderNodes;
-	center.y /= numberOfBorderNodes;
-	center.z /= numberOfBorderNodes;
-	center.w = 0.0f;
+	centerOfBoarder.x /= numberOfBorderNodes;
+	centerOfBoarder.y /= numberOfBorderNodes;
+	centerOfBoarder.z /= numberOfBorderNodes;
+	centerOfBoarder.w = 0.0f;
 	
-	if(nodeType == TypePulmonaryVeinLS) CenterPVLS = center;
-	if(nodeType == TypePulmonaryVeinLI) CenterPVLI = center;
-	if(nodeType == TypePulmonaryVeinRS) CenterPVRS = center;
-	if(nodeType == TypePulmonaryVeinRI) CenterPVRI = center;
+	if(nodeType == TypePulmonaryVeinLS) OtherPoints[0] = centerOfBoarder;
+	if(nodeType == TypePulmonaryVeinLI) OtherPoints[2] = centerOfBoarder;
+	if(nodeType == TypePulmonaryVeinRS) OtherPoints[4] = centerOfBoarder;
+	if(nodeType == TypePulmonaryVeinRI) OtherPoints[6] = centerOfBoarder;
+	
+	float4 centerOfPV = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < numberOfPVNodes; i++)
+	{
+		if(Node[nodePV[i].number].type != TypeExtraTissue)
+		{
+			centerOfPV.x += Node[nodePV[i].number].position.x;
+			centerOfPV.y += Node[nodePV[i].number].position.y;
+			centerOfPV.z += Node[nodePV[i].number].position.z;
+		}
+	}
+	centerOfPV.x /= (numberOfPVNodes - reductionCount);
+	centerOfPV.y /= (numberOfPVNodes - reductionCount);
+	centerOfPV.z /= (numberOfPVNodes - reductionCount);
+	centerOfPV.w = 0.0f;
+	
+	if(nodeType == TypePulmonaryVeinLS) OtherPoints[1] = centerOfPV;
+	if(nodeType == TypePulmonaryVeinLI) OtherPoints[3] = centerOfPV;
+	if(nodeType == TypePulmonaryVeinRS) OtherPoints[5] = centerOfPV;
+	if(nodeType == TypePulmonaryVeinRI) OtherPoints[7] = centerOfPV;
 }
 
 void setBackWall(float multiplierCV, float multiplierRP)
@@ -1205,17 +1310,77 @@ void setMitralValveOpening()
 	}
 }
 
-void setAppendage(float multiplierCV, float multiplierRP)
+void setAppendage(int numberOfLAANodes, float multiplierCV, float multiplierRP)
 {
+	struct nodeInfo
+	{
+	    int number;
+	    bool border;
+	};
+	nodeInfo nodeLAA[numberOfLAANodes];
+	
+	int id, idA, idB;
+	int numberOfBorderNodes = 0;
+	
+	// Finding all the boarder nodes
+	int k = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		if(Node[i].type == TypeAppendage)
 		{
 			Node[i].isDrawNode = true;
+			
+			nodeLAA[k].number = i;
+			nodeLAA[k].border = false;
+			int j = 0;
+			while(Node[i].muscle[j] != -1 && j < MUSCLES_PER_NODE)
+			{
+				id = Node[i].muscle[j];
+				idA = Muscle[id].nodeA;
+				idB = Muscle[id].nodeB;
+				if(Node[idA].type != TypeAppendage || Node[idB].type != TypeAppendage)
+				{
+					nodeLAA[k].border = true;
+					Node[nodeLAA[k].number].color = {0.0f, 1.0f, 0.902f, 0.0f};
+					numberOfBorderNodes++;
+					break;
+				}
+				j++;
+			}
+			k++;
 		}
 	}
 	
-	// Should put fiber direction off of vector running down the center of the LAA. BMW
+	float4 centerOfLAABoarder = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < numberOfLAANodes; i++)
+	{
+		if(nodeLAA[i].border == true)
+		{
+			centerOfLAABoarder.x += Node[nodeLAA[i].number].position.x;
+			centerOfLAABoarder.y += Node[nodeLAA[i].number].position.y;
+			centerOfLAABoarder.z += Node[nodeLAA[i].number].position.z;
+		}
+	}
+	centerOfLAABoarder.x /= numberOfBorderNodes;
+	centerOfLAABoarder.y /= numberOfBorderNodes;
+	centerOfLAABoarder.z /= numberOfBorderNodes;
+	
+	OtherPoints[8] = centerOfLAABoarder;
+	
+	float4 centerOfLAA = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < numberOfLAANodes; i++)
+	{
+		centerOfLAA.x += Node[nodeLAA[i].number].position.x;
+		centerOfLAA.y += Node[nodeLAA[i].number].position.y;
+		centerOfLAA.z += Node[nodeLAA[i].number].position.z;
+	}
+	centerOfLAA.x /= numberOfLAANodes;
+	centerOfLAA.y /= numberOfLAANodes;
+	centerOfLAA.z /= numberOfLAANodes;
+	
+	OtherPoints[9] = centerOfLAA;
+	
+	//BMW this section will not work if we do noy reset muscle first. !!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		if(Muscle[i].type == TypeAppendage)
@@ -2793,6 +2958,8 @@ void drawPicture()
 {
 	int muscleNumber;
 	int k;
+	float x,y,z,dx,dy,dz,d;
+	
 	glClear(GL_COLOR_BUFFER_BIT);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	
@@ -2816,28 +2983,65 @@ void drawPicture()
 	}
 	
 	glColor3d(0.0,1.0,1.0);
+	for(int i = 0; i < 20; i++)
+	{
+		glPushMatrix();
+			glTranslatef(OtherPoints[i].x, OtherPoints[i].y, OtherPoints[i].z);
+			renderSphereVBO();
+		glPopMatrix();
+	}
+	
+	glColor3d(1.0,1.0,0.0); //BMW
 	glPushMatrix();
-		glTranslatef(CenterPVLS.x, CenterPVLS.y, CenterPVLS.z);
+		glTranslatef(OtherPoints[8].x, OtherPoints[8].y, OtherPoints[8].z);
 		renderSphereVBO();
 	glPopMatrix();
 	
-	glColor3d(0.0,1.0,1.0);
-	glPushMatrix();
-		glTranslatef(CenterPVLI.x, CenterPVLI.y, CenterPVLI.z);
-		renderSphereVBO();
-	glPopMatrix();
+	glColor3d(1.0,1.0,1.0);
+	dx = OtherPoints[1].x - OtherPoints[0].x;
+	dy = OtherPoints[1].y - OtherPoints[0].y;
+	dz = OtherPoints[1].z - OtherPoints[0].z;
+	d = sqrt(dx*dx + dy*dy + dz*dz);
+	dx /= d; dy /= d; dz /= d;
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[0].x, OtherPoints[0].y, OtherPoints[0].z);
+		glVertex3f(OtherPoints[0].x + dx*TransitionLengthLSPV, OtherPoints[0].y + dy*TransitionLengthLSPV, OtherPoints[0].z + dz*TransitionLengthLSPV);
+	glEnd();
 	
-	glColor3d(0.0,1.0,1.0);
-	glPushMatrix();
-		glTranslatef(CenterPVRS.x, CenterPVRS.y, CenterPVRS.z);
-		renderSphereVBO();
-	glPopMatrix();
+	dx = OtherPoints[3].x - OtherPoints[2].x;
+	dy = OtherPoints[3].y - OtherPoints[2].y;
+	dz = OtherPoints[3].z - OtherPoints[2].z;
+	d = sqrt(dx*dx + dy*dy + dz*dz);
+	dx /= d; dy /= d; dz /= d;
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[2].x, OtherPoints[2].y, OtherPoints[2].z);
+		glVertex3f(OtherPoints[2].x + dx*TransitionLengthLIPV, OtherPoints[2].y + dy*TransitionLengthLIPV, OtherPoints[2].z + dz*TransitionLengthLIPV);
+	glEnd();
 	
-	glColor3d(0.0,1.0,1.0);
-	glPushMatrix();
-		glTranslatef(CenterPVRI.x, CenterPVRI.y, CenterPVRI.z);
-		renderSphereVBO();
-	glPopMatrix();
+	dx = OtherPoints[5].x - OtherPoints[4].x;
+	dy = OtherPoints[5].y - OtherPoints[4].y;
+	dz = OtherPoints[5].z - OtherPoints[4].z;
+	d = sqrt(dx*dx + dy*dy + dz*dz);
+	dx /= d; dy /= d; dz /= d;
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[4].x, OtherPoints[4].y, OtherPoints[4].z);
+		glVertex3f(OtherPoints[4].x + dx*TransitionLengthRSPV, OtherPoints[4].y + dy*TransitionLengthRSPV, OtherPoints[4].z + dz*TransitionLengthRSPV);
+	glEnd();
+	
+	dx = OtherPoints[7].x - OtherPoints[6].x;
+	dy = OtherPoints[7].y - OtherPoints[6].y;
+	dz = OtherPoints[7].z - OtherPoints[6].z;
+	d = sqrt(dx*dx + dy*dy + dz*dz);
+	dx /= d; dy /= d; dz /= d;
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[6].x, OtherPoints[6].y, OtherPoints[6].z);
+		glVertex3f(OtherPoints[6].x + dx*TransitionLengthRIPV, OtherPoints[6].y + dy*TransitionLengthRIPV, OtherPoints[6].z + dz*TransitionLengthRIPV);
+	glEnd();
+	
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[8].x, OtherPoints[8].y, OtherPoints[8].z);
+		glVertex3f(OtherPoints[9].x, OtherPoints[9].y, OtherPoints[9].z);
+	glEnd();
 	
 	
 	// Drawing nodes
@@ -2941,7 +3145,6 @@ void drawPicture()
 	// Tracking the action potintial.
 	SimulationSwitch.isDrawAP = 1;
 	float distance;
-	float x,y,z,dx,dy,dz,d;
 	int id1, id2;
 	glColor3d(0.0, 0.0, 1.0);
 	glPointSize(5.0);
@@ -3486,7 +3689,7 @@ int centerMouse(GLFWwindow* window, double* mx, double* my, double* mz)
 */
 void translateObject(float dx, float dy, float dz)
 {
-	//copyNodesFromGPU();
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		Node[i].position.x += dx;
@@ -3495,14 +3698,17 @@ void translateObject(float dx, float dy, float dz)
 	}
 	copyNodesToGPU();
 	
+	for(int i = 0; i < 20; i++)
+	{
+		OtherPoints[i].x += dx;
+		OtherPoints[i].y += dy;
+		OtherPoints[i].z += dz;
+	}
+	
 	CenterOfSimulation.x += dx;
 	CenterOfSimulation.y += dy;
 	CenterOfSimulation.z += dz;
 	
-	CenterPVLS.x += dx; CenterPVLS.y += dy; CenterPVLS.z += dz;
-	CenterPVLI.x += dx; CenterPVLI.y += dy; CenterPVLI.z += dz;
-	CenterPVRS.x += dx; CenterPVRS.y += dy; CenterPVRS.z += dz;
-	CenterPVRI.x += dx; CenterPVRI.y += dy; CenterPVRI.z += dz;
 }
 
 /*
@@ -3515,7 +3721,7 @@ void rotateXAxis(float angle)
 	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
 	
 	float temp;
-	//copyNodesFromGPU();
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp = cos(angle)*Node[i].position.y - sin(angle)*Node[i].position.z;
@@ -3524,33 +3730,14 @@ void rotateXAxis(float angle)
 	}
 	copyNodesToGPU();
 	
+	for(int i = 0; i < 20; i++)
+	{
+		temp = cos(angle)*OtherPoints[i].y - sin(angle)*OtherPoints[i].z;
+		OtherPoints[i].z  = sin(angle)*OtherPoints[i].y + cos(angle)*OtherPoints[i].z;
+		OtherPoints[i].y  = temp;
+	}
+	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
-	
-	CenterPVLS = subtractFloat4(CenterPVLS, centerOfObject);
-	CenterPVLI = subtractFloat4(CenterPVLI, centerOfObject);
-	CenterPVRS = subtractFloat4(CenterPVRS, centerOfObject);
-	CenterPVRI = subtractFloat4(CenterPVRI, centerOfObject);
-	
-	temp = cos(angle)*CenterPVLS.y - sin(angle)*CenterPVLS.z;
-	CenterPVLS.z  = sin(angle)*CenterPVLS.y + cos(angle)*CenterPVLS.z;
-	CenterPVLS.y  = temp;
-	
-	temp = cos(angle)*CenterPVLI.y - sin(angle)*CenterPVLI.z;
-	CenterPVLI.z  = sin(angle)*CenterPVLI.y + cos(angle)*CenterPVLI.z;
-	CenterPVLI.y  = temp;
-	
-	temp = cos(angle)*CenterPVRS.y - sin(angle)*CenterPVRS.z;
-	CenterPVRS.z  = sin(angle)*CenterPVRS.y + cos(angle)*CenterPVRS.z;
-	CenterPVRS.y  = temp;
-	
-	temp = cos(angle)*CenterPVRI.y - sin(angle)*CenterPVRI.z;
-	CenterPVRI.z  = sin(angle)*CenterPVRI.y + cos(angle)*CenterPVRI.z;
-	CenterPVRI.y  = temp;
-		
-	CenterPVLS = addFloat4(CenterPVLS, centerOfObject);
-	CenterPVLI = addFloat4(CenterPVLI, centerOfObject);
-	CenterPVRS = addFloat4(CenterPVRS, centerOfObject);
-	CenterPVRI = addFloat4(CenterPVRI, centerOfObject);
 }
 
 /*
@@ -3563,7 +3750,7 @@ void rotateYAxis(float angle)
 	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
 	
 	float temp;
-	//copyNodesFromGPU();
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp =  cos(-angle)*Node[i].position.x + sin(-angle)*Node[i].position.z;
@@ -3572,33 +3759,14 @@ void rotateYAxis(float angle)
 	}
 	copyNodesToGPU();
 	
+	for(int i = 0; i < 20; i++)
+	{
+		temp =  cos(-angle)*OtherPoints[i].x + sin(-angle)*OtherPoints[i].z;
+		OtherPoints[i].z  = -sin(-angle)*OtherPoints[i].x + cos(-angle)*OtherPoints[i].z;
+		OtherPoints[i].x  = temp;
+	}
+	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
-	
-	CenterPVLS = subtractFloat4(CenterPVLS, centerOfObject);
-	CenterPVLI = subtractFloat4(CenterPVLI, centerOfObject);
-	CenterPVRS = subtractFloat4(CenterPVRS, centerOfObject);
-	CenterPVRI = subtractFloat4(CenterPVRI, centerOfObject);
-	
-	temp =  cos(-angle)*CenterPVLS.x + sin(-angle)*CenterPVLS.z;
-	CenterPVLS.z  = -sin(-angle)*CenterPVLS.x + cos(-angle)*CenterPVLS.z;
-	CenterPVLS.x  = temp;
-	
-	temp =  cos(-angle)*CenterPVLI.x + sin(-angle)*CenterPVLI.z;
-	CenterPVLI.z  = -sin(-angle)*CenterPVLI.x + cos(-angle)*CenterPVLI.z;
-	CenterPVLI.x  = temp;
-	
-	temp =  cos(-angle)*CenterPVRS.x + sin(-angle)*CenterPVRS.z;
-	CenterPVRS.z  = -sin(-angle)*CenterPVRS.x + cos(-angle)*CenterPVRS.z;
-	CenterPVRS.x  = temp;
-	
-	temp =  cos(-angle)*CenterPVRI.x + sin(-angle)*CenterPVRI.z;
-	CenterPVRI.z  = -sin(-angle)*CenterPVRI.x + cos(-angle)*CenterPVRI.z;
-	CenterPVRI.x  = temp;
-		
-	CenterPVLS = addFloat4(CenterPVLS, centerOfObject);
-	CenterPVLI = addFloat4(CenterPVLI, centerOfObject);
-	CenterPVRS = addFloat4(CenterPVRS, centerOfObject);
-	CenterPVRI = addFloat4(CenterPVRI, centerOfObject);
 }
 
 /*
@@ -3611,7 +3779,7 @@ void rotateZAxis(float angle)
 	translateObject(-centerOfObject.x, -centerOfObject.y, -centerOfObject.z);
 	
 	float temp;
-	//copyNodesFromGPU();
+	copyNodesFromGPU();
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		temp = cos(angle)*Node[i].position.x - sin(angle)*Node[i].position.y;
@@ -3620,33 +3788,14 @@ void rotateZAxis(float angle)
 	}
 	copyNodesToGPU();
 	
+	for(int i = 0; i < 20; i++)
+	{
+		temp = cos(angle)*OtherPoints[i].x - sin(angle)*OtherPoints[i].y;
+		OtherPoints[i].y  = sin(angle)*OtherPoints[i].x + cos(angle)*OtherPoints[i].y;
+		OtherPoints[i].x  = temp;
+	}
+	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
-	
-	CenterPVLS = subtractFloat4(CenterPVLS, centerOfObject);
-	CenterPVLI = subtractFloat4(CenterPVLI, centerOfObject);
-	CenterPVRS = subtractFloat4(CenterPVRS, centerOfObject);
-	CenterPVRI = subtractFloat4(CenterPVRI, centerOfObject);
-	
-	temp = cos(angle)*CenterPVLS.x - sin(angle)*CenterPVLS.y;
-	CenterPVLS.y  = sin(angle)*CenterPVLS.x + cos(angle)*CenterPVLS.y;
-	CenterPVLS.x  = temp;
-	
-	temp = cos(angle)*CenterPVLI.x - sin(angle)*CenterPVLI.y;
-	CenterPVLI.y  = sin(angle)*CenterPVLI.x + cos(angle)*CenterPVLI.y;
-	CenterPVLI.x  = temp;
-	
-	temp = cos(angle)*CenterPVRS.x - sin(angle)*CenterPVRS.y;
-	CenterPVRS.y  = sin(angle)*CenterPVRS.x + cos(angle)*CenterPVRS.y;
-	CenterPVRS.x  = temp;
-	
-	temp = cos(angle)*CenterPVRI.x - sin(angle)*CenterPVRI.y;
-	CenterPVRI.y  = sin(angle)*CenterPVRI.x + cos(angle)*CenterPVRI.y;
-	CenterPVRI.x  = temp;
-		
-	CenterPVLS = addFloat4(CenterPVLS, centerOfObject);
-	CenterPVLI = addFloat4(CenterPVLI, centerOfObject);
-	CenterPVRS = addFloat4(CenterPVRS, centerOfObject);
-	CenterPVRI = addFloat4(CenterPVRI, centerOfObject);
 }
 
 /*
