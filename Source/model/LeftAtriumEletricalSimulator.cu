@@ -5,7 +5,7 @@
 // Main *************************************************************************************
 
 /*
- The main function: BMW go over main slowly.
+ The main function: BMW2 go over main slowly.
  Reads to user setup file inputs, setsup the invoronment and kicks off the GUI loop.
 */
 int main(int argc, char** argv)
@@ -13,6 +13,9 @@ int main(int argc, char** argv)
 	// Getting user inputs.
 	readBasicSimulationSetupParameters();
 	readIntermediateSimulationSetupParameters();
+	readAdvancedSimulationSetupParameters();
+	
+	printf("\n CVMultiplierBachmannBundle = %f \n", CVMultiplierBachmannBundle);
 	
 	// Create a new run or input a previous run file.
 	if(NodesMusclesFileOrPreviousRunsFile == false)
@@ -384,6 +387,133 @@ void readIntermediateSimulationSetupParameters()
 
 /*
  This function:
+ Reads in all the user defined parameters in the AdvancedSimulationSetup file.
+*/
+void readAdvancedSimulationSetupParameters()
+{
+	ifstream data;
+	string name;
+	
+	data.open("./AdvancedSimulationSetup");
+	if(data.is_open() == 1)
+	{
+		getline(data,name,'=');
+		data >> CVVectorReductionMainBody;
+		
+		
+		getline(data,name,'=');
+		data >> CVMultiplierBachmannBundle;
+		
+		getline(data,name,'=');
+		data >> RPMultiplierBachmannBundle;
+		
+		
+		getline(data,name,'=');
+		data >> StartingCVMultiplierLSPV;
+		
+		getline(data,name,'=');
+		data >> EndingCVMultiplierLSPV;
+		
+		getline(data,name,'=');
+		data >> StartingRPMultiplierLSPV;
+		
+		getline(data,name,'=');
+		data >> EndingRPMultiplierLSPV;
+		
+		getline(data,name,'=');
+		data >> TransitionLengthLSPV;
+		
+		getline(data,name,'=');
+		data >> CVVectorReductionLSPV;
+		
+		
+		getline(data,name,'=');
+		data >> StartingCVMultiplierLIPV;
+		
+		getline(data,name,'=');
+		data >> EndingCVMultiplierLIPV;
+		
+		getline(data,name,'=');
+		data >> StartingRPMultiplierLIPV;
+		
+		getline(data,name,'=');
+		data >> EndingRPMultiplierLIPV;
+		
+		getline(data,name,'=');
+		data >> TransitionLengthLIPV;
+		
+		getline(data,name,'=');
+		data >> CVVectorReductionLIPV;
+		
+		
+		getline(data,name,'=');
+		data >> StartingCVMultiplierRSPV;
+		
+		getline(data,name,'=');
+		data >> EndingCVMultiplierRSPV;
+		
+		getline(data,name,'=');
+		data >> StartingRPMultiplierRSPV;
+		
+		getline(data,name,'=');
+		data >> EndingRPMultiplierRSPV;
+		
+		getline(data,name,'=');
+		data >> TransitionLengthRSPV;
+		
+		getline(data,name,'=');
+		data >> CVVectorReductionRSPV;
+		
+		
+		getline(data,name,'=');
+		data >> StartingCVMultiplierRIPV;
+		
+		getline(data,name,'=');
+		data >> EndingCVMultiplierRIPV;
+		
+		getline(data,name,'=');
+		data >> StartingRPMultiplierRIPV;
+		
+		getline(data,name,'=');
+		data >> EndingRPMultiplierRIPV;
+		
+		getline(data,name,'=');
+		data >> TransitionLengthRIPV;
+		
+		getline(data,name,'=');
+		data >> CVVectorReductionRIPV;
+		
+		
+		getline(data,name,'=');
+		data >> CVMultiplierBackWall;
+		
+		getline(data,name,'=');
+		data >> RPMultiplierBackWall;
+		
+		
+		getline(data,name,'=');
+		data >> CVMultiplierAppendage;
+		
+		getline(data,name,'=');
+		data >> RPMultiplierAppendage;
+		
+		getline(data,name,'=');
+		data >> CVVectorReductionLAA;
+		
+	}
+	else
+	{
+		printf("\n\n Could not open BasicSimulationSetup file.");
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
+	}
+	
+	data.close();
+	printf("\n Basic Simulation Parameters have been read in from BasicSimulationSetup file.\n");
+}
+
+/*
+ This function:
  Reads node and muscle data from a exported binary file from the LA mapping program.
 */
 void readNodesAndMusclesFromBinaryFile()
@@ -733,9 +863,8 @@ void createNewRun()
 	
 	setSimulationRunDefaults();
 	readNodesAndMusclesFromBinaryFile();
-	//setRemainingNodeAndMuscleAttributes();
 	boarderCleaning();
-	// BMW need to set the muscles here. Copy the code over from the mapper. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	setAllMuscleTypesAndColors();
 	setupCudaEnvironment();
 	copyNodesMusclesToGPU();
 	centerObject();
@@ -780,54 +909,71 @@ void createNewRun()
 	
 	setPulseNode();
 	
-	// These will go in the setup file. BMW
+	// These will go in the setup file. BMW *********************************************************
+	/*
 	CVMultiplierBachmannBundle = 0.935f/BaseMuscleConductionVelocity;
 	RPMultiplierBachmannBundle = 200.0f/BaseMuscleRefractoryPeriod;
-	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle(CVMultiplierBachmannBundle, RPMultiplierBachmannBundle);
 	
-	// These will go in the setup file. BMW
+	// These will go in the setup file.
 	StartingCVMultiplierLSPV = 0.775f/BaseMuscleConductionVelocity;
 	EndingCVMultiplierLSPV = 0.625f/BaseMuscleConductionVelocity;
 	StartingRPMultiplierLSPV = 276.0f/BaseMuscleRefractoryPeriod;
 	EndingRPMultiplierLSPV = 214.0f/BaseMuscleRefractoryPeriod;
 	TransitionLengthLSPV = 9.4f;
-	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, StartingCVMultiplierLSPV, EndingCVMultiplierLSPV, StartingRPMultiplierLSPV, EndingRPMultiplierLSPV, TransitionLengthLSPV); 
+	CVVectorReductionLSPV = 0.3f;
 	
-	// These will go in the setup file. BMW
+	// These will go in the setup file. 
 	StartingCVMultiplierLIPV = 0.930f/BaseMuscleConductionVelocity;
 	EndingCVMultiplierLIPV = 0.750f/BaseMuscleConductionVelocity;
 	StartingRPMultiplierLIPV = 263.0f/BaseMuscleRefractoryPeriod;
 	EndingRPMultiplierLIPV = 211.0f/BaseMuscleRefractoryPeriod;
 	TransitionLengthLIPV = 6.6f;
-	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, StartingCVMultiplierLIPV, EndingCVMultiplierLIPV, StartingRPMultiplierLIPV, EndingRPMultiplierLIPV, TransitionLengthLIPV);
+	CVVectorReductionLIPV = 0.3f;
 	
-	// These will go in the setup file. BMW
+	// These will go in the setup file. 
 	StartingCVMultiplierRSPV = 0.850f/BaseMuscleConductionVelocity;
 	EndingCVMultiplierRSPV = 0.650f/BaseMuscleConductionVelocity;
 	StartingRPMultiplierRSPV = 278.0f/BaseMuscleRefractoryPeriod;
 	EndingRPMultiplierRSPV = 228.0f/BaseMuscleRefractoryPeriod;
 	TransitionLengthRSPV = 6.0f;
-	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, StartingCVMultiplierRSPV, EndingCVMultiplierRSPV, StartingRPMultiplierRSPV, EndingRPMultiplierRSPV, TransitionLengthRSPV);
+	CVVectorReductionRSPV = 0.3f;
 	
-	// These will go in the setup file. BMW
+	// These will go in the setup file. 
 	StartingCVMultiplierRIPV = 0.905f/BaseMuscleConductionVelocity;
 	EndingCVMultiplierRIPV = 0.735f/BaseMuscleConductionVelocity;
 	StartingRPMultiplierRIPV = 282.0f/BaseMuscleRefractoryPeriod;
 	EndingRPMultiplierRIPV = 226.0f/BaseMuscleRefractoryPeriod;
 	TransitionLengthRIPV = 5.0f;
-	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, StartingCVMultiplierRIPV, EndingCVMultiplierRIPV, StartingRPMultiplierRIPV, EndingRPMultiplierRIPV, TransitionLengthRIPV);
+	CVVectorReductionRIPV = 0.3f;
 	
-	// These will go in the setup file. BMW
+	// These will go in the setup file. 
 	CVMultiplierBackWall = 1.1f/BaseMuscleConductionVelocity;
 	RPMultiplierBackWall = 265.0f/BaseMuscleRefractoryPeriod;
-	if(numberOfBackWallNodes != 0) setBackWall(CVMultiplierBackWall, RPMultiplierBackWall);
 	
-	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening();
+	CVVectorReductionMainBody = 0.3f;
 	
-	// These will go in the setup file. BMW
+	// These will go in the setup file. 
 	CVMultiplierAppendage = 0.55f/BaseMuscleConductionVelocity;
 	RPMultiplierAppendage = 210.0f/BaseMuscleRefractoryPeriod;
+	CVVectorReductionLAA = 0.3f;
+	
+	*/
+	//BMW *************************************************************************************************************************
+	
+	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle(CVMultiplierBachmannBundle, RPMultiplierBachmannBundle);
+	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, StartingCVMultiplierLSPV, EndingCVMultiplierLSPV, StartingRPMultiplierLSPV, EndingRPMultiplierLSPV, TransitionLengthLSPV); 
+	setAllMuscleTypesAndColors();
+	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, StartingCVMultiplierLIPV, EndingCVMultiplierLIPV, StartingRPMultiplierLIPV, EndingRPMultiplierLIPV, TransitionLengthLIPV);
+	setAllMuscleTypesAndColors();
+	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, StartingCVMultiplierRSPV, EndingCVMultiplierRSPV, StartingRPMultiplierRSPV, EndingRPMultiplierRSPV, TransitionLengthRSPV);
+	setAllMuscleTypesAndColors();
+	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, StartingCVMultiplierRIPV, EndingCVMultiplierRIPV, StartingRPMultiplierRIPV, EndingRPMultiplierRIPV, TransitionLengthRIPV);
+	setAllMuscleTypesAndColors();
+	if(numberOfBackWallNodes != 0) setBackWall(CVMultiplierBackWall, RPMultiplierBackWall);
+	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening(numberOfMitralValveOpeningNodes);
 	if(numberOfAppendageNodes != 0) setAppendage(numberOfAppendageNodes, CVMultiplierAppendage, RPMultiplierAppendage);
+	
+	
 	
 	if(numberOfScarTissueNodes != 0) setScarTissue();
 	if(numberOfExtraTissueNodes != 0) setExtraTissue();
@@ -843,7 +989,7 @@ void createNewRun()
 /*
  This function:
  Sets the simulation's default run settings. Most of these will get over written if you run an previuos run but they are all
- set here for a new run and for safety if an existing file read did not set something.
+ set here for a new run and for safety if an existing fileCVVectorReductionMainBody read did not set something.
 */
 void setSimulationRunDefaults()
 {
@@ -1073,7 +1219,6 @@ void setBachmannsBundle(float multiplierCV, float multiplierRP)
 		}
 	}
 	
-	//BachmannsBundleMultiplier = 10.0; // BMW overwriting setup
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		if(Muscle[i].type == TypeBachmannBundle)
@@ -1145,7 +1290,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 					d2 = dx*dx + dy*dy + dz*dz;
 					if(d2 < minDis) minDis = d2; 
 				}
-			}// BMW need to set the muscles here. Copy the code over from the mapper.
+			}
 			nodePV[i].distance = sqrt(minDis);
 		}
 		else
@@ -1198,7 +1343,6 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	}
 	
 	// Setting the nodes' muscle conduction velocity and refractory period.
-	// You may in the future put a muscle fiber direction off a vector running down the tube. BMW
 	float slopeCVMultiplier = (endingCVMultiplier - startingCVMultiplier)/transitionDistance;
 	float slopeRPMultiplier = (endingRPMultiplier - startingRPMultiplier)/transitionDistance;
 	int reductionCount = 0;
@@ -1265,6 +1409,59 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	if(nodeType == TypePulmonaryVeinLI) OtherPoints[3] = centerOfPV;
 	if(nodeType == TypePulmonaryVeinRS) OtherPoints[5] = centerOfPV;
 	if(nodeType == TypePulmonaryVeinRI) OtherPoints[7] = centerOfPV;
+	
+	float4 v, u;
+	if(nodeType == TypePulmonaryVeinLS)
+	{
+		v.x = OtherPoints[1].x - OtherPoints[0].x;
+		v.y = OtherPoints[1].y - OtherPoints[0].y;
+		v.z = OtherPoints[1].z - OtherPoints[0].z;
+		v.w = 0.0f;
+	}
+	if(nodeType == TypePulmonaryVeinLI)
+	{
+		v.x = OtherPoints[3].x - OtherPoints[2].x;
+		v.y = OtherPoints[3].y - OtherPoints[2].y;
+		v.z = OtherPoints[3].z - OtherPoints[2].z;
+		v.w = 0.0f;
+	}
+	if(nodeType == TypePulmonaryVeinRS)
+	{
+		v.x = OtherPoints[5].x - OtherPoints[4].x;
+		v.y = OtherPoints[5].y - OtherPoints[4].y;
+		v.z = OtherPoints[5].z - OtherPoints[4].z;
+		v.w = 0.0f;
+	}
+	if(nodeType == TypePulmonaryVeinRI)
+	{
+		v.x = OtherPoints[7].x - OtherPoints[6].x;
+		v.y = OtherPoints[7].y - OtherPoints[6].y;
+		v.z = OtherPoints[7].z - OtherPoints[6].z;
+		v.w = 0.0f;
+	}
+	
+	float cosTheta;
+	float vectorReduction;
+	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionLSPV;
+	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionLIPV;
+	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionRSPV;
+	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionRIPV;
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == nodeType)
+		{
+			u.x = Node[Muscle[i].nodeB].position.x - Node[Muscle[i].nodeA].position.x;
+			u.y = Node[Muscle[i].nodeB].position.y - Node[Muscle[i].nodeA].position.y;
+			u.z = Node[Muscle[i].nodeB].position.z - Node[Muscle[i].nodeA].position.z;
+			u.w = 0.0f;
+			
+			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
+			if(cosTheta < 0) cosTheta = -cosTheta;
+			
+			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
+			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+		}
+	}
 }
 
 void setBackWall(float multiplierCV, float multiplierRP)
@@ -1290,22 +1487,108 @@ void setBackWall(float multiplierCV, float multiplierRP)
 }
 
 // Treating the mitral valve open as electrically inert tissue.
-void setMitralValveOpening()
+void setMitralValveOpening(int numberOfMVONodes)
 {
+	struct nodeInfo
+	{
+	    int number;
+	    bool border;
+	};
+	nodeInfo nodeMVO[numberOfMVONodes];
+	
+	int numberOfBorderNodes = 0;
+	
+	int k = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		if(Node[i].type == TypeMitralValveOpening)
 		{
 			Node[i].isDrawNode = true;
 			Node[i].isAblated = true;
+			
+			nodeMVO[k].number = i;
+			nodeMVO[k].border = false;
+			int j = 0;
+			while(Node[i].muscle[j] != -1 && j < MUSCLES_PER_NODE)
+			{
+				id = Node[i].muscle[j];
+				idA = Muscle[id].nodeA;
+				idB = Muscle[id].nodeB;
+				if(Node[idA].type != TypeMitralValveOpening || Node[idB].type != TypeMitralValveOpening)
+				{
+					nodeMVO[k].border = true;
+					Node[nodeMVO[k].number].color = {0.0f, 1.0f, 0.902f, 0.0f};
+					numberOfBorderNodes++;
+					break;
+				}
+				j++;
+			}
+			k++;
+			
 		}
 	}
+	
+	float4 centerOfMVOBoarder = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < numberOfMVONodes; i++)
+	{
+		if(nodeMVO[i].border == true)
+		{
+			centerOfMVOBoarder.x += Node[nodeMVO[i].number].position.x;
+			centerOfMVOBoarder.y += Node[nodeMVO[i].number].position.y;
+			centerOfMVOBoarder.z += Node[nodeMVO[i].number].position.z;
+		}
+	}
+	centerOfMVOBoarder.x /= numberOfBorderNodes;
+	centerOfMVOBoarder.y /= numberOfBorderNodes;
+	centerOfMVOBoarder.z /= numberOfBorderNodes;
+	
+	OtherPoints[10] = centerOfMVOBoarder;
+	
+	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypeBachmannBundle || Node[i].type == TypeBackWall || Node[i].type == TypeStandardLA || Node[i].type == TypeScarTissue) // This should be scare tissue in the main body of the LA.
+		centerOfLA.x += Node[i].position.x;
+		centerOfLA.y += Node[i].position.y;
+		centerOfLA.z += Node[i].position.z;
+		centerOfLA.w++;
+	}
+	centerOfLA.x /= centerOfLA.w;
+	centerOfLA.y /= centerOfLA.w;
+	centerOfLA.z /= centerOfLA.w;
+	
+	OtherPoints[11] = centerOfLA;
 	
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		if(Muscle[i].type == TypeMitralValveOpening)
 		{
 			Muscle[i].isEnabled = false;
+		}
+	}
+	
+	float4 v, u;
+	v.x = OtherPoints[11].x - OtherPoints[10].x;
+	v.y = OtherPoints[11].y - OtherPoints[10].y;
+	v.z = OtherPoints[11].z - OtherPoints[10].z;
+	v.w = 0.0f;
+		
+	float cosTheta;
+	float vectorReduction = CVVectorReductionMainBody;
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypeBachmannBundle || Muscle[i].type == TypeBackWall || Muscle[i].type == TypeStandardLA)
+		{
+			u.x = Node[Muscle[i].nodeB].position.x - Node[Muscle[i].nodeA].position.x;
+			u.y = Node[Muscle[i].nodeB].position.y - Node[Muscle[i].nodeA].position.y;
+			u.z = Node[Muscle[i].nodeB].position.z - Node[Muscle[i].nodeA].position.z;
+			u.w = 0.0f;
+			
+			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
+			if(cosTheta < 0) cosTheta = -cosTheta;
+			
+			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
+			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
 		}
 	}
 }
@@ -1380,7 +1663,31 @@ void setAppendage(int numberOfLAANodes, float multiplierCV, float multiplierRP)
 	
 	OtherPoints[9] = centerOfLAA;
 	
-	//BMW this section will not work if we do noy reset muscle first. !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	float4 v, u;
+	v.x = OtherPoints[9].x - OtherPoints[8].x;
+	v.y = OtherPoints[9].y - OtherPoints[8].y;
+	v.z = OtherPoints[9].z - OtherPoints[8].z;
+	v.w = 0.0f;
+		
+	float cosTheta;
+	float vectorReduction = CVVectorReductionLAA;
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypeAppendage)
+		{
+			u.x = Node[Muscle[i].nodeB].position.x - Node[Muscle[i].nodeA].position.x;
+			u.y = Node[Muscle[i].nodeB].position.y - Node[Muscle[i].nodeA].position.y;
+			u.z = Node[Muscle[i].nodeB].position.z - Node[Muscle[i].nodeA].position.z;
+			u.w = 0.0f;
+			
+			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
+			if(cosTheta < 0) cosTheta = -cosTheta;
+			
+			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
+			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+		}
+	}
+	
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		if(Muscle[i].type == TypeAppendage)
@@ -1684,7 +1991,7 @@ void copyNodesToGPU()
 // Gui functions ****************************************************************************
 
 /* 
-	 This function creates the GUI using ImGui. BMW Look at this function closer.
+	 This function creates the GUI using ImGui. BMW2 Look at this function closer.
 	 This is where the actual window is built
 
 	 All ImGui fields need to be in an if statement to check if the value has changed.
@@ -2394,7 +2701,7 @@ void scrollWheelCallback(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 /*
- This function: BMW go over slowly
+ This function: BMW2 go over slowly
  Does an action based on the mode the viewer is in and which mouse button the user pressed.
 */
 void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
@@ -2982,20 +3289,16 @@ void drawPicture()
 		glPopMatrix();
 	}
 	
-	glColor3d(0.0,1.0,1.0);
-	for(int i = 0; i < 20; i++)
+	//glColor3d(0.0,1.0,1.0);
+	for(int i = 0; i < 12; i++) // BMW can go up to 20
 	{
+		if(i%2 == 0) glColor3d(0.0,1.0,0.0);
+		else glColor3d(1.0,0.0,0.0);
 		glPushMatrix();
 			glTranslatef(OtherPoints[i].x, OtherPoints[i].y, OtherPoints[i].z);
 			renderSphereVBO();
 		glPopMatrix();
 	}
-	
-	glColor3d(1.0,1.0,0.0); //BMW
-	glPushMatrix();
-		glTranslatef(OtherPoints[8].x, OtherPoints[8].y, OtherPoints[8].z);
-		renderSphereVBO();
-	glPopMatrix();
 	
 	glColor3d(1.0,1.0,1.0);
 	dx = OtherPoints[1].x - OtherPoints[0].x;
@@ -3043,6 +3346,10 @@ void drawPicture()
 		glVertex3f(OtherPoints[9].x, OtherPoints[9].y, OtherPoints[9].z);
 	glEnd();
 	
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[10].x, OtherPoints[10].y, OtherPoints[10].z);
+		glVertex3f(OtherPoints[11].x, OtherPoints[11].y, OtherPoints[11].z);
+	glEnd();
 	
 	// Drawing nodes
 	if(SimulationSwitch.DrawNodesFlag == 1 || SimulationSwitch.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
@@ -3208,7 +3515,7 @@ void drawPicture()
 }
 
 /*
- This function: BMW take a closer look at this.
+ This function: BMW2 take a closer look at this.
  Creates the mouse selection sphere.
  Add this to a utility file, only used for the mouse selection since it's just 1 object
 */
@@ -3245,7 +3552,7 @@ void renderSphere(float radius, int slices, int stacks)
     }
 }
 
-/* BMW look at this closer
+/* BMW2 look at this closer
  This function: 
  Renders a sphere using a VBO
  This function creates a VBO for a sphere and binds it for rendering.
@@ -3345,7 +3652,7 @@ void createSphereVBO(float radius, int slices, int stacks)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-/* Bmw look at this closer.
+/* Bmw2 look at this closer.
  This function:
  ???
 */
@@ -3878,4 +4185,81 @@ float4 subtractFloat4(float4 a, float4 b)
     return result;
 }
 
+/*
+ This function:
+ Sets a single muscle type and color based on its endpoint node types.
+*/
+void setSingleMuscleTypeAndColor(int muscleId)
+{
+	int typeA = Node[Muscle[muscleId].nodeA].type;
+	int typeB = Node[Muscle[muscleId].nodeB].type;
+	int priorityA, priorityB;
+	
+	int PriorityList[NUMBER_OF_TYPES];
+	
+	PriorityList[0] = TypeBachmannBundle;
+	PriorityList[1] = TypePulmonaryVeinLS;
+	PriorityList[2] = TypePulmonaryVeinLI;
+	PriorityList[3] = TypePulmonaryVeinRS;
+	PriorityList[4] = TypePulmonaryVeinRI;
+	PriorityList[5] = TypeBackWall;
+	PriorityList[6] = TypeMitralValveOpening;
+	PriorityList[7] = TypeAppendage;
+	PriorityList[8] = TypeStandardLA;
+	PriorityList[9] = TypeScarTissue;
+	PriorityList[10] = TypeExtraTissue;
+	
+	for(int i = 0; i < NUMBER_OF_TYPES; i++)
+	{
+		if(typeA == PriorityList[i]) priorityA = i;
+		if(typeB == PriorityList[i]) priorityB = i;
+	}
+	
+	if(priorityA <= priorityB)
+	{
+		Muscle[muscleId].type = typeA;
+		Muscle[muscleId].color = getColorFromType(typeA);
+	}
+	else 
+	{
+		Muscle[muscleId].type = typeB;
+		Muscle[muscleId].color = getColorFromType(typeB);
+	}
+}
 
+/*
+ This function: 
+ Sets all muscle types and colors.
+*/
+void setAllMuscleTypesAndColors()
+{
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		setSingleMuscleTypeAndColor(i);
+	}
+}
+
+/*
+ This function:
+ Returns the color for given type.
+*/
+float4 getColorFromType(int type)
+{	
+	if(type == TypeBachmannBundle) return ColorBachmannsBundle;
+	if(type == TypePulmonaryVeinLS) return ColorPulmonaryVeins;
+	if(type == TypePulmonaryVeinLI) return ColorPulmonaryVeins;
+	if(type == TypePulmonaryVeinRS) return ColorPulmonaryVeins;
+	if(type == TypePulmonaryVeinRI) return ColorPulmonaryVeins;
+	if(type == TypeBackWall) return ColorBackWall;
+	if(type == TypeMitralValveOpening) return ColorMitralValveOpening;
+	if(type == TypeAppendage) return ColorAppendage;
+	if(type == TypeStandardLA) return ColorStandardLA;
+	if(type == TypeScarTissue) return ColorScarTissue;
+	if(type == TypeExtraTissue) return ColorExtraTissue;
+	else
+	{
+		printf("\n Error: Unknown node type %d while setting type colors.", type);
+		printf("\n Simulation has been terminated.\n");
+		exit(0);
+	}
+}

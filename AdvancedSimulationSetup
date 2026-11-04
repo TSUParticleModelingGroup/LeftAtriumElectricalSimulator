@@ -1,0 +1,46 @@
+!!!Important: In this file, do not use the equal sign in a comment, as it triggers the reading of an input.
+
+The units we use in the code are: length in millimeters (mm), mass in grams (g), and time in milliseconds (ms). 
+Any value read from this file that is not in these units will be converted to these units in the code.
+
+	CVVectorReductionMainBody = 0.3f;
+	
+	CVMultiplierBachmannBundle = 20.0f;
+	RPMultiplierBachmannBundle = 1.0f;
+	
+	StartingCVMultiplierLSPV = 1.0f;
+	EndingCVMultiplierLSPV = 0.5f;
+	StartingRPMultiplierLSPV = 1.0f;
+	EndingRPMultiplierLSPV = 0.5f;
+	TransitionLengthLSPV = 9.4f;
+	CVVectorReductionLSPV = 0.3f;
+	
+	StartingCVMultiplierLIPV = 1.0f;
+	EndingCVMultiplierLIPV = 0.5f;
+	StartingRPMultiplierLIPV = 1.0f;
+	EndingRPMultiplierLIPV = 0.5f;
+	TransitionLengthLIPV = 6.6f;
+	CVVectorReductionLIPV = 0.3f;
+	
+	StartingCVMultiplierRSPV = 1.0f;
+	EndingCVMultiplierRSPV = 0.5f;
+	StartingRPMultiplierRSPV = 1.0f;
+	EndingRPMultiplierRSPV = 0.5f;
+	TransitionLengthRSPV = 6.0f;
+	CVVectorReductionRSPV = 0.3f;
+	
+	StartingCVMultiplierRIPV = 1.0f;
+	EndingCVMultiplierRIPV = 0.5f;
+	StartingRPMultiplierRIPV = 1.0f;
+	EndingRPMultiplierRIPV = 0.5f;
+	TransitionLengthRIPV = 5.0f;
+	CVVectorReductionRIPV = 0.3f;
+	
+	CVMultiplierBackWall = 1.0;
+	RPMultiplierBackWall = 1.0;
+	
+	CVMultiplierAppendage = 1.0f;
+	RPMultiplierAppendage = 1.0f;
+	CVVectorReductionLAA = 0.3f;
+
+

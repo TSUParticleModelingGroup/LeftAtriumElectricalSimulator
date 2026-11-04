@@ -43,6 +43,9 @@ using namespace std;
 // This sets how many muscle can be connected to a node.
 #define MUSCLES_PER_NODE 20
 
+// The number of different tissue types used.
+#define NUMBER_OF_TYPES 11
+
 // Structures *****************************************************************
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
 struct nodeAttributesStructure
@@ -251,10 +254,13 @@ float CVMultiplierBackWall;
 float RPMultiplierBackWall;
 float CVMultiplierAppendage;
 float RPMultiplierAppendage;
+float CVVectorReductionLSPV;
+float CVVectorReductionLIPV;
+float CVVectorReductionRSPV;
+float CVVectorReductionRIPV;
+float CVVectorReductionMainBody;
+float CVVectorReductionLAA;
 	
-	
-
-
 // This will hold the radius of the left atrium which we will use to scale the size of everything in the simulation.
 // It is calculated in setNodesAndMuscles.h/findRadiusAndMassOfLeftAtrium().
 // *** Should be stored if a runfile is saved.
@@ -304,6 +310,7 @@ int main(int, char**);
 // System input and output functions ********************************************************
 void readBasicSimulationSetupParameters();
 void readIntermediateSimulationSetupParameters();
+void readAdvancedSimulationSetupParameters();
 void readNodesAndMusclesFromBinaryFile();
 void saveRun();
 void uploadPreviousRun();
@@ -319,7 +326,7 @@ void setPulseNode();
 void setBachmannsBundle(float, float);
 void setPulmonaryVein(int, int, float, float, float, float, float);
 void setBackWall(float, float);
-void setMitralValveOpening();
+void setMitralValveOpening(int);
 void setAppendage(int, float, float);
 void setScarTissue();
 void setExtraTissue();
@@ -392,3 +399,6 @@ void showMuscleTypes();
  float dotProduct(float4, float4);
  float4 addFloat4(float4, float4);
  float4 subtractFloat4(float4, float4);
+ void setSingleMuscleTypeAndColor(int);
+ void setAllMuscleTypesAndColors();
+ float4 getColorFromType(int);
