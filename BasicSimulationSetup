@@ -12,10 +12,15 @@ Name of the files that holds the nodes and muscles.
 
 Cactus.bin
 BMW_Test.bin
+CW_p1_done_b_e.bin
+Circle24.bin
+Circle200.bin
+600by200mm600X200.bin
+IdealLeftAtrium13.0KNotTriangle.bin
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = CW_p1_done_b_e.bin
+--InputFileName = IdealLeftAtrium13.0KNotTriangle.bin
 
 Name of previous run files that were stored in GitHub.
 test

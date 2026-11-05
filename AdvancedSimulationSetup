@@ -5,7 +5,7 @@ Any value read from this file that is not in these units will be converted to th
 
 	CVVectorReductionMainBody = 0.3f;
 	
-	CVMultiplierBachmannBundle = 20.0f;
+	CVMultiplierBachmannBundle = 2.0f;
 	RPMultiplierBachmannBundle = 1.0f;
 	
 	StartingCVMultiplierLSPV = 1.0f;

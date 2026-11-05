@@ -283,7 +283,7 @@ double RunTime = -1.0; // Set to -1.0 to flag it if it is used before it is set.
 float4 CenterOfSimulation;
 //float4 AngleOfSimulation;
 
-// Window globals 
+// Window globals setNonstandardShapes()
 // They are all initialized in main().
 GLFWwindow* Window; // Window pointer
 int XWindowSize;
@@ -299,7 +299,6 @@ double CenterZ;
 double UpX; // What up means to the viewer
 double UpY;
 double UpZ;
-
 float4 OtherPoints[20];
 	
 // ***************************** Prototyping functions *************************************************************************
@@ -327,6 +326,7 @@ void setBachmannsBundle(float, float);
 void setPulmonaryVein(int, int, float, float, float, float, float);
 void setBackWall(float, float);
 void setMitralValveOpening(int);
+void setNonstandardShapesFiberDirection();
 void setAppendage(int, float, float);
 void setScarTissue();
 void setExtraTissue();
@@ -336,7 +336,7 @@ void setExtraTissue();
 void nBody(double);
 
 // CUDA Functions ***********************************************************************
-__device__ void turnOnNodeMusclesGPU(int, int, int, muscleAttributesStructure *, nodeAttributesStructure *);
+__device__ void turnOnNodeMusclesGPU(int, int, int, float, muscleAttributesStructure *, nodeAttributesStructure *);
 __global__ void updateNodes(nodeAttributesStructure *, int, int, muscleAttributesStructure *, float, float);
 __global__ void updateMuscles(muscleAttributesStructure *, nodeAttributesStructure *, int, int, float, float4, float4, float4, float4);
 void cudaErrorCheck(const char *, int);

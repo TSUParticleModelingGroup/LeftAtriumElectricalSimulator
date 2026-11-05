@@ -971,6 +971,7 @@ void createNewRun()
 	setAllMuscleTypesAndColors();
 	if(numberOfBackWallNodes != 0) setBackWall(CVMultiplierBackWall, RPMultiplierBackWall);
 	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening(numberOfMitralValveOpeningNodes);
+	else(setNonstandardShapesFiberDirection());
 	if(numberOfAppendageNodes != 0) setAppendage(numberOfAppendageNodes, CVMultiplierAppendage, RPMultiplierAppendage);
 	
 	
@@ -1593,6 +1594,49 @@ void setMitralValveOpening(int numberOfMVONodes)
 	}
 }
 
+void setNonstandardShapesFiberDirection()
+{
+	OtherPoints[10] = Node[PulsePointNode].position;
+	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		centerOfLA.x += Node[i].position.x;
+		centerOfLA.y += Node[i].position.y;
+		centerOfLA.z += Node[i].position.z;
+		centerOfLA.w++;
+	}
+	centerOfLA.x /= centerOfLA.w;
+	centerOfLA.y /= centerOfLA.w;
+	centerOfLA.z /= centerOfLA.w;
+	
+	OtherPoints[11] = centerOfLA;
+	
+	float4 v, u;
+	v.x = OtherPoints[11].x - OtherPoints[10].x;
+	v.y = OtherPoints[11].y - OtherPoints[10].y;
+	v.z = OtherPoints[11].z - OtherPoints[10].z;
+	v.w = 0.0f;
+	
+	float cosTheta;
+	float vectorReduction = CVVectorReductionMainBody;
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypeBachmannBundle || Muscle[i].type == TypeBackWall || Muscle[i].type == TypeStandardLA)
+		{
+			u.x = Node[Muscle[i].nodeB].position.x - Node[Muscle[i].nodeA].position.x;
+			u.y = Node[Muscle[i].nodeB].position.y - Node[Muscle[i].nodeA].position.y;
+			u.z = Node[Muscle[i].nodeB].position.z - Node[Muscle[i].nodeA].position.z;
+			u.w = 0.0f;
+			
+			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
+			if(cosTheta < 0) cosTheta = -cosTheta;
+			
+			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
+			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+		}
+	}
+}
+
 void setAppendage(int numberOfLAANodes, float multiplierCV, float multiplierRP)
 {
 	struct nodeInfo
@@ -1763,7 +1807,7 @@ void nBody(double dt)
  	b. Sets the muscle to on.
  	c. Sets the muscle's timer to 0.0.
 */
-__device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int musclesPerNode, muscleAttributesStructure *muscle, nodeAttributesStructure *node)
+__device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int musclesPerNode, float dt, muscleAttributesStructure *muscle, nodeAttributesStructure *node)
 {
 	int muscleNumber;
 	
@@ -1771,16 +1815,22 @@ __device__ void turnOnNodeMusclesGPU(int nodeToTurnOn, int numberOfNodes, int mu
 	{
 		muscleNumber = node[nodeToTurnOn].muscle[j];
 		
-		// 1: Is this a legit muscle and is it ready to turn on.
-		if((muscleNumber != -1) && (!muscle[muscleNumber].isOn))
+		// 1: Is this a legit muscle. 
+		if(muscleNumber != -1)
 		{
-			muscle[muscleNumber].apNode = nodeToTurnOn;  //a: This is the node where the AP wave will now start moving away from.
-			muscle[muscleNumber].isOn = true; //b: Set to on.
-			muscle[muscleNumber].timer = 0.0; //c: Set timer.
+			if(!muscle[muscleNumber].isOn) // Is it ready to turn on.
+			{
+				muscle[muscleNumber].apNode = nodeToTurnOn;  //a: This is the node where the AP wave will now start moving away from.
+				muscle[muscleNumber].isOn = true; //b: Set to on.
+				muscle[muscleNumber].timer = 0.0; //c: Set timer.
+			}
+			else if(muscle[muscleNumber].timer < muscle[muscleNumber].conductionDuration && (nodeToTurnOn != muscle[muscleNumber].apNode)) // Muscle is hit with signal from the other side before the AP wave has left this muscle.
+			{
+				muscle[muscleNumber].timer = muscle[muscleNumber].conductionDuration + dt; // Setting the time just past the conduction duration so it will not try and excite the next node. The signals will just stop.
+			}
 		}
 	}
 }
-
 
 /*
  This CUDA function: 
@@ -1799,7 +1849,7 @@ __global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, in
 		{
 			if(node[i].isBeatNode)
 			{
-				if(node[i].beatPeriod < node[i].beatTimer) // If the time is past its period set it to fire and reset it internal clock.
+				if(node[i].beatPeriod < node[i].beatTimer) // If the time is past its period, set it to fire and reset it internal clock.
 				{	
 					node[i].isFiring = true;		
 					node[i].beatTimer = 0.0; 
@@ -1818,7 +1868,7 @@ __global__ void updateNodes(nodeAttributesStructure *node, int numberOfNodes, in
 			// beat period.
 			if(node[i].isFiring)
 			{
-				turnOnNodeMusclesGPU(i, numberOfNodes, musclesPerNode, muscle, node);
+				turnOnNodeMusclesGPU(i, numberOfNodes, musclesPerNode, dt, muscle, node);
 				node[i].isFiring = false;
 			}
 		}
@@ -1862,9 +1912,9 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 				}
 				else
 				{
-					// If you want to do something with a beat node when it is hit by a signal, 
-					// like reset its internal clock, do it here.
-					// Currently we are simply ignoring the signal.
+					// Beat node actions go here.
+					node[nodeId].isFiring = true;
+					node[nodeId].beatTimer = 0.0f;
 				}
 			}
 		
@@ -1903,7 +1953,6 @@ __global__ void updateMuscles(muscleAttributesStructure *muscle, nodeAttributesS
 				muscle[i].color.x = readyColor.x;
 				muscle[i].color.y = readyColor.y;
 				muscle[i].color.z = readyColor.z;
-				muscle[i].color.w = 1.0;
 				
 				muscle[i].isOn = false;
 				muscle[i].timer = 0.0;
@@ -2804,7 +2853,6 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 						Muscle[muscleId].color.x = 1.0;
 						Muscle[muscleId].color.y = 0.0;
 						Muscle[muscleId].color.z = 1.0;
-						Muscle[muscleId].color.w = 0.0;
 						
 						checkMuscle(muscleId);		
 					}
@@ -2883,7 +2931,6 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 									Muscle[muscleId].color.x = 1.0;
 									Muscle[muscleId].color.y = 0.0;
 									Muscle[muscleId].color.z = 1.0;
-									Muscle[muscleId].color.w = 0.0;
 									
 									checkMuscle(muscleId);
 								}
@@ -3007,7 +3054,6 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 						Muscle[muscleId].color.x = 0.0;
 						Muscle[muscleId].color.y = 1.0;
 						Muscle[muscleId].color.z = 0.0;
-						Muscle[muscleId].color.w = 0.0;
 						// Turning the muscle back on if it was disabled.
 						Muscle[muscleId].isEnabled = true;
 						
@@ -3046,7 +3092,6 @@ void myMouseCallback(GLFWwindow* window, int button, int action, int mods)
 									Muscle[muscleId].color.x = 0.0;
 									Muscle[muscleId].color.y = 1.0;
 									Muscle[muscleId].color.z = 0.0;
-									Muscle[muscleId].color.w = 0.0;
 									
 									// Turning the muscle back on if it was disabled.
 									Muscle[muscleId].isEnabled = true;
@@ -3872,7 +3917,6 @@ void checkMuscle(int muscleId)
 	 	Muscle[muscleId].color.x = DeadColor.x;
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
-		Muscle[muscleId].color.w = 1.0;
 	} 
 	// 2:
 	if(Muscle[muscleId].absoluteRefractoryPeriodFraction < 0.5 || 1.0 < Muscle[muscleId].absoluteRefractoryPeriodFraction)
@@ -3883,7 +3927,6 @@ void checkMuscle(int muscleId)
 	 	Muscle[muscleId].color.x = DeadColor.x;
 		Muscle[muscleId].color.y = DeadColor.y;
 		Muscle[muscleId].color.z = DeadColor.z;
-		Muscle[muscleId].color.w = 1.0;
 	}
 }
 
