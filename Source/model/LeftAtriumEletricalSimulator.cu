@@ -1459,7 +1459,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
 			if(cosTheta < 0) cosTheta = -cosTheta;
 			
-			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
+			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(cosTheta); // This makes the max CV perpendicular to the vector.
 			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
 		}
 	}
@@ -1592,6 +1592,11 @@ void setMitralValveOpening(int numberOfMVONodes)
 			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
 		}
 	}
+	
+	OtherPoints[12].x = (OtherPoints[0].x + OtherPoints[2].x + OtherPoints[4].x + OtherPoints[6].x)/4.0f;
+	OtherPoints[12].y = (OtherPoints[0].y + OtherPoints[2].y + OtherPoints[4].y + OtherPoints[6].y)/4.0f;
+	OtherPoints[12].z = (OtherPoints[0].z + OtherPoints[2].z + OtherPoints[4].z + OtherPoints[6].z)/4.0f;
+	OtherPoints[13] = centerOfLA;
 }
 
 void setNonstandardShapesFiberDirection()
@@ -1727,7 +1732,7 @@ void setAppendage(int numberOfLAANodes, float multiplierCV, float multiplierRP)
 			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
 			if(cosTheta < 0) cosTheta = -cosTheta;
 			
-			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
+			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta); // This makes the max CV parallel to the vector.
 			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
 		}
 	}
@@ -3335,7 +3340,7 @@ void drawPicture()
 	}
 	
 	//glColor3d(0.0,1.0,1.0);
-	for(int i = 0; i < 12; i++) // BMW can go up to 20
+	for(int i = 0; i < 14; i++) // BMW can go up to 20
 	{
 		if(i%2 == 0) glColor3d(0.0,1.0,0.0);
 		else glColor3d(1.0,0.0,0.0);
@@ -3394,6 +3399,11 @@ void drawPicture()
 	glBegin(GL_LINES);
 		glVertex3f(OtherPoints[10].x, OtherPoints[10].y, OtherPoints[10].z);
 		glVertex3f(OtherPoints[11].x, OtherPoints[11].y, OtherPoints[11].z);
+	glEnd();
+	
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[12].x, OtherPoints[12].y, OtherPoints[12].z);
+		glVertex3f(OtherPoints[13].x, OtherPoints[13].y, OtherPoints[13].z);
 	glEnd();
 	
 	// Drawing nodes

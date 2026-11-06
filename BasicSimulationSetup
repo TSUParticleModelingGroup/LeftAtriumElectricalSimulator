@@ -20,7 +20,7 @@ IdealLeftAtrium13.0KNotTriangle.bin
 
 Place the Nodes and Muscle file you would like to run here.
 
---InputFileName = IdealLeftAtrium13.0KNotTriangle.bin
+--InputFileName = CW_p1_done_b_e.bin
 
 Name of previous run files that were stored in GitHub.
 test
