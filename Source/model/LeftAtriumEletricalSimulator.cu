@@ -1573,12 +1573,33 @@ void setMitralValveOpening(int numberOfMVONodes)
 	v.y = OtherPoints[11].y - OtherPoints[10].y;
 	v.z = OtherPoints[11].z - OtherPoints[10].z;
 	v.w = 0.0f;
-		
+	
 	float cosTheta;
+	bool outOfBoundsNode[NumberOfNodes];
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		outOfBoundsNode[i] = false;
+		if(Node[i].type == TypeStandardLA || Node[i].type == TypeBachmannBundle)
+		{
+			u.x = Node[i].position.x - OtherPoints[10].x;
+			u.y = Node[i].position.y - OtherPoints[10].y;
+			u.z = Node[i].position.z - OtherPoints[10].z;
+			u.w = 0.0f;
+			
+			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
+			if(cosTheta < 0) cosTheta = -cosTheta;
+			if(0.8f < cosTheta) // Less than 36.9 degrees off the central vector (cos(30)~0.866y.
+			{
+				if(0.8f < cosTheta && cosTheta < 0.82f) Node[i].color = {0.0f, 1.0f, 0.902f, 0.0f};  // Coment this line out to hide the bourder where LA and BB nodes are and are not vector direction adjusting.
+				outOfBoundsNode[i] = true;
+			}
+		}
+	}
+		
 	float vectorReduction = CVVectorReductionMainBody;
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
-		if(Muscle[i].type == TypeBachmannBundle || Muscle[i].type == TypeBackWall || Muscle[i].type == TypeStandardLA)
+		if((Muscle[i].type == TypeStandardLA || Muscle[i].type == TypeBachmannBundle) && (outOfBoundsNode[Muscle[i].nodeA] == false && outOfBoundsNode[Muscle[i].nodeB] == false))
 		{
 			u.x = Node[Muscle[i].nodeB].position.x - Node[Muscle[i].nodeA].position.x;
 			u.y = Node[Muscle[i].nodeB].position.y - Node[Muscle[i].nodeA].position.y;
@@ -1590,6 +1611,9 @@ void setMitralValveOpening(int numberOfMVONodes)
 			
 			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
 			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
+			
+			//Node[Muscle[i].nodeA].color = {0.5f, 0.0f, 0.4f, 0.0f};
+			//Node[Muscle[i].nodeB].color = {0.5f, 0.0f, 0.4f, 0.0f};
 		}
 	}
 	
@@ -3340,7 +3364,7 @@ void drawPicture()
 	}
 	
 	//glColor3d(0.0,1.0,1.0);
-	for(int i = 0; i < 14; i++) // BMW can go up to 20
+	for(int i = 0; i < 12; i++) // BMW can go up to 20
 	{
 		if(i%2 == 0) glColor3d(0.0,1.0,0.0);
 		else glColor3d(1.0,0.0,0.0);
@@ -3401,10 +3425,10 @@ void drawPicture()
 		glVertex3f(OtherPoints[11].x, OtherPoints[11].y, OtherPoints[11].z);
 	glEnd();
 	
-	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[12].x, OtherPoints[12].y, OtherPoints[12].z);
-		glVertex3f(OtherPoints[13].x, OtherPoints[13].y, OtherPoints[13].z);
-	glEnd();
+	//glBegin(GL_LINES);
+		//glVertex3f(OtherPoints[12].x, OtherPoints[12].y, OtherPoints[12].z);
+		//glVertex3f(OtherPoints[13].x, OtherPoints[13].y, OtherPoints[13].z);
+	//glEnd();
 	
 	// Drawing nodes
 	if(SimulationSwitch.DrawNodesFlag == 1 || SimulationSwitch.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
