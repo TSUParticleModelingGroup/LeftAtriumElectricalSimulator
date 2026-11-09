@@ -500,6 +500,9 @@ void readAdvancedSimulationSetupParameters()
 		getline(data,name,'=');
 		data >> CVVectorReductionLAA;
 		
+		getline(data,name,'=');
+		data >> RoofAngle;;
+		
 	}
 	else
 	{
@@ -1109,6 +1112,7 @@ void boarderCleaning()
 			int countPVRI = 0;
 			int countLAA = 0;
 			int countMVO = 0;
+			int countBW = 0;
 			for(int j = 0; j < MUSCLES_PER_NODE; j++)
 			{
 				muscleId = Node[i].muscle[j];
@@ -1122,6 +1126,7 @@ void boarderCleaning()
 					if(Node[i].type != TypePulmonaryVeinLI && (Node[nodeIdA].type == TypePulmonaryVeinRI || Node[nodeIdB].type == TypePulmonaryVeinRI)) countPVRI++;
 					if(Node[i].type != TypeAppendage && (Node[nodeIdA].type == TypeAppendage || Node[nodeIdB].type == TypeAppendage)) countLAA++;
 					if(Node[i].type != TypeMitralValveOpening && (Node[nodeIdA].type == TypeMitralValveOpening || Node[nodeIdB].type == TypeMitralValveOpening)) countMVO++;
+					if(Node[i].type != TypeBackWall && (Node[nodeIdA].type == TypeBackWall || Node[nodeIdB].type == TypeBackWall)) countBW++;
 				}
 			}
 			
@@ -1161,6 +1166,12 @@ void boarderCleaning()
 				{
 					Node[i].type = TypeMitralValveOpening;
 					Node[i].color = {0.5f, 0.0f, 0.5f, 0.0f};
+					change = true;
+				}
+				if(2 < countBW) 
+				{
+					Node[i].type = TypeBackWall;
+					Node[i].color = {0.0f, 1.0f, 0.0f, 0.0f};
 					change = true;
 				}
 			}
@@ -1545,21 +1556,6 @@ void setMitralValveOpening(int numberOfMVONodes)
 	
 	OtherPoints[10] = centerOfMVOBoarder;
 	
-	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		if(Node[i].type == TypeBachmannBundle || Node[i].type == TypeBackWall || Node[i].type == TypeStandardLA || Node[i].type == TypeScarTissue) // This should be scare tissue in the main body of the LA.
-		centerOfLA.x += Node[i].position.x;
-		centerOfLA.y += Node[i].position.y;
-		centerOfLA.z += Node[i].position.z;
-		centerOfLA.w++;
-	}
-	centerOfLA.x /= centerOfLA.w;
-	centerOfLA.y /= centerOfLA.w;
-	centerOfLA.z /= centerOfLA.w;
-	
-	OtherPoints[11] = centerOfLA;
-	
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		if(Muscle[i].type == TypeMitralValveOpening)
@@ -1569,12 +1565,18 @@ void setMitralValveOpening(int numberOfMVONodes)
 	}
 	
 	float4 v, u;
+	
+	OtherPoints[11].x = (OtherPoints[0].x + OtherPoints[2].x + OtherPoints[4].x + OtherPoints[6].x)/4.0f;
+	OtherPoints[11].y = (OtherPoints[0].y + OtherPoints[2].y + OtherPoints[4].y + OtherPoints[6].y)/4.0f;
+	OtherPoints[11].z = (OtherPoints[0].z + OtherPoints[2].z + OtherPoints[4].z + OtherPoints[6].z)/4.0f;
+	
 	v.x = OtherPoints[11].x - OtherPoints[10].x;
 	v.y = OtherPoints[11].y - OtherPoints[10].y;
 	v.z = OtherPoints[11].z - OtherPoints[10].z;
 	v.w = 0.0f;
 	
 	float cosTheta;
+	//float RoofAngle = PI/6.0f;
 	bool outOfBoundsNode[NumberOfNodes];
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
@@ -1588,9 +1590,9 @@ void setMitralValveOpening(int numberOfMVONodes)
 			
 			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
 			if(cosTheta < 0) cosTheta = -cosTheta;
-			if(0.8f < cosTheta) // Less than 36.9 degrees off the central vector (cos(30)~0.866y.
+			if(cos(RoofAngle) < cosTheta)
 			{
-				if(0.8f < cosTheta && cosTheta < 0.82f) Node[i].color = {0.0f, 1.0f, 0.902f, 0.0f};  // Coment this line out to hide the bourder where LA and BB nodes are and are not vector direction adjusting.
+				if(cos(RoofAngle) < cosTheta && cosTheta < cos(RoofAngle - 0.02f)) Node[i].color = {0.0f, 1.0f, 0.902f, 0.0f};  // Coment this line out to hide the bourder where LA and BB nodes are and are not vector direction adjusting.
 				outOfBoundsNode[i] = true;
 			}
 		}
@@ -1617,10 +1619,20 @@ void setMitralValveOpening(int numberOfMVONodes)
 		}
 	}
 	
-	OtherPoints[12].x = (OtherPoints[0].x + OtherPoints[2].x + OtherPoints[4].x + OtherPoints[6].x)/4.0f;
-	OtherPoints[12].y = (OtherPoints[0].y + OtherPoints[2].y + OtherPoints[4].y + OtherPoints[6].y)/4.0f;
-	OtherPoints[12].z = (OtherPoints[0].z + OtherPoints[2].z + OtherPoints[4].z + OtherPoints[6].z)/4.0f;
-	OtherPoints[13] = centerOfLA;
+	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypeBachmannBundle || Node[i].type == TypeBackWall || Node[i].type == TypeStandardLA || Node[i].type == TypeScarTissue) // This should be scare tissue in the main body of the LA.
+		centerOfLA.x += Node[i].position.x;
+		centerOfLA.y += Node[i].position.y;
+		centerOfLA.z += Node[i].position.z;
+		centerOfLA.w++;
+	}
+	centerOfLA.x /= centerOfLA.w;
+	centerOfLA.y /= centerOfLA.w;
+	centerOfLA.z /= centerOfLA.w;
+	
+	OtherPoints[12] = centerOfLA;
 }
 
 void setNonstandardShapesFiberDirection()
@@ -3374,6 +3386,12 @@ void drawPicture()
 		glPopMatrix();
 	}
 	
+	glColor3d(0.0,0.0,1.0);
+	glPushMatrix();
+		glTranslatef(OtherPoints[12].x, OtherPoints[12].y, OtherPoints[12].z);
+		renderSphereVBO();
+	glPopMatrix();
+	
 	glColor3d(1.0,1.0,1.0);
 	dx = OtherPoints[1].x - OtherPoints[0].x;
 	dy = OtherPoints[1].y - OtherPoints[0].y;
@@ -3425,10 +3443,6 @@ void drawPicture()
 		glVertex3f(OtherPoints[11].x, OtherPoints[11].y, OtherPoints[11].z);
 	glEnd();
 	
-	//glBegin(GL_LINES);
-		//glVertex3f(OtherPoints[12].x, OtherPoints[12].y, OtherPoints[12].z);
-		//glVertex3f(OtherPoints[13].x, OtherPoints[13].y, OtherPoints[13].z);
-	//glEnd();
 	
 	// Drawing nodes
 	if(SimulationSwitch.DrawNodesFlag == 1 || SimulationSwitch.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
@@ -3541,27 +3555,30 @@ void drawPicture()
 			{
 				if(0.0 < Muscle[i].timer && Muscle[i].timer < Muscle[i].conductionDuration)
 				{
-					distance = Muscle[i].conductionVelocity*Muscle[i].timer;
-					if(Muscle[i].apNode == Muscle[i].nodeA)
+					if(SimulationSwitch.DrawFrontHalfFlag != 1 || (CenterOfSimulation.z < Node[Muscle[i].nodeA].position.z))
 					{
-						id1 = Muscle[i].nodeA;
-						id2 = Muscle[i].nodeB;
+						distance = Muscle[i].conductionVelocity*Muscle[i].timer;
+						if(Muscle[i].apNode == Muscle[i].nodeA)
+						{
+							id1 = Muscle[i].nodeA;
+							id2 = Muscle[i].nodeB;
+						}
+						else
+						{
+							id1 = Muscle[i].nodeB;
+							id2 = Muscle[i].nodeA;
+						}
+						dx = Node[id2].position.x - Node[id1].position.x;
+						dy = Node[id2].position.y - Node[id1].position.y;
+						dz = Node[id2].position.z - Node[id1].position.z;
+						d = sqrt(dx*dx + dy*dy + dz*dz);
+						
+						x = Node[id1].position.x + distance*(dx/d);
+						y = Node[id1].position.y + distance*(dy/d);
+						z = Node[id1].position.z + distance*(dz/d);
+						
+						glVertex3f(x, y, z);
 					}
-					else
-					{
-						id1 = Muscle[i].nodeB;
-						id2 = Muscle[i].nodeA;
-					}
-					dx = Node[id2].position.x - Node[id1].position.x;
-					dy = Node[id2].position.y - Node[id1].position.y;
-					dz = Node[id2].position.z - Node[id1].position.z;
-					d = sqrt(dx*dx + dy*dy + dz*dz);
-					
-					x = Node[id1].position.x + distance*(dx/d);
-					y = Node[id1].position.y + distance*(dy/d);
-					z = Node[id1].position.z + distance*(dz/d);
-					
-					glVertex3f(x, y, z);
 				}
 			}
 		}

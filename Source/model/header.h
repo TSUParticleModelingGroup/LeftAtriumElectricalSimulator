@@ -260,6 +260,7 @@ float CVVectorReductionRSPV;
 float CVVectorReductionRIPV;
 float CVVectorReductionMainBody;
 float CVVectorReductionLAA;
+float RoofAngle;
 	
 // This will hold the radius of the left atrium which we will use to scale the size of everything in the simulation.
 // It is calculated in setNodesAndMuscles.h/findRadiusAndMassOfLeftAtrium().
