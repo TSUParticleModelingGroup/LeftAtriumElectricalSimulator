@@ -46,6 +46,9 @@ using namespace std;
 // The number of different tissue types used.
 #define NUMBER_OF_TYPES 11
 
+// The number of other points used to draw stuff, that need to be move with the object.
+#define NUMBER_OF_OTHER_POINTS 30
+
 // Structures *****************************************************************
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
 struct nodeAttributesStructure
@@ -167,6 +170,7 @@ const int TypePulmonaryVeinLS = 2;
 const int TypePulmonaryVeinLI = 21;
 const int TypePulmonaryVeinRS = 22;
 const int TypePulmonaryVeinRI = 23;
+const int TypePulmonaryVein5 = 25;
 const int TypeBackWall = 3;
 const int TypeMitralValveOpening = 4;
 const int TypeAppendage = 5;
@@ -226,38 +230,51 @@ float4 RepolarizingColor;
 float4 RelativeRepolarizingColor;
 float4 DeadColor;
 
-
 // These will go in the advanced setup file. BMW
 float CVMultiplierBachmannBundle;
 float RPMultiplierBachmannBundle;
-float StartingCVMultiplierLSPV;
-float EndingCVMultiplierLSPV;
-float StartingRPMultiplierLSPV;
-float EndingRPMultiplierLSPV;
-float TransitionLengthLSPV;
-float StartingCVMultiplierLIPV;
-float EndingCVMultiplierLIPV;
-float StartingRPMultiplierLIPV;
-float EndingRPMultiplierLIPV;
-float TransitionLengthLIPV;
-float StartingCVMultiplierRSPV;
-float EndingCVMultiplierRSPV;
-float StartingRPMultiplierRSPV;
-float EndingRPMultiplierRSPV;
-float TransitionLengthRSPV;
-float StartingCVMultiplierRIPV;
-float EndingCVMultiplierRIPV;
-float StartingRPMultiplierRIPV;
-float EndingRPMultiplierRIPV;
-float TransitionLengthRIPV;
+
+float StartingCVMultiplierPVLS;
+float EndingCVMultiplierPVLS;
+float StartingRPMultiplierPVLS;
+float EndingRPMultiplierPVLS;
+float TransitionLengthPVLS;
+
+float StartingCVMultiplierPVLI;
+float EndingCVMultiplierPVLI;
+float StartingRPMultiplierPVLI;
+float EndingRPMultiplierPVLI;
+float TransitionLengthPVLI;
+
+float StartingCVMultiplierPVRS;
+float EndingCVMultiplierPVRS;
+float StartingRPMultiplierPVRS;
+float EndingRPMultiplierPVRS;
+float TransitionLengthPVRS;
+
+float StartingCVMultiplierPVRI;
+float EndingCVMultiplierPVRI;
+float StartingRPMultiplierPVRI;
+float EndingRPMultiplierPVRI;
+float TransitionLengthPVRI;
+
+float StartingCVMultiplierPV5;
+float EndingCVMultiplierPV5;
+float StartingRPMultiplierPV5;
+float EndingRPMultiplierPV5;
+float TransitionLengthPV5;
+
 float CVMultiplierBackWall;
 float RPMultiplierBackWall;
+
 float CVMultiplierAppendage;
 float RPMultiplierAppendage;
-float CVVectorReductionLSPV;
-float CVVectorReductionLIPV;
-float CVVectorReductionRSPV;
-float CVVectorReductionRIPV;
+
+float CVVectorReductionPVLS;
+float CVVectorReductionPVLI;
+float CVVectorReductionPVRS;
+float CVVectorReductionPVRI;
+float CVVectorReductionPV5;
 float CVVectorReductionMainBody;
 float CVVectorReductionLAA;
 float RoofAngle;
@@ -300,7 +317,20 @@ double CenterZ;
 double UpX; // What up means to the viewer
 double UpY;
 double UpZ;
-float4 OtherPoints[20];
+
+// Other viewing points
+float4 OtherPoints[NUMBER_OF_OTHER_POINTS];
+
+float4 *OpeningPVLS = &OtherPoints[0];
+float4 *CenterPVLS = &OtherPoints[1];
+float4 *OpeningPVLI = &OtherPoints[2];
+float4 *CenterPVLI = &OtherPoints[3];
+float4 *OpeningPVRS = &OtherPoints[4];
+float4 *CenterPVRS = &OtherPoints[5];
+float4 *OpeningPVRI = &OtherPoints[6];
+float4 *CenterPVRI = &OtherPoints[7];
+float4 *OpeningPV5 = &OtherPoints[8];
+float4 *CenterPV5 = &OtherPoints[9];
 	
 // ***************************** Prototyping functions *************************************************************************
 
@@ -327,10 +357,10 @@ void setBachmannsBundle(float, float);
 void setPulmonaryVein(int, int, float, float, float, float, float);
 void setBackWall(float, float);
 void setMitralValveOpening(int);
-void setNonstandardShapesFiberDirection();
 void setAppendage(int, float, float);
 void setScarTissue();
 void setExtraTissue();
+void setNonstandardShapesFiberDirection();
 //void setRemainingNodeAndMuscleAttributes();
 
 // Function called to move the simulation forward in time. *************************************************

@@ -409,79 +409,98 @@ void readAdvancedSimulationSetupParameters()
 		
 		
 		getline(data,name,'=');
-		data >> StartingCVMultiplierLSPV;
+		data >> StartingCVMultiplierPVLS;
 		
 		getline(data,name,'=');
-		data >> EndingCVMultiplierLSPV;
+		data >> EndingCVMultiplierPVLS;
 		
 		getline(data,name,'=');
-		data >> StartingRPMultiplierLSPV;
+		data >> StartingRPMultiplierPVLS;
 		
 		getline(data,name,'=');
-		data >> EndingRPMultiplierLSPV;
+		data >> EndingRPMultiplierPVLS;
 		
 		getline(data,name,'=');
-		data >> TransitionLengthLSPV;
+		data >> TransitionLengthPVLS;
 		
 		getline(data,name,'=');
-		data >> CVVectorReductionLSPV;
-		
-		
-		getline(data,name,'=');
-		data >> StartingCVMultiplierLIPV;
-		
-		getline(data,name,'=');
-		data >> EndingCVMultiplierLIPV;
-		
-		getline(data,name,'=');
-		data >> StartingRPMultiplierLIPV;
-		
-		getline(data,name,'=');
-		data >> EndingRPMultiplierLIPV;
-		
-		getline(data,name,'=');
-		data >> TransitionLengthLIPV;
-		
-		getline(data,name,'=');
-		data >> CVVectorReductionLIPV;
+		data >> CVVectorReductionPVLS;
 		
 		
 		getline(data,name,'=');
-		data >> StartingCVMultiplierRSPV;
+		data >> StartingCVMultiplierPVLI;
 		
 		getline(data,name,'=');
-		data >> EndingCVMultiplierRSPV;
+		data >> EndingCVMultiplierPVLI;
 		
 		getline(data,name,'=');
-		data >> StartingRPMultiplierRSPV;
+		data >> StartingRPMultiplierPVLI;
 		
 		getline(data,name,'=');
-		data >> EndingRPMultiplierRSPV;
+		data >> EndingRPMultiplierPVLI;
 		
 		getline(data,name,'=');
-		data >> TransitionLengthRSPV;
+		data >> TransitionLengthPVLI;
 		
 		getline(data,name,'=');
-		data >> CVVectorReductionRSPV;
+		data >> CVVectorReductionPVLI;
 		
 		
 		getline(data,name,'=');
-		data >> StartingCVMultiplierRIPV;
+		data >> StartingCVMultiplierPVRS;
 		
 		getline(data,name,'=');
-		data >> EndingCVMultiplierRIPV;
+		data >> EndingCVMultiplierPVRS;
 		
 		getline(data,name,'=');
-		data >> StartingRPMultiplierRIPV;
+		data >> StartingRPMultiplierPVRS;
 		
 		getline(data,name,'=');
-		data >> EndingRPMultiplierRIPV;
+		data >> EndingRPMultiplierPVRS;
 		
 		getline(data,name,'=');
-		data >> TransitionLengthRIPV;
+		data >> TransitionLengthPVRS;
 		
 		getline(data,name,'=');
-		data >> CVVectorReductionRIPV;
+		data >> CVVectorReductionPVRS;
+		
+		
+		getline(data,name,'=');
+		data >> StartingCVMultiplierPVRI;
+		
+		getline(data,name,'=');
+		data >> EndingCVMultiplierPVRI;
+		
+		getline(data,name,'=');
+		data >> StartingRPMultiplierPVRI;
+		
+		getline(data,name,'=');
+		data >> EndingRPMultiplierPVRI;
+		
+		getline(data,name,'=');
+		data >> TransitionLengthPVRI;
+		
+		getline(data,name,'=');
+		data >> CVVectorReductionPVRI;
+		
+		
+		getline(data,name,'=');
+		data >> StartingCVMultiplierPV5;
+		
+		getline(data,name,'=');
+		data >> EndingCVMultiplierPV5;
+		
+		getline(data,name,'=');
+		data >> StartingRPMultiplierPV5;
+		
+		getline(data,name,'=');
+		data >> EndingRPMultiplierPV5;
+		
+		getline(data,name,'=');
+		data >> TransitionLengthPV5;
+		
+		getline(data,name,'=');
+		data >> CVVectorReductionPV5;
 		
 		
 		getline(data,name,'=');
@@ -874,12 +893,21 @@ void createNewRun()
 	RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
 	setRemainingParameters();
 	
+	if(RadiusOfLeftAtrium < 0.0)
+	{
+		printf("\n\n You are trying to use RadiusOfLeftAtrium before it is set.");
+		printf("\n The simulation has been terminated.\n\n");
+		exit(0);
+	}
+	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++) OtherPoints[i] = {2.0f*(float)RadiusOfLeftAtrium, 2.0f*(float)RadiusOfLeftAtrium, 2.0f*(float)RadiusOfLeftAtrium, 0.0f};
+	
 	int numberOfStandardLANodes = 0;
 	int numberOfBachmannBundleNodes = 0;
 	int numberOfPulmonaryVeinLSNodes = 0;
 	int numberOfPulmonaryVeinLINodes = 0;
 	int numberOfPulmonaryVeinRSNodes = 0;
 	int numberOfPulmonaryVeinRINodes = 0;
+	int numberOfPulmonaryVein5Nodes = 0;
 	int numberOfBackWallNodes = 0;
 	int numberOfMitralValveOpeningNodes = 0;
 	int numberOfAppendageNodes = 0;
@@ -894,6 +922,7 @@ void createNewRun()
 		else if(Node[i].type == TypePulmonaryVeinLI) numberOfPulmonaryVeinLINodes++;
 		else if(Node[i].type == TypePulmonaryVeinRS) numberOfPulmonaryVeinRSNodes++;
 		else if(Node[i].type == TypePulmonaryVeinRI) numberOfPulmonaryVeinRINodes++;
+		else if(Node[i].type == TypePulmonaryVein5) numberOfPulmonaryVein5Nodes++;
 		else if(Node[i].type == TypeBackWall) numberOfBackWallNodes++;
 		else if(Node[i].type == TypeMitralValveOpening) numberOfMitralValveOpeningNodes++;
 		else if(Node[i].type == TypeAppendage) numberOfAppendageNodes++;
@@ -964,13 +993,15 @@ void createNewRun()
 	//BMW *************************************************************************************************************************
 	
 	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle(CVMultiplierBachmannBundle, RPMultiplierBachmannBundle);
-	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, StartingCVMultiplierLSPV, EndingCVMultiplierLSPV, StartingRPMultiplierLSPV, EndingRPMultiplierLSPV, TransitionLengthLSPV); 
+	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, StartingCVMultiplierPVLS, EndingCVMultiplierPVLS, StartingRPMultiplierPVLS, EndingRPMultiplierPVLS, TransitionLengthPVLS); 
 	setAllMuscleTypesAndColors();
-	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, StartingCVMultiplierLIPV, EndingCVMultiplierLIPV, StartingRPMultiplierLIPV, EndingRPMultiplierLIPV, TransitionLengthLIPV);
+	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, StartingCVMultiplierPVLI, EndingCVMultiplierPVLI, StartingRPMultiplierPVLI, EndingRPMultiplierPVLI, TransitionLengthPVLI);
 	setAllMuscleTypesAndColors();
-	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, StartingCVMultiplierRSPV, EndingCVMultiplierRSPV, StartingRPMultiplierRSPV, EndingRPMultiplierRSPV, TransitionLengthRSPV);
+	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, StartingCVMultiplierPVRS, EndingCVMultiplierPVRS, StartingRPMultiplierPVRS, EndingRPMultiplierPVRS, TransitionLengthPVRS);
 	setAllMuscleTypesAndColors();
-	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, StartingCVMultiplierRIPV, EndingCVMultiplierRIPV, StartingRPMultiplierRIPV, EndingRPMultiplierRIPV, TransitionLengthRIPV);
+	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, StartingCVMultiplierPVRI, EndingCVMultiplierPVRI, StartingRPMultiplierPVRI, EndingRPMultiplierPVRI, TransitionLengthPVRI);
+	setAllMuscleTypesAndColors();
+	if(numberOfPulmonaryVein5Nodes != 0) setPulmonaryVein(numberOfPulmonaryVein5Nodes, TypePulmonaryVein5, StartingCVMultiplierPV5, EndingCVMultiplierPV5, StartingRPMultiplierPV5, EndingRPMultiplierPV5, TransitionLengthPV5);
 	setAllMuscleTypesAndColors();
 	if(numberOfBackWallNodes != 0) setBackWall(CVMultiplierBackWall, RPMultiplierBackWall);
 	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening(numberOfMitralValveOpeningNodes);
@@ -1015,8 +1046,6 @@ void setSimulationRunDefaults()
 	SimulationSwitch.DrawNodesFlag = 0;
 	SimulationSwitch.DrawFrontHalfFlag = 0;
 	SimulationSwitch.guiCollapsed = false;
-	
-	for(int i = 0; i < 20; i++) OtherPoints[i] = {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
 /*
@@ -1062,7 +1091,7 @@ void setRemainingParameters()
 	ScrollSpeed = 1.0;
 	MouseWheelPos = 0;
 }
-int id, idA, idB;
+
 /*
  This function:
  Setting up the CUDA environment.
@@ -1110,6 +1139,7 @@ void boarderCleaning()
 			int countPVLI = 0;
 			int countPVRS = 0;
 			int countPVRI = 0;
+			int countPV5 = 0;
 			int countLAA = 0;
 			int countMVO = 0;
 			int countBW = 0;
@@ -1124,6 +1154,7 @@ void boarderCleaning()
 					if(Node[i].type != TypePulmonaryVeinLI && (Node[nodeIdA].type == TypePulmonaryVeinLI || Node[nodeIdB].type == TypePulmonaryVeinLI)) countPVLI++;
 					if(Node[i].type != TypePulmonaryVeinRS && (Node[nodeIdA].type == TypePulmonaryVeinRS || Node[nodeIdB].type == TypePulmonaryVeinRS)) countPVRS++;
 					if(Node[i].type != TypePulmonaryVeinLI && (Node[nodeIdA].type == TypePulmonaryVeinRI || Node[nodeIdB].type == TypePulmonaryVeinRI)) countPVRI++;
+					if(Node[i].type != TypePulmonaryVein5 && (Node[nodeIdA].type == TypePulmonaryVein5 || Node[nodeIdB].type == TypePulmonaryVein5)) countPV5++;
 					if(Node[i].type != TypeAppendage && (Node[nodeIdA].type == TypeAppendage || Node[nodeIdB].type == TypeAppendage)) countLAA++;
 					if(Node[i].type != TypeMitralValveOpening && (Node[nodeIdA].type == TypeMitralValveOpening || Node[nodeIdB].type == TypeMitralValveOpening)) countMVO++;
 					if(Node[i].type != TypeBackWall && (Node[nodeIdA].type == TypeBackWall || Node[nodeIdB].type == TypeBackWall)) countBW++;
@@ -1153,6 +1184,12 @@ void boarderCleaning()
 				if(2 < countPVRI) 
 				{
 					Node[i].type = TypePulmonaryVeinRI;
+					Node[i].color = {1.0f, 0.4f, 0.7f, 0.0f};
+					change = true;
+				}
+				if(2 < countPV5) 
+				{
+					Node[i].type = TypePulmonaryVein5;
 					Node[i].color = {1.0f, 0.4f, 0.7f, 0.0f};
 					change = true;
 				}
@@ -1401,6 +1438,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	if(nodeType == TypePulmonaryVeinLI) OtherPoints[2] = centerOfBoarder;
 	if(nodeType == TypePulmonaryVeinRS) OtherPoints[4] = centerOfBoarder;
 	if(nodeType == TypePulmonaryVeinRI) OtherPoints[6] = centerOfBoarder;
+	if(nodeType == TypePulmonaryVein5) OtherPoints[8] = centerOfBoarder;
 	
 	float4 centerOfPV = {0.0f, 0.0f, 0.0f, 0.0f};
 	for(int i = 0; i < numberOfPVNodes; i++)
@@ -1421,6 +1459,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	if(nodeType == TypePulmonaryVeinLI) OtherPoints[3] = centerOfPV;
 	if(nodeType == TypePulmonaryVeinRS) OtherPoints[5] = centerOfPV;
 	if(nodeType == TypePulmonaryVeinRI) OtherPoints[7] = centerOfPV;
+	if(nodeType == TypePulmonaryVein5) OtherPoints[9] = centerOfPV;
 	
 	float4 v, u;
 	if(nodeType == TypePulmonaryVeinLS)
@@ -1451,13 +1490,21 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 		v.z = OtherPoints[7].z - OtherPoints[6].z;
 		v.w = 0.0f;
 	}
+	if(nodeType == TypePulmonaryVein5)
+	{
+		v.x = OtherPoints[9].x - OtherPoints[8].x;
+		v.y = OtherPoints[9].y - OtherPoints[8].y;
+		v.z = OtherPoints[9].z - OtherPoints[8].z;
+		v.w = 0.0f;
+	}
 	
 	float cosTheta;
 	float vectorReduction;
-	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionLSPV;
-	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionLIPV;
-	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionRSPV;
-	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionRIPV;
+	if(nodeType == TypePulmonaryVeinLS) vectorReduction = CVVectorReductionPVLS;
+	if(nodeType == TypePulmonaryVeinLI) vectorReduction = CVVectorReductionPVLI;
+	if(nodeType == TypePulmonaryVeinRS) vectorReduction = CVVectorReductionPVRS;
+	if(nodeType == TypePulmonaryVeinRI) vectorReduction = CVVectorReductionPVRI;
+	if(nodeType == TypePulmonaryVein5) vectorReduction = CVVectorReductionPV5;
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
 		if(Muscle[i].type == nodeType)
@@ -1509,6 +1556,7 @@ void setMitralValveOpening(int numberOfMVONodes)
 	nodeInfo nodeMVO[numberOfMVONodes];
 	
 	int numberOfBorderNodes = 0;
+	int id, idA, idB;
 	
 	int k = 0;
 	for(int i = 0; i < NumberOfNodes; i++)
@@ -1566,9 +1614,20 @@ void setMitralValveOpening(int numberOfMVONodes)
 	
 	float4 v, u;
 	
-	OtherPoints[11].x = (OtherPoints[0].x + OtherPoints[2].x + OtherPoints[4].x + OtherPoints[6].x)/4.0f;
-	OtherPoints[11].y = (OtherPoints[0].y + OtherPoints[2].y + OtherPoints[4].y + OtherPoints[6].y)/4.0f;
-	OtherPoints[11].z = (OtherPoints[0].z + OtherPoints[2].z + OtherPoints[4].z + OtherPoints[6].z)/4.0f;
+	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		if(Node[i].type == TypeBachmannBundle || Node[i].type == TypeBackWall || Node[i].type == TypeStandardLA || Node[i].type == TypeScarTissue) // This should be scare tissue in the main body of the LA.
+		centerOfLA.x += Node[i].position.x;
+		centerOfLA.y += Node[i].position.y;
+		centerOfLA.z += Node[i].position.z;
+		centerOfLA.w++;
+	}
+	centerOfLA.x /= centerOfLA.w;
+	centerOfLA.y /= centerOfLA.w;
+	centerOfLA.z /= centerOfLA.w;
+	
+	OtherPoints[11] = centerOfLA;
 	
 	v.x = OtherPoints[11].x - OtherPoints[10].x;
 	v.y = OtherPoints[11].y - OtherPoints[10].y;
@@ -1616,64 +1675,6 @@ void setMitralValveOpening(int numberOfMVONodes)
 			
 			//Node[Muscle[i].nodeA].color = {0.5f, 0.0f, 0.4f, 0.0f};
 			//Node[Muscle[i].nodeB].color = {0.5f, 0.0f, 0.4f, 0.0f};
-		}
-	}
-	
-	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		if(Node[i].type == TypeBachmannBundle || Node[i].type == TypeBackWall || Node[i].type == TypeStandardLA || Node[i].type == TypeScarTissue) // This should be scare tissue in the main body of the LA.
-		centerOfLA.x += Node[i].position.x;
-		centerOfLA.y += Node[i].position.y;
-		centerOfLA.z += Node[i].position.z;
-		centerOfLA.w++;
-	}
-	centerOfLA.x /= centerOfLA.w;
-	centerOfLA.y /= centerOfLA.w;
-	centerOfLA.z /= centerOfLA.w;
-	
-	OtherPoints[12] = centerOfLA;
-}
-
-void setNonstandardShapesFiberDirection()
-{
-	OtherPoints[10] = Node[PulsePointNode].position;
-	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		centerOfLA.x += Node[i].position.x;
-		centerOfLA.y += Node[i].position.y;
-		centerOfLA.z += Node[i].position.z;
-		centerOfLA.w++;
-	}
-	centerOfLA.x /= centerOfLA.w;
-	centerOfLA.y /= centerOfLA.w;
-	centerOfLA.z /= centerOfLA.w;
-	
-	OtherPoints[11] = centerOfLA;
-	
-	float4 v, u;
-	v.x = OtherPoints[11].x - OtherPoints[10].x;
-	v.y = OtherPoints[11].y - OtherPoints[10].y;
-	v.z = OtherPoints[11].z - OtherPoints[10].z;
-	v.w = 0.0f;
-	
-	float cosTheta;
-	float vectorReduction = CVVectorReductionMainBody;
-	for(int i = 0; i < NumberOfMuscles; i++)
-	{
-		if(Muscle[i].type == TypeBachmannBundle || Muscle[i].type == TypeBackWall || Muscle[i].type == TypeStandardLA)
-		{
-			u.x = Node[Muscle[i].nodeB].position.x - Node[Muscle[i].nodeA].position.x;
-			u.y = Node[Muscle[i].nodeB].position.y - Node[Muscle[i].nodeA].position.y;
-			u.z = Node[Muscle[i].nodeB].position.z - Node[Muscle[i].nodeA].position.z;
-			u.w = 0.0f;
-			
-			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
-			if(cosTheta < 0) cosTheta = -cosTheta;
-			
-			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
-			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
 		}
 	}
 }
@@ -1733,7 +1734,7 @@ void setAppendage(int numberOfLAANodes, float multiplierCV, float multiplierRP)
 	centerOfLAABoarder.y /= numberOfBorderNodes;
 	centerOfLAABoarder.z /= numberOfBorderNodes;
 	
-	OtherPoints[8] = centerOfLAABoarder;
+	OtherPoints[12] = centerOfLAABoarder;
 	
 	float4 centerOfLAA = {0.0f, 0.0f, 0.0f, 0.0f};
 	for(int i = 0; i < numberOfLAANodes; i++)
@@ -1746,12 +1747,12 @@ void setAppendage(int numberOfLAANodes, float multiplierCV, float multiplierRP)
 	centerOfLAA.y /= numberOfLAANodes;
 	centerOfLAA.z /= numberOfLAANodes;
 	
-	OtherPoints[9] = centerOfLAA;
+	OtherPoints[13] = centerOfLAA;
 	
 	float4 v, u;
-	v.x = OtherPoints[9].x - OtherPoints[8].x;
-	v.y = OtherPoints[9].y - OtherPoints[8].y;
-	v.z = OtherPoints[9].z - OtherPoints[8].z;
+	v.x = OtherPoints[13].x - OtherPoints[12].x;
+	v.y = OtherPoints[13].y - OtherPoints[12].y;
+	v.z = OtherPoints[13].z - OtherPoints[12].z;
 	v.w = 0.0f;
 		
 	float cosTheta;
@@ -1814,6 +1815,49 @@ void setExtraTissue()
 		{
 			Node[i].isDrawNode = true;
 			Node[i].isAblated = true;
+		}
+	}
+}
+
+void setNonstandardShapesFiberDirection()
+{
+	OtherPoints[14] = Node[PulsePointNode].position;
+	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		centerOfLA.x += Node[i].position.x;
+		centerOfLA.y += Node[i].position.y;
+		centerOfLA.z += Node[i].position.z;
+		centerOfLA.w++;
+	}
+	centerOfLA.x /= centerOfLA.w;
+	centerOfLA.y /= centerOfLA.w;
+	centerOfLA.z /= centerOfLA.w;
+	
+	OtherPoints[15] = centerOfLA;
+	
+	float4 v, u;
+	v.x = OtherPoints[15].x - OtherPoints[14].x;
+	v.y = OtherPoints[15].y - OtherPoints[14].y;
+	v.z = OtherPoints[15].z - OtherPoints[14].z;
+	v.w = 0.0f;
+	
+	float cosTheta;
+	float vectorReduction = CVVectorReductionMainBody;
+	for(int i = 0; i < NumberOfMuscles; i++)
+	{
+		if(Muscle[i].type == TypeBachmannBundle || Muscle[i].type == TypeBackWall || Muscle[i].type == TypeStandardLA)
+		{
+			u.x = Node[Muscle[i].nodeB].position.x - Node[Muscle[i].nodeA].position.x;
+			u.y = Node[Muscle[i].nodeB].position.y - Node[Muscle[i].nodeA].position.y;
+			u.z = Node[Muscle[i].nodeB].position.z - Node[Muscle[i].nodeA].position.z;
+			u.w = 0.0f;
+			
+			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
+			if(cosTheta < 0) cosTheta = -cosTheta;
+			
+			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
+			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
 		}
 	}
 }
@@ -2563,7 +2607,7 @@ void ShowIdentifiedMusclesBox()
 		//if the muscle is colored blue, it is identified. Blue color: (0.0, 0.0, 0.7)
 		if (Muscle[i].color.x == 0.0f && Muscle[i].color.y == 0.0f && Muscle[i].color.z == 0.7f)
 		{
-			ImGui::Text("Muscle ID: %d | CV: %.3f | RP: %.3f", i, Muscle[i].conductionVelocity, Muscle[i].refractoryPeriod/300.0f);
+			ImGui::Text("Muscle ID: %d | CV: %.3f | RP: %.3f", i, Muscle[i].conductionVelocity, Muscle[i].refractoryPeriod);
 			k++;
 		}
 	}
@@ -3376,7 +3420,7 @@ void drawPicture()
 	}
 	
 	//glColor3d(0.0,1.0,1.0);
-	for(int i = 0; i < 12; i++) // BMW can go up to 20
+	for(int i = 0; i < 14; i++) // BMW can go up to NUMBER_OF_OTHER_POINTS
 	{
 		if(i%2 == 0) glColor3d(0.0,1.0,0.0);
 		else glColor3d(1.0,0.0,0.0);
@@ -3386,61 +3430,90 @@ void drawPicture()
 		glPopMatrix();
 	}
 	
-	glColor3d(0.0,0.0,1.0);
-	glPushMatrix();
-		glTranslatef(OtherPoints[12].x, OtherPoints[12].y, OtherPoints[12].z);
-		renderSphereVBO();
-	glPopMatrix();
-	
 	glColor3d(1.0,1.0,1.0);
-	dx = OtherPoints[1].x - OtherPoints[0].x;
-	dy = OtherPoints[1].y - OtherPoints[0].y;
-	dz = OtherPoints[1].z - OtherPoints[0].z;
+	//dx = OtherPoints[1].x - OtherPoints[0].x;
+	//dy = OtherPoints[1].y - OtherPoints[0].y;
+	//dz = OtherPoints[1].z - OtherPoints[0].z;
+	dx = CenterPVLS[0].x - OpeningPVLS[0].x;
+	dy = CenterPVLS[0].y - OpeningPVLS[0].y;
+	dz = CenterPVLS[0].z - OpeningPVLS[0].z;
+	d = sqrt(dx*dx + dy*dy + dz*dz);
+	dx /= d; dy /= d; dz /= d;
+	//glBegin(GL_LINES);
+		//glVertex3f(OtherPoints[0].x, OtherPoints[0].y, OtherPoints[0].z);
+		//glVertex3f(OtherPoints[0].x + dx*TransitionLengthPVLS, OtherPoints[0].y + dy*TransitionLengthPVLS, OtherPoints[0].z + dz*TransitionLengthPVLS);
+	//glEnd();
+	glBegin(GL_LINES);
+		glVertex3f(OpeningPVLS[0].x, OpeningPVLS[0].y, OpeningPVLS[0].z);
+		glVertex3f(OpeningPVLS[0].x + dx*TransitionLengthPVLS, OpeningPVLS[0].y + dy*TransitionLengthPVLS, OpeningPVLS[0].z + dz*TransitionLengthPVLS);
+	glEnd();
+	
+	//dx = OtherPoints[3].x - OtherPoints[2].x;
+	//dy = OtherPoints[3].y - OtherPoints[2].y;
+	//dz = OtherPoints[3].z - OtherPoints[2].z;
+	dx = CenterPVLI[0].x - OpeningPVLI[0].x;
+	dy = CenterPVLI[0].y - OpeningPVLI[0].y;
+	dz = CenterPVLI[0].z - OpeningPVLI[0].z;
 	d = sqrt(dx*dx + dy*dy + dz*dz);
 	dx /= d; dy /= d; dz /= d;
 	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[0].x, OtherPoints[0].y, OtherPoints[0].z);
-		glVertex3f(OtherPoints[0].x + dx*TransitionLengthLSPV, OtherPoints[0].y + dy*TransitionLengthLSPV, OtherPoints[0].z + dz*TransitionLengthLSPV);
+		glVertex3f(OpeningPVLI[0].x, OpeningPVLI[0].y, OpeningPVLI[0].z);
+		glVertex3f(OpeningPVLI[0].x + dx*TransitionLengthPVLI, OpeningPVLI[0].y + dy*TransitionLengthPVLI, OpeningPVLI[0].z + dz*TransitionLengthPVLI);
 	glEnd();
 	
-	dx = OtherPoints[3].x - OtherPoints[2].x;
-	dy = OtherPoints[3].y - OtherPoints[2].y;
-	dz = OtherPoints[3].z - OtherPoints[2].z;
+	//dx = OtherPoints[5].x - OtherPoints[4].x;
+	//dy = OtherPoints[5].y - OtherPoints[4].y;
+	//dz = OtherPoints[5].z - OtherPoints[4].z;
+	dx = CenterPVRS[0].x - OpeningPVRS[0].x;
+	dy = CenterPVRS[0].y - OpeningPVRS[0].y;
+	dz = CenterPVRS[0].z - OpeningPVRS[0].z;
 	d = sqrt(dx*dx + dy*dy + dz*dz);
 	dx /= d; dy /= d; dz /= d;
 	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[2].x, OtherPoints[2].y, OtherPoints[2].z);
-		glVertex3f(OtherPoints[2].x + dx*TransitionLengthLIPV, OtherPoints[2].y + dy*TransitionLengthLIPV, OtherPoints[2].z + dz*TransitionLengthLIPV);
+		glVertex3f(OpeningPVRS[0].x, OpeningPVRS[0].y, OpeningPVRS[0].z);
+		glVertex3f(OpeningPVRS[0].x + dx*TransitionLengthPVRS, OpeningPVRS[0].y + dy*TransitionLengthPVRS, OpeningPVRS[0].z + dz*TransitionLengthPVRS);
 	glEnd();
 	
-	dx = OtherPoints[5].x - OtherPoints[4].x;
-	dy = OtherPoints[5].y - OtherPoints[4].y;
-	dz = OtherPoints[5].z - OtherPoints[4].z;
+	//dx = OtherPoints[7].x - OtherPoints[6].x;
+	//dy = OtherPoints[7].y - OtherPoints[6].y;
+	//dz = OtherPoints[7].z - OtherPoints[6].z;
+	dx = CenterPVRI[0].x - OpeningPVRI[0].x;
+	dy = CenterPVRI[0].y - OpeningPVRI[0].y;
+	dz = CenterPVRI[0].z - OpeningPVRI[0].z;
 	d = sqrt(dx*dx + dy*dy + dz*dz);
 	dx /= d; dy /= d; dz /= d;
 	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[4].x, OtherPoints[4].y, OtherPoints[4].z);
-		glVertex3f(OtherPoints[4].x + dx*TransitionLengthRSPV, OtherPoints[4].y + dy*TransitionLengthRSPV, OtherPoints[4].z + dz*TransitionLengthRSPV);
+		glVertex3f(OpeningPVRI[0].x, OpeningPVRI[0].y, OpeningPVRI[0].z);
+		glVertex3f(OpeningPVRI[0].x + dx*TransitionLengthPVRI, OpeningPVRI[0].y + dy*TransitionLengthPVRI, OpeningPVRI[0].z + dz*TransitionLengthPVRI);
 	glEnd();
 	
-	dx = OtherPoints[7].x - OtherPoints[6].x;
-	dy = OtherPoints[7].y - OtherPoints[6].y;
-	dz = OtherPoints[7].z - OtherPoints[6].z;
+	//dx = OtherPoints[9].x - OtherPoints[8].x;
+	//dy = OtherPoints[9].y - OtherPoints[8].y;
+	//dz = OtherPoints[9].z - OtherPoints[8].z;
+	dx = CenterPV5[0].x - OpeningPV5[0].x;
+	dy = CenterPV5[0].y - OpeningPV5[0].y;
+	dz = CenterPV5[0].z - OpeningPV5[0].z;
 	d = sqrt(dx*dx + dy*dy + dz*dz);
 	dx /= d; dy /= d; dz /= d;
 	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[6].x, OtherPoints[6].y, OtherPoints[6].z);
-		glVertex3f(OtherPoints[6].x + dx*TransitionLengthRIPV, OtherPoints[6].y + dy*TransitionLengthRIPV, OtherPoints[6].z + dz*TransitionLengthRIPV);
-	glEnd();
-	
-	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[8].x, OtherPoints[8].y, OtherPoints[8].z);
-		glVertex3f(OtherPoints[9].x, OtherPoints[9].y, OtherPoints[9].z);
+		glVertex3f(OpeningPV5[0].x, OpeningPV5[0].y, OpeningPV5[0].z);
+		glVertex3f(OpeningPV5[0].x + dx*TransitionLengthPV5, OpeningPV5[0].y + dy*TransitionLengthPV5, OpeningPV5[0].z + dz*TransitionLengthPV5);
 	glEnd();
 	
 	glBegin(GL_LINES);
 		glVertex3f(OtherPoints[10].x, OtherPoints[10].y, OtherPoints[10].z);
 		glVertex3f(OtherPoints[11].x, OtherPoints[11].y, OtherPoints[11].z);
+	glEnd();
+	
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[12].x, OtherPoints[12].y, OtherPoints[12].z);
+		glVertex3f(OtherPoints[13].x, OtherPoints[13].y, OtherPoints[13].z);
+	glEnd();
+	
+	// Line for nonstandard shapes.
+	glBegin(GL_LINES);
+		glVertex3f(OtherPoints[14].x, OtherPoints[14].y, OtherPoints[14].z);
+		glVertex3f(OtherPoints[15].x, OtherPoints[15].y, OtherPoints[15].z);
 	glEnd();
 	
 	
@@ -4099,7 +4172,7 @@ void translateObject(float dx, float dy, float dz)
 	}
 	copyNodesToGPU();
 	
-	for(int i = 0; i < 20; i++)
+	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
 		OtherPoints[i].x += dx;
 		OtherPoints[i].y += dy;
@@ -4131,7 +4204,7 @@ void rotateXAxis(float angle)
 	}
 	copyNodesToGPU();
 	
-	for(int i = 0; i < 20; i++)
+	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
 		temp = cos(angle)*OtherPoints[i].y - sin(angle)*OtherPoints[i].z;
 		OtherPoints[i].z  = sin(angle)*OtherPoints[i].y + cos(angle)*OtherPoints[i].z;
@@ -4160,7 +4233,7 @@ void rotateYAxis(float angle)
 	}
 	copyNodesToGPU();
 	
-	for(int i = 0; i < 20; i++)
+	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
 		temp =  cos(-angle)*OtherPoints[i].x + sin(-angle)*OtherPoints[i].z;
 		OtherPoints[i].z  = -sin(-angle)*OtherPoints[i].x + cos(-angle)*OtherPoints[i].z;
@@ -4189,7 +4262,7 @@ void rotateZAxis(float angle)
 	}
 	copyNodesToGPU();
 	
-	for(int i = 0; i < 20; i++)
+	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
 		temp = cos(angle)*OtherPoints[i].x - sin(angle)*OtherPoints[i].y;
 		OtherPoints[i].y  = sin(angle)*OtherPoints[i].x + cos(angle)*OtherPoints[i].y;
@@ -4296,12 +4369,13 @@ void setSingleMuscleTypeAndColor(int muscleId)
 	PriorityList[2] = TypePulmonaryVeinLI;
 	PriorityList[3] = TypePulmonaryVeinRS;
 	PriorityList[4] = TypePulmonaryVeinRI;
-	PriorityList[5] = TypeBackWall;
-	PriorityList[6] = TypeMitralValveOpening;
-	PriorityList[7] = TypeAppendage;
-	PriorityList[8] = TypeStandardLA;
-	PriorityList[9] = TypeScarTissue;
-	PriorityList[10] = TypeExtraTissue;
+	PriorityList[5] = TypePulmonaryVein5;
+	PriorityList[6] = TypeBackWall;
+	PriorityList[7] = TypeMitralValveOpening;
+	PriorityList[8] = TypeAppendage;
+	PriorityList[9] = TypeStandardLA;
+	PriorityList[10] = TypeScarTissue;
+	PriorityList[11] = TypeExtraTissue;
 	
 	for(int i = 0; i < NUMBER_OF_TYPES; i++)
 	{
@@ -4344,6 +4418,7 @@ float4 getColorFromType(int type)
 	if(type == TypePulmonaryVeinLI) return ColorPulmonaryVeins;
 	if(type == TypePulmonaryVeinRS) return ColorPulmonaryVeins;
 	if(type == TypePulmonaryVeinRI) return ColorPulmonaryVeins;
+	if(type == TypePulmonaryVein5) return ColorPulmonaryVeins;
 	if(type == TypeBackWall) return ColorBackWall;
 	if(type == TypeMitralValveOpening) return ColorMitralValveOpening;
 	if(type == TypeAppendage) return ColorAppendage;

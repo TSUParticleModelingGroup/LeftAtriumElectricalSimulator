@@ -36,6 +36,13 @@ Any value read from this file that is not in these units will be converted to th
 	TransitionLengthRIPV = 5.0f;
 	CVVectorReductionRIPV = 0.3f;
 	
+	StartingCVMultiplier5PV = 1.0f;
+	EndingCVMultiplier5PV = 0.5f;
+	StartingRPMultiplier5PV = 1.0f;
+	EndingRPMultiplier5PV = 0.5f;
+	TransitionLength5PV = 5.0f;
+	CVVectorReduction5PV = 0.3f;
+	
 	CVMultiplierBackWall = 1.0;
 	RPMultiplierBackWall = 1.0;
 	
