@@ -21,7 +21,7 @@ Any value read from this file that is not in these units will be converted to th
 	EndingRPMultiplierLIPV = 0.5f;
 	TransitionLengthLIPV = 6.6f;
 	CVVectorReductionLIPV = 0.3f;
-	r
+	
 	StartingCVMultiplierRSPV = 1.0f;
 	EndingCVMultiplierRSPV = 0.5f;
 	StartingRPMultiplierRSPV = 1.0f;

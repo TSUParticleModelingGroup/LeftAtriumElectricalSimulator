@@ -893,14 +893,6 @@ void createNewRun()
 	RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
 	setRemainingParameters();
 	
-	if(RadiusOfLeftAtrium < 0.0)
-	{
-		printf("\n\n You are trying to use RadiusOfLeftAtrium before it is set.");
-		printf("\n The simulation has been terminated.\n\n");
-		exit(0);
-	}
-	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++) OtherPoints[i] = {2.0f*(float)RadiusOfLeftAtrium, 2.0f*(float)RadiusOfLeftAtrium, 2.0f*(float)RadiusOfLeftAtrium, 0.0f};
-	
 	int numberOfStandardLANodes = 0;
 	int numberOfBachmannBundleNodes = 0;
 	int numberOfPulmonaryVeinLSNodes = 0;
@@ -1248,6 +1240,20 @@ void initializeAllNodesAndMuscles()
 		right = AbsoluteRefractoryPeriodFractionSTD;
 		Muscle[i].absoluteRefractoryPeriodFraction = BaseAbsoluteRefractoryPeriodFraction + croppedRandomNumber(stddev, left, right);
 	}
+	
+	float4 center = {0.0f, 0.0f, 0.0f, 0.0f};
+	for(int i = 0; i < NumberOfNodes; i++)
+	{
+		center.x += Node[i].position.x;
+		center.y += Node[i].position.y;
+		center.z += Node[i].position.z;
+		center.w++;
+	}
+	center.x /= center.w;
+	center.y /= center.w;
+	center.z /= center.w;
+	
+	CenterOfObject = center;
 }
 
 void setPulseNode()
@@ -1256,6 +1262,8 @@ void setPulseNode()
 	Node[PulsePointNode].isBeatNode = true;
 	Node[PulsePointNode].beatPeriod = BeatPeriod;
 	Node[PulsePointNode].beatTimer = BeatPeriod; // Set the time to BeatPeriod so it will kickoff a beat as soon as it starts.
+	
+	PulseNodePosition = Node[PulsePointNode].position;
 }
 
 void setBachmannsBundle(float multiplierCV, float multiplierRP)
@@ -1434,11 +1442,11 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	centerOfBoarder.z /= numberOfBorderNodes;
 	centerOfBoarder.w = 0.0f;
 	
-	if(nodeType == TypePulmonaryVeinLS) OtherPoints[0] = centerOfBoarder;
-	if(nodeType == TypePulmonaryVeinLI) OtherPoints[2] = centerOfBoarder;
-	if(nodeType == TypePulmonaryVeinRS) OtherPoints[4] = centerOfBoarder;
-	if(nodeType == TypePulmonaryVeinRI) OtherPoints[6] = centerOfBoarder;
-	if(nodeType == TypePulmonaryVein5) OtherPoints[8] = centerOfBoarder;
+	if(nodeType == TypePulmonaryVeinLS) OpeningPVLS = centerOfBoarder;
+	if(nodeType == TypePulmonaryVeinLI) OpeningPVLI = centerOfBoarder;
+	if(nodeType == TypePulmonaryVeinRS) OpeningPVRS = centerOfBoarder;
+	if(nodeType == TypePulmonaryVeinRI) OpeningPVRI = centerOfBoarder;
+	if(nodeType == TypePulmonaryVein5)  OpeningPV5  = centerOfBoarder;
 	
 	float4 centerOfPV = {0.0f, 0.0f, 0.0f, 0.0f};
 	for(int i = 0; i < numberOfPVNodes; i++)
@@ -1455,13 +1463,18 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 	centerOfPV.z /= (numberOfPVNodes - reductionCount);
 	centerOfPV.w = 0.0f;
 	
-	if(nodeType == TypePulmonaryVeinLS) OtherPoints[1] = centerOfPV;
-	if(nodeType == TypePulmonaryVeinLI) OtherPoints[3] = centerOfPV;
-	if(nodeType == TypePulmonaryVeinRS) OtherPoints[5] = centerOfPV;
-	if(nodeType == TypePulmonaryVeinRI) OtherPoints[7] = centerOfPV;
-	if(nodeType == TypePulmonaryVein5) OtherPoints[9] = centerOfPV;
+	if(nodeType == TypePulmonaryVeinLS) CenterPVLS = centerOfPV;
+	if(nodeType == TypePulmonaryVeinLI) CenterPVLI = centerOfPV;
+	if(nodeType == TypePulmonaryVeinRS) CenterPVRS = centerOfPV;
+	if(nodeType == TypePulmonaryVeinRI) CenterPVRI = centerOfPV;
+	if(nodeType == TypePulmonaryVein5)  CenterPV5  = centerOfPV;
 	
 	float4 v, u;
+	v.x = centerOfPV.x - centerOfBoarder.x;
+	v.y = centerOfPV.y - centerOfBoarder.y;
+	v.z = centerOfPV.z - centerOfBoarder.z;
+	v.w = 0.0f;
+	/*
 	if(nodeType == TypePulmonaryVeinLS)
 	{
 		v.x = OtherPoints[1].x - OtherPoints[0].x;
@@ -1497,6 +1510,7 @@ void setPulmonaryVein(int numberOfPVNodes, int nodeType, float startingCVMultipl
 		v.z = OtherPoints[9].z - OtherPoints[8].z;
 		v.w = 0.0f;
 	}
+	*/
 	
 	float cosTheta;
 	float vectorReduction;
@@ -1588,21 +1602,19 @@ void setMitralValveOpening(int numberOfMVONodes)
 		}
 	}
 	
-	float4 centerOfMVOBoarder = {0.0f, 0.0f, 0.0f, 0.0f};
+	OpeningMVO = {0.0f, 0.0f, 0.0f, 0.0f};
 	for(int i = 0; i < numberOfMVONodes; i++)
 	{
 		if(nodeMVO[i].border == true)
 		{
-			centerOfMVOBoarder.x += Node[nodeMVO[i].number].position.x;
-			centerOfMVOBoarder.y += Node[nodeMVO[i].number].position.y;
-			centerOfMVOBoarder.z += Node[nodeMVO[i].number].position.z;
+			OpeningMVO.x += Node[nodeMVO[i].number].position.x;
+			OpeningMVO.y += Node[nodeMVO[i].number].position.y;
+			OpeningMVO.z += Node[nodeMVO[i].number].position.z;
 		}
 	}
-	centerOfMVOBoarder.x /= numberOfBorderNodes;
-	centerOfMVOBoarder.y /= numberOfBorderNodes;
-	centerOfMVOBoarder.z /= numberOfBorderNodes;
-	
-	OtherPoints[10] = centerOfMVOBoarder;
+	OpeningMVO.x /= numberOfBorderNodes;
+	OpeningMVO.y /= numberOfBorderNodes;
+	OpeningMVO.z /= numberOfBorderNodes;
 	
 	for(int i = 0; i < NumberOfMuscles; i++)
 	{
@@ -1614,37 +1626,34 @@ void setMitralValveOpening(int numberOfMVONodes)
 	
 	float4 v, u;
 	
-	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
+	CenterMainLA = {0.0f, 0.0f, 0.0f, 0.0f};
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		if(Node[i].type == TypeBachmannBundle || Node[i].type == TypeBackWall || Node[i].type == TypeStandardLA || Node[i].type == TypeScarTissue) // This should be scare tissue in the main body of the LA.
-		centerOfLA.x += Node[i].position.x;
-		centerOfLA.y += Node[i].position.y;
-		centerOfLA.z += Node[i].position.z;
-		centerOfLA.w++;
+		CenterMainLA.x += Node[i].position.x;
+		CenterMainLA.y += Node[i].position.y;
+		CenterMainLA.z += Node[i].position.z;
+		CenterMainLA.w++;
 	}
-	centerOfLA.x /= centerOfLA.w;
-	centerOfLA.y /= centerOfLA.w;
-	centerOfLA.z /= centerOfLA.w;
+	CenterMainLA.x /= CenterMainLA.w;
+	CenterMainLA.y /= CenterMainLA.w;
+	CenterMainLA.z /= CenterMainLA.w;
 	
-	OtherPoints[11] = centerOfLA;
-	
-	v.x = OtherPoints[11].x - OtherPoints[10].x;
-	v.y = OtherPoints[11].y - OtherPoints[10].y;
-	v.z = OtherPoints[11].z - OtherPoints[10].z;
+	v.x = CenterMainLA.x - OpeningMVO.x;
+	v.y = CenterMainLA.y - OpeningMVO.y;
+	v.z = CenterMainLA.z - OpeningMVO.z;
 	v.w = 0.0f;
 	
 	float cosTheta;
-	//float RoofAngle = PI/6.0f;
 	bool outOfBoundsNode[NumberOfNodes];
 	for(int i = 0; i < NumberOfNodes; i++)
 	{
 		outOfBoundsNode[i] = false;
 		if(Node[i].type == TypeStandardLA || Node[i].type == TypeBachmannBundle)
 		{
-			u.x = Node[i].position.x - OtherPoints[10].x;
-			u.y = Node[i].position.y - OtherPoints[10].y;
-			u.z = Node[i].position.z - OtherPoints[10].z;
+			u.x = Node[i].position.x - OpeningMVO.x;
+			u.y = Node[i].position.y - OpeningMVO.y;
+			u.z = Node[i].position.z - OpeningMVO.z;
 			u.w = 0.0f;
 			
 			cosTheta = (v.x*u.x + v.y*u.y + v.z*u.z)/(sqrt(v.x*v.x + v.y*v.y + v.z*v.z)*sqrt(u.x*u.x + u.y*u.y + u.z*u.z));
@@ -1734,7 +1743,7 @@ void setAppendage(int numberOfLAANodes, float multiplierCV, float multiplierRP)
 	centerOfLAABoarder.y /= numberOfBorderNodes;
 	centerOfLAABoarder.z /= numberOfBorderNodes;
 	
-	OtherPoints[12] = centerOfLAABoarder;
+	OpeningLAA = centerOfLAABoarder;
 	
 	float4 centerOfLAA = {0.0f, 0.0f, 0.0f, 0.0f};
 	for(int i = 0; i < numberOfLAANodes; i++)
@@ -1747,12 +1756,12 @@ void setAppendage(int numberOfLAANodes, float multiplierCV, float multiplierRP)
 	centerOfLAA.y /= numberOfLAANodes;
 	centerOfLAA.z /= numberOfLAANodes;
 	
-	OtherPoints[13] = centerOfLAA;
+	CenterLAA = centerOfLAA;
 	
 	float4 v, u;
-	v.x = OtherPoints[13].x - OtherPoints[12].x;
-	v.y = OtherPoints[13].y - OtherPoints[12].y;
-	v.z = OtherPoints[13].z - OtherPoints[12].z;
+	v.x = CenterLAA.x - OpeningLAA.x;
+	v.y = CenterLAA.y - OpeningLAA.y;
+	v.z = CenterLAA.z - OpeningLAA.z;
 	v.w = 0.0f;
 		
 	float cosTheta;
@@ -1820,26 +1829,11 @@ void setExtraTissue()
 }
 
 void setNonstandardShapesFiberDirection()
-{
-	OtherPoints[14] = Node[PulsePointNode].position;
-	float4 centerOfLA = {0.0f, 0.0f, 0.0f, 0.0f};
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		centerOfLA.x += Node[i].position.x;
-		centerOfLA.y += Node[i].position.y;
-		centerOfLA.z += Node[i].position.z;
-		centerOfLA.w++;
-	}
-	centerOfLA.x /= centerOfLA.w;
-	centerOfLA.y /= centerOfLA.w;
-	centerOfLA.z /= centerOfLA.w;
-	
-	OtherPoints[15] = centerOfLA;
-	
+{	
 	float4 v, u;
-	v.x = OtherPoints[15].x - OtherPoints[14].x;
-	v.y = OtherPoints[15].y - OtherPoints[14].y;
-	v.z = OtherPoints[15].z - OtherPoints[14].z;
+	v.x = CenterOfObject.x - PulseNodePosition.x;
+	v.y = CenterOfObject.y - PulseNodePosition.y;
+	v.z = CenterOfObject.z - PulseNodePosition.z;
 	v.w = 0.0f;
 	
 	float cosTheta;
@@ -3420,100 +3414,80 @@ void drawPicture()
 	}
 	
 	//glColor3d(0.0,1.0,1.0);
-	for(int i = 0; i < 14; i++) // BMW can go up to NUMBER_OF_OTHER_POINTS
+	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
-		if(i%2 == 0) glColor3d(0.0,1.0,0.0);
-		else glColor3d(1.0,0.0,0.0);
+		glColor3d(1.0,1.0,0.0);
 		glPushMatrix();
-			glTranslatef(OtherPoints[i].x, OtherPoints[i].y, OtherPoints[i].z);
+			glTranslatef(OtherPoints[i]->x, OtherPoints[i]->y, OtherPoints[i]->z);
 			renderSphereVBO();
 		glPopMatrix();
 	}
 	
 	glColor3d(1.0,1.0,1.0);
-	//dx = OtherPoints[1].x - OtherPoints[0].x;
-	//dy = OtherPoints[1].y - OtherPoints[0].y;
-	//dz = OtherPoints[1].z - OtherPoints[0].z;
-	dx = CenterPVLS[0].x - OpeningPVLS[0].x;
-	dy = CenterPVLS[0].y - OpeningPVLS[0].y;
-	dz = CenterPVLS[0].z - OpeningPVLS[0].z;
-	d = sqrt(dx*dx + dy*dy + dz*dz);
-	dx /= d; dy /= d; dz /= d;
-	//glBegin(GL_LINES);
-		//glVertex3f(OtherPoints[0].x, OtherPoints[0].y, OtherPoints[0].z);
-		//glVertex3f(OtherPoints[0].x + dx*TransitionLengthPVLS, OtherPoints[0].y + dy*TransitionLengthPVLS, OtherPoints[0].z + dz*TransitionLengthPVLS);
-	//glEnd();
-	glBegin(GL_LINES);
-		glVertex3f(OpeningPVLS[0].x, OpeningPVLS[0].y, OpeningPVLS[0].z);
-		glVertex3f(OpeningPVLS[0].x + dx*TransitionLengthPVLS, OpeningPVLS[0].y + dy*TransitionLengthPVLS, OpeningPVLS[0].z + dz*TransitionLengthPVLS);
-	glEnd();
-	
-	//dx = OtherPoints[3].x - OtherPoints[2].x;
-	//dy = OtherPoints[3].y - OtherPoints[2].y;
-	//dz = OtherPoints[3].z - OtherPoints[2].z;
-	dx = CenterPVLI[0].x - OpeningPVLI[0].x;
-	dy = CenterPVLI[0].y - OpeningPVLI[0].y;
-	dz = CenterPVLI[0].z - OpeningPVLI[0].z;
+	dx = CenterPVLS.x - OpeningPVLS.x;
+	dy = CenterPVLS.y - OpeningPVLS.y;
+	dz = CenterPVLS.z - OpeningPVLS.z;
 	d = sqrt(dx*dx + dy*dy + dz*dz);
 	dx /= d; dy /= d; dz /= d;
 	glBegin(GL_LINES);
-		glVertex3f(OpeningPVLI[0].x, OpeningPVLI[0].y, OpeningPVLI[0].z);
-		glVertex3f(OpeningPVLI[0].x + dx*TransitionLengthPVLI, OpeningPVLI[0].y + dy*TransitionLengthPVLI, OpeningPVLI[0].z + dz*TransitionLengthPVLI);
+		glVertex3f(OpeningPVLS.x, OpeningPVLS.y, OpeningPVLS.z);
+		glVertex3f(OpeningPVLS.x + dx*TransitionLengthPVLS, OpeningPVLS.y + dy*TransitionLengthPVLS, OpeningPVLS.z + dz*TransitionLengthPVLS);
 	glEnd();
 	
-	//dx = OtherPoints[5].x - OtherPoints[4].x;
-	//dy = OtherPoints[5].y - OtherPoints[4].y;
-	//dz = OtherPoints[5].z - OtherPoints[4].z;
-	dx = CenterPVRS[0].x - OpeningPVRS[0].x;
-	dy = CenterPVRS[0].y - OpeningPVRS[0].y;
-	dz = CenterPVRS[0].z - OpeningPVRS[0].z;
+	dx = CenterPVLI.x - OpeningPVLI.x;
+	dy = CenterPVLI.y - OpeningPVLI.y;
+	dz = CenterPVLI.z - OpeningPVLI.z;
 	d = sqrt(dx*dx + dy*dy + dz*dz);
 	dx /= d; dy /= d; dz /= d;
 	glBegin(GL_LINES);
-		glVertex3f(OpeningPVRS[0].x, OpeningPVRS[0].y, OpeningPVRS[0].z);
-		glVertex3f(OpeningPVRS[0].x + dx*TransitionLengthPVRS, OpeningPVRS[0].y + dy*TransitionLengthPVRS, OpeningPVRS[0].z + dz*TransitionLengthPVRS);
+		glVertex3f(OpeningPVLI.x, OpeningPVLI.y, OpeningPVLI.z);
+		glVertex3f(OpeningPVLI.x + dx*TransitionLengthPVLI, OpeningPVLI.y + dy*TransitionLengthPVLI, OpeningPVLI.z + dz*TransitionLengthPVLI);
 	glEnd();
 	
-	//dx = OtherPoints[7].x - OtherPoints[6].x;
-	//dy = OtherPoints[7].y - OtherPoints[6].y;
-	//dz = OtherPoints[7].z - OtherPoints[6].z;
-	dx = CenterPVRI[0].x - OpeningPVRI[0].x;
-	dy = CenterPVRI[0].y - OpeningPVRI[0].y;
-	dz = CenterPVRI[0].z - OpeningPVRI[0].z;
+	dx = CenterPVRS.x - OpeningPVRS.x;
+	dy = CenterPVRS.y - OpeningPVRS.y;
+	dz = CenterPVRS.z - OpeningPVRS.z;
 	d = sqrt(dx*dx + dy*dy + dz*dz);
 	dx /= d; dy /= d; dz /= d;
 	glBegin(GL_LINES);
-		glVertex3f(OpeningPVRI[0].x, OpeningPVRI[0].y, OpeningPVRI[0].z);
-		glVertex3f(OpeningPVRI[0].x + dx*TransitionLengthPVRI, OpeningPVRI[0].y + dy*TransitionLengthPVRI, OpeningPVRI[0].z + dz*TransitionLengthPVRI);
+		glVertex3f(OpeningPVRS.x, OpeningPVRS.y, OpeningPVRS.z);
+		glVertex3f(OpeningPVRS.x + dx*TransitionLengthPVRS, OpeningPVRS.y + dy*TransitionLengthPVRS, OpeningPVRS.z + dz*TransitionLengthPVRS);
 	glEnd();
 	
-	//dx = OtherPoints[9].x - OtherPoints[8].x;
-	//dy = OtherPoints[9].y - OtherPoints[8].y;
-	//dz = OtherPoints[9].z - OtherPoints[8].z;
-	dx = CenterPV5[0].x - OpeningPV5[0].x;
-	dy = CenterPV5[0].y - OpeningPV5[0].y;
-	dz = CenterPV5[0].z - OpeningPV5[0].z;
+	dx = CenterPVRI.x - OpeningPVRI.x;
+	dy = CenterPVRI.y - OpeningPVRI.y;
+	dz = CenterPVRI.z - OpeningPVRI.z;
 	d = sqrt(dx*dx + dy*dy + dz*dz);
 	dx /= d; dy /= d; dz /= d;
 	glBegin(GL_LINES);
-		glVertex3f(OpeningPV5[0].x, OpeningPV5[0].y, OpeningPV5[0].z);
-		glVertex3f(OpeningPV5[0].x + dx*TransitionLengthPV5, OpeningPV5[0].y + dy*TransitionLengthPV5, OpeningPV5[0].z + dz*TransitionLengthPV5);
+		glVertex3f(OpeningPVRI.x, OpeningPVRI.y, OpeningPVRI.z);
+		glVertex3f(OpeningPVRI.x + dx*TransitionLengthPVRI, OpeningPVRI.y + dy*TransitionLengthPVRI, OpeningPVRI.z + dz*TransitionLengthPVRI);
+	glEnd();
+	
+	dx = CenterPV5.x - OpeningPV5.x;
+	dy = CenterPV5.y - OpeningPV5.y;
+	dz = CenterPV5.z - OpeningPV5.z;
+	d = sqrt(dx*dx + dy*dy + dz*dz);
+	dx /= d; dy /= d; dz /= d;
+	glBegin(GL_LINES);
+		glVertex3f(OpeningPV5.x, OpeningPV5.y, OpeningPV5.z);
+		glVertex3f(OpeningPV5.x + dx*TransitionLengthPV5, OpeningPV5.y + dy*TransitionLengthPV5, OpeningPV5.z + dz*TransitionLengthPV5);
 	glEnd();
 	
 	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[10].x, OtherPoints[10].y, OtherPoints[10].z);
-		glVertex3f(OtherPoints[11].x, OtherPoints[11].y, OtherPoints[11].z);
+		glVertex3f(OpeningMVO.x, OpeningMVO.y, OpeningMVO.z);
+		glVertex3f(CenterMainLA.x, CenterMainLA.y, CenterMainLA.z);
 	glEnd();
 	
 	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[12].x, OtherPoints[12].y, OtherPoints[12].z);
-		glVertex3f(OtherPoints[13].x, OtherPoints[13].y, OtherPoints[13].z);
+		glVertex3f(OpeningLAA.x, OpeningLAA.y, OpeningLAA.z);
+		glVertex3f(CenterLAA.x, CenterLAA.y, CenterLAA.z);
 	glEnd();
 	
 	// Line for nonstandard shapes.
 	glBegin(GL_LINES);
-		glVertex3f(OtherPoints[14].x, OtherPoints[14].y, OtherPoints[14].z);
-		glVertex3f(OtherPoints[15].x, OtherPoints[15].y, OtherPoints[15].z);
+		glVertex3f(PulseNodePosition.x, PulseNodePosition.y, PulseNodePosition.z);
+		glVertex3f(CenterOfObject.x, CenterOfObject.y, CenterOfObject.z);
 	glEnd();
 	
 	
@@ -4174,9 +4148,9 @@ void translateObject(float dx, float dy, float dz)
 	
 	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
-		OtherPoints[i].x += dx;
-		OtherPoints[i].y += dy;
-		OtherPoints[i].z += dz;
+		OtherPoints[i]->x += dx;
+		OtherPoints[i]->y += dy;
+		OtherPoints[i]->z += dz;
 	}
 	
 	CenterOfSimulation.x += dx;
@@ -4206,9 +4180,9 @@ void rotateXAxis(float angle)
 	
 	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
-		temp = cos(angle)*OtherPoints[i].y - sin(angle)*OtherPoints[i].z;
-		OtherPoints[i].z  = sin(angle)*OtherPoints[i].y + cos(angle)*OtherPoints[i].z;
-		OtherPoints[i].y  = temp;
+		temp = cos(angle)*OtherPoints[i]->y - sin(angle)*OtherPoints[i]->z;
+		OtherPoints[i]->z  = sin(angle)*OtherPoints[i]->y + cos(angle)*OtherPoints[i]->z;
+		OtherPoints[i]->y  = temp;
 	}
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
@@ -4235,9 +4209,9 @@ void rotateYAxis(float angle)
 	
 	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
-		temp =  cos(-angle)*OtherPoints[i].x + sin(-angle)*OtherPoints[i].z;
-		OtherPoints[i].z  = -sin(-angle)*OtherPoints[i].x + cos(-angle)*OtherPoints[i].z;
-		OtherPoints[i].x  = temp;
+		temp =  cos(-angle)*OtherPoints[i]->x + sin(-angle)*OtherPoints[i]->z;
+		OtherPoints[i]->z  = -sin(-angle)*OtherPoints[i]->x + cos(-angle)*OtherPoints[i]->z;
+		OtherPoints[i]->x  = temp;
 	}
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);
@@ -4264,9 +4238,9 @@ void rotateZAxis(float angle)
 	
 	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
 	{
-		temp = cos(angle)*OtherPoints[i].x - sin(angle)*OtherPoints[i].y;
-		OtherPoints[i].y  = sin(angle)*OtherPoints[i].x + cos(angle)*OtherPoints[i].y;
-		OtherPoints[i].x  = temp;
+		temp = cos(angle)*OtherPoints[i]->x - sin(angle)*OtherPoints[i]->y;
+		OtherPoints[i]->y  = sin(angle)*OtherPoints[i]->x + cos(angle)*OtherPoints[i]->y;
+		OtherPoints[i]->x  = temp;
 	}
 	
 	translateObject(centerOfObject.x, centerOfObject.y, centerOfObject.z);

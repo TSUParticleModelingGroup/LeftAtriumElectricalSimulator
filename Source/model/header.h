@@ -47,7 +47,7 @@ using namespace std;
 #define NUMBER_OF_TYPES 11
 
 // The number of other points used to draw stuff, that need to be move with the object.
-#define NUMBER_OF_OTHER_POINTS 30
+#define NUMBER_OF_OTHER_POINTS 16
 
 // Structures *****************************************************************
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
@@ -170,7 +170,7 @@ const int TypePulmonaryVeinLS = 2;
 const int TypePulmonaryVeinLI = 21;
 const int TypePulmonaryVeinRS = 22;
 const int TypePulmonaryVeinRI = 23;
-const int TypePulmonaryVein5 = 25;
+const int TypePulmonaryVein5 = 24;
 const int TypeBackWall = 3;
 const int TypeMitralValveOpening = 4;
 const int TypeAppendage = 5;
@@ -319,18 +319,22 @@ double UpY;
 double UpZ;
 
 // Other viewing points
-float4 OtherPoints[NUMBER_OF_OTHER_POINTS];
+//float4 OtherPoints[NUMBER_OF_OTHER_POINTS];
 
-float4 *OpeningPVLS = &OtherPoints[0];
-float4 *CenterPVLS = &OtherPoints[1];
-float4 *OpeningPVLI = &OtherPoints[2];
-float4 *CenterPVLI = &OtherPoints[3];
-float4 *OpeningPVRS = &OtherPoints[4];
-float4 *CenterPVRS = &OtherPoints[5];
-float4 *OpeningPVRI = &OtherPoints[6];
-float4 *CenterPVRI = &OtherPoints[7];
-float4 *OpeningPV5 = &OtherPoints[8];
-float4 *CenterPV5 = &OtherPoints[9];
+//float4 *OpeningPVLS = &OtherPoints[0];
+//float4 *CenterPVLS = &OtherPoints[1];
+//float4 *OpeningPVLI = &OtherPoints[2];
+//float4 *CenterPVLI = &OtherPoints[3];
+//float4 *OpeningPVRS = &OtherPoints[4];
+//float4 *CenterPVRS = &OtherPoints[5];
+//float4 *OpeningPVRI = &OtherPoints[6];
+//float4 *CenterPVRI = &OtherPoints[7];
+//float4 *OpeningPV5 = &OtherPoints[8];
+//float4 *CenterPV5 = &OtherPoints[9];
+
+float4 PulseNodePosition, OpeningPVLS, CenterPVLS, OpeningPVLI, CenterPVLI, OpeningPVRS, CenterPVRS, OpeningPVRI, CenterPVRI, OpeningPV5, CenterPV5, OpeningLAA, CenterLAA, OpeningMVO, CenterMainLA, CenterOfObject;
+
+float4* OtherPoints[] = {&PulseNodePosition, &OpeningPVLS, &CenterPVLI, &OpeningPVLI, &CenterPVLI, &OpeningPVRS, &CenterPVRS, &OpeningPVRI, &CenterPVRI, &OpeningPV5, &CenterPV5, &OpeningLAA, &CenterLAA, &OpeningMVO, &CenterMainLA, &CenterOfObject};
 	
 // ***************************** Prototyping functions *************************************************************************
 
