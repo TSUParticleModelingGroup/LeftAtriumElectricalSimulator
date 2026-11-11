@@ -97,6 +97,7 @@ struct simulationSwitchesStructure
 	bool isInMouseFunctionMode;
 	bool isRecording;
 	int ViewFlag; 
+	bool isDrawMuscleDirectionVectors;
 	bool isDrawAP; // Draws where the AP signal is along a muscle strand.
 	// This is a three way toggle. With draw no nodes, draw the front half of the nodes, or draw all nodes.  0 = off, 1 = front half, 2 = all
 	int DrawNodesFlag; 
@@ -334,7 +335,9 @@ double UpZ;
 
 float4 PulseNodePosition, OpeningPVLS, CenterPVLS, OpeningPVLI, CenterPVLI, OpeningPVRS, CenterPVRS, OpeningPVRI, CenterPVRI, OpeningPV5, CenterPV5, OpeningLAA, CenterLAA, OpeningMVO, CenterMainLA, CenterOfObject;
 
-float4* OtherPoints[] = {&PulseNodePosition, &OpeningPVLS, &CenterPVLI, &OpeningPVLI, &CenterPVLI, &OpeningPVRS, &CenterPVRS, &OpeningPVRI, &CenterPVRI, &OpeningPV5, &CenterPV5, &OpeningLAA, &CenterLAA, &OpeningMVO, &CenterMainLA, &CenterOfObject};
+float4* OtherPoints[] = {&PulseNodePosition, &OpeningPVLS, &CenterPVLS, &OpeningPVLI, &CenterPVLI, &OpeningPVRS, &CenterPVRS, &OpeningPVRI, &CenterPVRI, &OpeningPV5, &CenterPV5, &OpeningLAA, &CenterLAA, &OpeningMVO, &CenterMainLA, &CenterOfObject};
+
+bool DrawNonstandardMuscleVector;
 	
 // ***************************** Prototyping functions *************************************************************************
 

@@ -888,10 +888,14 @@ void createNewRun()
 	boarderCleaning();
 	setAllMuscleTypesAndColors();
 	setupCudaEnvironment();
-	copyNodesMusclesToGPU();
+	copyNodesMusclesToGPU(); // BMW be careful here. The center function copies nodes from the GPU first. We should probably redo this.
 	centerObject();
+	CenterOfObject = findCenterOfObject();
 	RadiusOfLeftAtrium = findAverageRadiusOfLeftAtrium();
 	setRemainingParameters();
+	
+	initializeAllNodesAndMuscles();
+	setPulseNode();
 	
 	int numberOfStandardLANodes = 0;
 	int numberOfBachmannBundleNodes = 0;
@@ -922,16 +926,12 @@ void createNewRun()
 		else if(Node[i].type == TypeExtraTissue) numberOfExtraTissueNodes++;
 		else
 		{
-			printf("\n Bad node type.");
+			printf("\n Bad node type of %d.", Node[i].type);
 			printf("\n The simulation has been terminated.\n");
 			exit(0);
 		}
 		
 	}
-	
-	initializeAllNodesAndMuscles();
-	
-	setPulseNode();
 	
 	// These will go in the setup file. BMW *********************************************************
 	/*
@@ -985,24 +985,67 @@ void createNewRun()
 	//BMW *************************************************************************************************************************
 	
 	if(numberOfBachmannBundleNodes != 0) setBachmannsBundle(CVMultiplierBachmannBundle, RPMultiplierBachmannBundle);
+	
 	if(numberOfPulmonaryVeinLSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLSNodes, TypePulmonaryVeinLS, StartingCVMultiplierPVLS, EndingCVMultiplierPVLS, StartingRPMultiplierPVLS, EndingRPMultiplierPVLS, TransitionLengthPVLS); 
+	else
+	{
+		OpeningPVLS = CenterOfObject;
+		CenterPVLS  = CenterOfObject;
+	}
 	setAllMuscleTypesAndColors();
+	
 	if(numberOfPulmonaryVeinLINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinLINodes, TypePulmonaryVeinLI, StartingCVMultiplierPVLI, EndingCVMultiplierPVLI, StartingRPMultiplierPVLI, EndingRPMultiplierPVLI, TransitionLengthPVLI);
+	else
+	{
+		OpeningPVLI = CenterOfObject;
+		CenterPVLI  = CenterOfObject;
+	}
 	setAllMuscleTypesAndColors();
+	
 	if(numberOfPulmonaryVeinRSNodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRSNodes, TypePulmonaryVeinRS, StartingCVMultiplierPVRS, EndingCVMultiplierPVRS, StartingRPMultiplierPVRS, EndingRPMultiplierPVRS, TransitionLengthPVRS);
+	else
+	{
+		OpeningPVRS = CenterOfObject;
+		CenterPVRS  = CenterOfObject;
+	}
 	setAllMuscleTypesAndColors();
+	
 	if(numberOfPulmonaryVeinRINodes != 0) setPulmonaryVein(numberOfPulmonaryVeinRINodes, TypePulmonaryVeinRI, StartingCVMultiplierPVRI, EndingCVMultiplierPVRI, StartingRPMultiplierPVRI, EndingRPMultiplierPVRI, TransitionLengthPVRI);
+	else
+	{
+		OpeningPVRI = CenterOfObject;
+		CenterPVRI  = CenterOfObject;
+	}
 	setAllMuscleTypesAndColors();
+	
 	if(numberOfPulmonaryVein5Nodes != 0) setPulmonaryVein(numberOfPulmonaryVein5Nodes, TypePulmonaryVein5, StartingCVMultiplierPV5, EndingCVMultiplierPV5, StartingRPMultiplierPV5, EndingRPMultiplierPV5, TransitionLengthPV5);
+	else
+	{
+		OpeningPV5 = CenterOfObject;
+		CenterPV5  = CenterOfObject;
+	}
 	setAllMuscleTypesAndColors();
-	if(numberOfBackWallNodes != 0) setBackWall(CVMultiplierBackWall, RPMultiplierBackWall);
-	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening(numberOfMitralValveOpeningNodes);
-	else(setNonstandardShapesFiberDirection());
+	
 	if(numberOfAppendageNodes != 0) setAppendage(numberOfAppendageNodes, CVMultiplierAppendage, RPMultiplierAppendage);
+	else
+	{
+		OpeningLAA = CenterOfObject;
+		CenterLAA = CenterOfObject;
+	}
 	
+	if(numberOfBackWallNodes != 0) setBackWall(CVMultiplierBackWall, RPMultiplierBackWall);
 	
+	if(numberOfMitralValveOpeningNodes != 0) setMitralValveOpening(numberOfMitralValveOpeningNodes);
+	else
+	{
+		DrawNonstandardMuscleVector = true;
+		OpeningMVO = CenterOfObject;
+		CenterMainLA = CenterOfObject;
+		setNonstandardShapesFiberDirection();
+	}
 	
 	if(numberOfScarTissueNodes != 0) setScarTissue();
+	
 	if(numberOfExtraTissueNodes != 0) setExtraTissue();
 	
 	for(int i = 0; i < NumberOfMuscles; i++)
@@ -1034,10 +1077,14 @@ void setSimulationRunDefaults()
 	SimulationSwitch.isInFindNodeMode = false;
 	SimulationSwitch.isInMouseFunctionMode = false;
 	SimulationSwitch.isRecording = false;
+	SimulationSwitch.isDrawAP = true;
+	SimulationSwitch.isDrawMuscleDirectionVectors = true;
 	SimulationSwitch.ViewFlag = 1;
 	SimulationSwitch.DrawNodesFlag = 0;
 	SimulationSwitch.DrawFrontHalfFlag = 0;
 	SimulationSwitch.guiCollapsed = false;
+	
+	DrawNonstandardMuscleVector = false;
 }
 
 /*
@@ -1240,20 +1287,6 @@ void initializeAllNodesAndMuscles()
 		right = AbsoluteRefractoryPeriodFractionSTD;
 		Muscle[i].absoluteRefractoryPeriodFraction = BaseAbsoluteRefractoryPeriodFraction + croppedRandomNumber(stddev, left, right);
 	}
-	
-	float4 center = {0.0f, 0.0f, 0.0f, 0.0f};
-	for(int i = 0; i < NumberOfNodes; i++)
-	{
-		center.x += Node[i].position.x;
-		center.y += Node[i].position.y;
-		center.z += Node[i].position.z;
-		center.w++;
-	}
-	center.x /= center.w;
-	center.y /= center.w;
-	center.z /= center.w;
-	
-	CenterOfObject = center;
 }
 
 void setPulseNode()
@@ -2461,6 +2494,9 @@ void createGUI()
 		{
 			ImGui::Text("Toggle GUI/Mouse mode: Tab");
 			ImGui::Text("Toggle Run/Pause:      r");
+			ImGui::Text("Toggle Muscle Vectors: v");
+			ImGui::Text("Toggle AP tracker:     a");
+			ImGui::Text("Toggle Run/Pause:      r");
 			ImGui::Text("Toggle Movie on/off:   m");
 			ImGui::Text("Screenshot:            s");
 			ImGui::NewLine();
@@ -2746,6 +2782,30 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
         if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+		return;
+	}
+	
+	// Run/pause toggle
+	if(key == GLFW_KEY_R && action == GLFW_PRESS)
+	{
+		if(SimulationSwitch.isPaused) SimulationSwitch.isPaused = false;
+		else SimulationSwitch.isPaused = true;
+		return;
+	}
+	
+	// Muscle direction viewing toggle
+	if(key == GLFW_KEY_V && action == GLFW_PRESS)
+	{
+		if(SimulationSwitch.isDrawMuscleDirectionVectors) SimulationSwitch.isDrawMuscleDirectionVectors = false;
+		else SimulationSwitch.isDrawMuscleDirectionVectors = true;
+		return;
+	}
+	
+	// Showing the action potential
+	if(key == GLFW_KEY_A && action == GLFW_PRESS)
+	{
+		if(SimulationSwitch.isDrawAP) SimulationSwitch.isDrawAP = false;
+		else SimulationSwitch.isDrawAP = true;
 		return;
 	}
 	
@@ -3413,83 +3473,144 @@ void drawPicture()
 		glPopMatrix();
 	}
 	
-	//glColor3d(0.0,1.0,1.0);
-	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
+	if(SimulationSwitch.isDrawMuscleDirectionVectors)
 	{
-		glColor3d(1.0,1.0,0.0);
+		glColor3d(0.0,1.0,0.0);
 		glPushMatrix();
-			glTranslatef(OtherPoints[i]->x, OtherPoints[i]->y, OtherPoints[i]->z);
+			glTranslatef(OpeningPVLS.x, OpeningPVLS.y, OpeningPVLS.z);
 			renderSphereVBO();
 		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(OpeningPVLI.x, OpeningPVLI.y, OpeningPVLI.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(OpeningPVRS.x, OpeningPVRS.y, OpeningPVRS.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(OpeningPVRI.x, OpeningPVRI.y, OpeningPVRI.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(OpeningPV5.x, OpeningPV5.y, OpeningPV5.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(OpeningLAA.x, OpeningLAA.y, OpeningLAA.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(OpeningMVO.x, OpeningMVO.y, OpeningMVO.z);
+			renderSphereVBO();
+		glPopMatrix();
+		
+		glColor3d(1.0,0.0,0.0);
+		glPushMatrix();
+			glTranslatef(CenterPVLS.x, CenterPVLS.y, CenterPVLS.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(CenterPVLI.x, CenterPVLI.y, CenterPVLI.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(CenterPVRS.x, CenterPVRS.y, CenterPVRS.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(CenterPVRI.x, CenterPVRI.y, CenterPVRI.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(CenterPV5.x, CenterPV5.y, CenterPV5.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(CenterLAA.x, CenterLAA.y, CenterLAA.z);
+			renderSphereVBO();
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(CenterMainLA.x, CenterMainLA.y, CenterMainLA.z);
+			renderSphereVBO();
+		glPopMatrix();
+		
+		glColor3d(0.0,0.0,1.0);
+		glPushMatrix();
+			glTranslatef(CenterOfObject.x, CenterOfObject.y, CenterOfObject.z);
+			renderSphereVBO();
+		glPopMatrix();
+		
+		glColor3d(1.0,1.0,1.0);
+		dx = CenterPVLS.x - OpeningPVLS.x;
+		dy = CenterPVLS.y - OpeningPVLS.y;
+		dz = CenterPVLS.z - OpeningPVLS.z;
+		d = sqrt(dx*dx + dy*dy + dz*dz);
+		dx /= d; dy /= d; dz /= d;
+		glBegin(GL_LINES);
+			glVertex3f(OpeningPVLS.x, OpeningPVLS.y, OpeningPVLS.z);
+			glVertex3f(OpeningPVLS.x + dx*TransitionLengthPVLS, OpeningPVLS.y + dy*TransitionLengthPVLS, OpeningPVLS.z + dz*TransitionLengthPVLS);
+		glEnd();
+		
+		dx = CenterPVLI.x - OpeningPVLI.x;
+		dy = CenterPVLI.y - OpeningPVLI.y;
+		dz = CenterPVLI.z - OpeningPVLI.z;
+		d = sqrt(dx*dx + dy*dy + dz*dz);
+		dx /= d; dy /= d; dz /= d;
+		glBegin(GL_LINES);
+			glVertex3f(OpeningPVLI.x, OpeningPVLI.y, OpeningPVLI.z);
+			glVertex3f(OpeningPVLI.x + dx*TransitionLengthPVLI, OpeningPVLI.y + dy*TransitionLengthPVLI, OpeningPVLI.z + dz*TransitionLengthPVLI);
+		glEnd();
+		
+		dx = CenterPVRS.x - OpeningPVRS.x;
+		dy = CenterPVRS.y - OpeningPVRS.y;
+		dz = CenterPVRS.z - OpeningPVRS.z;
+		d = sqrt(dx*dx + dy*dy + dz*dz);
+		dx /= d; dy /= d; dz /= d;
+		glBegin(GL_LINES);
+			glVertex3f(OpeningPVRS.x, OpeningPVRS.y, OpeningPVRS.z);
+			glVertex3f(OpeningPVRS.x + dx*TransitionLengthPVRS, OpeningPVRS.y + dy*TransitionLengthPVRS, OpeningPVRS.z + dz*TransitionLengthPVRS);
+		glEnd();
+		
+		dx = CenterPVRI.x - OpeningPVRI.x;
+		dy = CenterPVRI.y - OpeningPVRI.y;
+		dz = CenterPVRI.z - OpeningPVRI.z;
+		d = sqrt(dx*dx + dy*dy + dz*dz);
+		dx /= d; dy /= d; dz /= d;
+		glBegin(GL_LINES);
+			glVertex3f(OpeningPVRI.x, OpeningPVRI.y, OpeningPVRI.z);
+			glVertex3f(OpeningPVRI.x + dx*TransitionLengthPVRI, OpeningPVRI.y + dy*TransitionLengthPVRI, OpeningPVRI.z + dz*TransitionLengthPVRI);
+		glEnd();
+		
+		dx = CenterPV5.x - OpeningPV5.x;
+		dy = CenterPV5.y - OpeningPV5.y;
+		dz = CenterPV5.z - OpeningPV5.z;
+		d = sqrt(dx*dx + dy*dy + dz*dz);
+		dx /= d; dy /= d; dz /= d;
+		glBegin(GL_LINES);
+			glVertex3f(OpeningPV5.x, OpeningPV5.y, OpeningPV5.z);
+			glVertex3f(OpeningPV5.x + dx*TransitionLengthPV5, OpeningPV5.y + dy*TransitionLengthPV5, OpeningPV5.z + dz*TransitionLengthPV5);
+		glEnd();
+		
+		glBegin(GL_LINES);
+			glVertex3f(OpeningMVO.x, OpeningMVO.y, OpeningMVO.z);
+			glVertex3f(CenterMainLA.x, CenterMainLA.y, CenterMainLA.z);
+		glEnd();
+		
+		glBegin(GL_LINES);
+			glVertex3f(OpeningLAA.x, OpeningLAA.y, OpeningLAA.z);
+			glVertex3f(CenterLAA.x, CenterLAA.y, CenterLAA.z);
+		glEnd();
+		
+		// Line for nonstandard shapes.
+		if(DrawNonstandardMuscleVector)
+		{
+			glBegin(GL_LINES);
+				glVertex3f(PulseNodePosition.x, PulseNodePosition.y, PulseNodePosition.z);
+				glVertex3f(CenterOfObject.x, CenterOfObject.y, CenterOfObject.z);
+			glEnd();
+		}
 	}
-	
-	glColor3d(1.0,1.0,1.0);
-	dx = CenterPVLS.x - OpeningPVLS.x;
-	dy = CenterPVLS.y - OpeningPVLS.y;
-	dz = CenterPVLS.z - OpeningPVLS.z;
-	d = sqrt(dx*dx + dy*dy + dz*dz);
-	dx /= d; dy /= d; dz /= d;
-	glBegin(GL_LINES);
-		glVertex3f(OpeningPVLS.x, OpeningPVLS.y, OpeningPVLS.z);
-		glVertex3f(OpeningPVLS.x + dx*TransitionLengthPVLS, OpeningPVLS.y + dy*TransitionLengthPVLS, OpeningPVLS.z + dz*TransitionLengthPVLS);
-	glEnd();
-	
-	dx = CenterPVLI.x - OpeningPVLI.x;
-	dy = CenterPVLI.y - OpeningPVLI.y;
-	dz = CenterPVLI.z - OpeningPVLI.z;
-	d = sqrt(dx*dx + dy*dy + dz*dz);
-	dx /= d; dy /= d; dz /= d;
-	glBegin(GL_LINES);
-		glVertex3f(OpeningPVLI.x, OpeningPVLI.y, OpeningPVLI.z);
-		glVertex3f(OpeningPVLI.x + dx*TransitionLengthPVLI, OpeningPVLI.y + dy*TransitionLengthPVLI, OpeningPVLI.z + dz*TransitionLengthPVLI);
-	glEnd();
-	
-	dx = CenterPVRS.x - OpeningPVRS.x;
-	dy = CenterPVRS.y - OpeningPVRS.y;
-	dz = CenterPVRS.z - OpeningPVRS.z;
-	d = sqrt(dx*dx + dy*dy + dz*dz);
-	dx /= d; dy /= d; dz /= d;
-	glBegin(GL_LINES);
-		glVertex3f(OpeningPVRS.x, OpeningPVRS.y, OpeningPVRS.z);
-		glVertex3f(OpeningPVRS.x + dx*TransitionLengthPVRS, OpeningPVRS.y + dy*TransitionLengthPVRS, OpeningPVRS.z + dz*TransitionLengthPVRS);
-	glEnd();
-	
-	dx = CenterPVRI.x - OpeningPVRI.x;
-	dy = CenterPVRI.y - OpeningPVRI.y;
-	dz = CenterPVRI.z - OpeningPVRI.z;
-	d = sqrt(dx*dx + dy*dy + dz*dz);
-	dx /= d; dy /= d; dz /= d;
-	glBegin(GL_LINES);
-		glVertex3f(OpeningPVRI.x, OpeningPVRI.y, OpeningPVRI.z);
-		glVertex3f(OpeningPVRI.x + dx*TransitionLengthPVRI, OpeningPVRI.y + dy*TransitionLengthPVRI, OpeningPVRI.z + dz*TransitionLengthPVRI);
-	glEnd();
-	
-	dx = CenterPV5.x - OpeningPV5.x;
-	dy = CenterPV5.y - OpeningPV5.y;
-	dz = CenterPV5.z - OpeningPV5.z;
-	d = sqrt(dx*dx + dy*dy + dz*dz);
-	dx /= d; dy /= d; dz /= d;
-	glBegin(GL_LINES);
-		glVertex3f(OpeningPV5.x, OpeningPV5.y, OpeningPV5.z);
-		glVertex3f(OpeningPV5.x + dx*TransitionLengthPV5, OpeningPV5.y + dy*TransitionLengthPV5, OpeningPV5.z + dz*TransitionLengthPV5);
-	glEnd();
-	
-	glBegin(GL_LINES);
-		glVertex3f(OpeningMVO.x, OpeningMVO.y, OpeningMVO.z);
-		glVertex3f(CenterMainLA.x, CenterMainLA.y, CenterMainLA.z);
-	glEnd();
-	
-	glBegin(GL_LINES);
-		glVertex3f(OpeningLAA.x, OpeningLAA.y, OpeningLAA.z);
-		glVertex3f(CenterLAA.x, CenterLAA.y, CenterLAA.z);
-	glEnd();
-	
-	// Line for nonstandard shapes.
-	glBegin(GL_LINES);
-		glVertex3f(PulseNodePosition.x, PulseNodePosition.y, PulseNodePosition.z);
-		glVertex3f(CenterOfObject.x, CenterOfObject.y, CenterOfObject.z);
-	glEnd();
-	
 	
 	// Drawing nodes
 	if(SimulationSwitch.DrawNodesFlag == 1 || SimulationSwitch.DrawNodesFlag == 2)  //if we're drawing half(1) or all(2) of the nodes
@@ -3590,46 +3711,45 @@ void drawPicture()
 	}
 	
 	// Tracking the action potintial.
-	SimulationSwitch.isDrawAP = 1;
-	float distance;
-	int id1, id2;
-	glColor3d(0.0, 0.0, 1.0);
-	glPointSize(5.0);
-	glBegin(GL_POINTS);
-		if(SimulationSwitch.isDrawAP)
+	if(SimulationSwitch.isDrawAP)
+	{
+		float distance;
+		int id1, id2;
+		glColor3d(0.0, 0.0, 1.0);
+		glPointSize(5.0);
+		glBegin(GL_POINTS);
+		for(int i = 0; i < NumberOfMuscles; i++)
 		{
-			for(int i = 0; i < NumberOfMuscles; i++)
+			if(0.0 < Muscle[i].timer && Muscle[i].timer < Muscle[i].conductionDuration)
 			{
-				if(0.0 < Muscle[i].timer && Muscle[i].timer < Muscle[i].conductionDuration)
+				if(SimulationSwitch.DrawFrontHalfFlag != 1 || (CenterOfSimulation.z < Node[Muscle[i].nodeA].position.z))
 				{
-					if(SimulationSwitch.DrawFrontHalfFlag != 1 || (CenterOfSimulation.z < Node[Muscle[i].nodeA].position.z))
+					distance = Muscle[i].conductionVelocity*Muscle[i].timer;
+					if(Muscle[i].apNode == Muscle[i].nodeA)
 					{
-						distance = Muscle[i].conductionVelocity*Muscle[i].timer;
-						if(Muscle[i].apNode == Muscle[i].nodeA)
-						{
-							id1 = Muscle[i].nodeA;
-							id2 = Muscle[i].nodeB;
-						}
-						else
-						{
-							id1 = Muscle[i].nodeB;
-							id2 = Muscle[i].nodeA;
-						}
-						dx = Node[id2].position.x - Node[id1].position.x;
-						dy = Node[id2].position.y - Node[id1].position.y;
-						dz = Node[id2].position.z - Node[id1].position.z;
-						d = sqrt(dx*dx + dy*dy + dz*dz);
-						
-						x = Node[id1].position.x + distance*(dx/d);
-						y = Node[id1].position.y + distance*(dy/d);
-						z = Node[id1].position.z + distance*(dz/d);
-						
-						glVertex3f(x, y, z);
+						id1 = Muscle[i].nodeA;
+						id2 = Muscle[i].nodeB;
 					}
+					else
+					{
+						id1 = Muscle[i].nodeB;
+						id2 = Muscle[i].nodeA;
+					}
+					dx = Node[id2].position.x - Node[id1].position.x;
+					dy = Node[id2].position.y - Node[id1].position.y;
+					dz = Node[id2].position.z - Node[id1].position.z;
+					d = sqrt(dx*dx + dy*dy + dz*dz);
+					
+					x = Node[id1].position.x + distance*(dx/d);
+					y = Node[id1].position.y + distance*(dy/d);
+					z = Node[id1].position.z + distance*(dz/d);
+					
+					glVertex3f(x, y, z);
 				}
 			}
 		}
-	glEnd();
+		glEnd();
+	}
 
 	// Puts a ball at the location of the mouse if a mouse function is on.
 	if(SimulationSwitch.isInMouseFunctionMode)
