@@ -47,7 +47,7 @@ using namespace std;
 #define NUMBER_OF_TYPES 11
 
 // The number of other points used to draw stuff, that need to be move with the object.
-#define NUMBER_OF_OTHER_POINTS 16
+#define NUMBER_OF_OTHER_POINTS 17
 
 // Structures *****************************************************************
 // Everything a node holds. We have 1 on the CPU and 1 on the GPU
@@ -333,9 +333,9 @@ double UpZ;
 //float4 *OpeningPV5 = &OtherPoints[8];
 //float4 *CenterPV5 = &OtherPoints[9];
 
-float4 PulseNodePosition, OpeningPVLS, CenterPVLS, OpeningPVLI, CenterPVLI, OpeningPVRS, CenterPVRS, OpeningPVRI, CenterPVRI, OpeningPV5, CenterPV5, OpeningLAA, CenterLAA, OpeningMVO, CenterMainLA, CenterOfObject;
+float4 PulseNodePosition, OpeningPVLS, CenterPVLS, OpeningPVLI, CenterPVLI, OpeningPVRS, CenterPVRS, OpeningPVRI, CenterPVRI, OpeningPV5, CenterPV5, OpeningLAA, CenterLAA, OpeningMVO, CenterMainLA, CenterOfObject, AveragePVO;
 
-float4* OtherPoints[] = {&PulseNodePosition, &OpeningPVLS, &CenterPVLS, &OpeningPVLI, &CenterPVLI, &OpeningPVRS, &CenterPVRS, &OpeningPVRI, &CenterPVRI, &OpeningPV5, &CenterPV5, &OpeningLAA, &CenterLAA, &OpeningMVO, &CenterMainLA, &CenterOfObject};
+float4* OtherPoints[] = {&PulseNodePosition, &OpeningPVLS, &CenterPVLS, &OpeningPVLI, &CenterPVLI, &OpeningPVRS, &CenterPVRS, &OpeningPVRI, &CenterPVRI, &OpeningPV5, &CenterPV5, &OpeningLAA, &CenterLAA, &OpeningMVO, &CenterMainLA, &CenterOfObject, &AveragePVO};
 
 bool DrawNonstandardMuscleVector;
 	
@@ -368,6 +368,7 @@ void setAppendage(int, float, float);
 void setScarTissue();
 void setExtraTissue();
 void setNonstandardShapesFiberDirection();
+void orientModel(int);
 //void setRemainingNodeAndMuscleAttributes();
 
 // Function called to move the simulation forward in time. *************************************************
@@ -440,3 +441,4 @@ void showMuscleTypes();
  void setSingleMuscleTypeAndColor(int);
  void setAllMuscleTypesAndColors();
  float4 getColorFromType(int);
+ 

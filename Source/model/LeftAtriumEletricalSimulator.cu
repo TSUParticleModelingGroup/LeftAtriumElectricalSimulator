@@ -1053,6 +1053,15 @@ void createNewRun()
 		checkMuscle(i);
 	}
 	
+	if(numberOfPulmonaryVeinLSNodes != 0 && numberOfPulmonaryVeinLINodes!= 0 && numberOfPulmonaryVeinRSNodes != 0 && numberOfPulmonaryVeinRINodes != 0 && numberOfMitralValveOpeningNodes != 0)
+	{
+		//orientModel(0);
+	}
+	else
+	{
+		//orientModel(1);
+	}
+	
 	copyNodesMusclesToGPU();
 }
 
@@ -1886,6 +1895,39 @@ void setNonstandardShapesFiberDirection()
 			Muscle[i].conductionVelocity *= 1.0f - vectorReduction*(1.0f - cosTheta);
 			Muscle[i].conductionDuration = Muscle[i].naturalLength/Muscle[i].conductionVelocity;
 		}
+	}
+}
+
+void orientModel(int modelType) // BMW needs work. But I'm going to SC. I'll think about it when I get back!
+{
+	if(modelType == 0)
+	{
+		centerObject();
+		//float4 point;
+		AveragePVO.x = (OpeningPVLS.x + OpeningPVLI.x + OpeningPVRS.x + OpeningPVRI.x)/4.0f;
+		AveragePVO.y = (OpeningPVLS.y + OpeningPVLI.y + OpeningPVRS.y + OpeningPVRI.y)/4.0f;
+		AveragePVO.z = (OpeningPVLS.z + OpeningPVLI.z + OpeningPVRS.z + OpeningPVRI.z)/4.0f;
+		AveragePVO.w = 0.0f;
+		float4 vector;
+		vector.x = CenterMainLA.x - AveragePVO.x;
+		vector.y = CenterMainLA.y - AveragePVO.y;
+		vector.z = CenterMainLA.z - AveragePVO.z;
+		vector.w = sqrt(vector.x*vector.x + vector.y*vector.y + vector.z*vector.z);
+		vector.x /= vector.w;
+		vector.y /= vector.w;
+		vector.z /= vector.w;
+		float angle = acos(vector.x*0.0f + vector.z*-1.0f)/(1.0*1.0);
+		//if     (vector.x <= 0.0f && 0.0f <= vector.z) angle =  PI/2.0f + acos(-vector.x);
+		//else if(vector.x <= 0.0f && vector.z < 0.0f)  angle =  PI/2.0f - acos(-vector.x);
+		//else if(0.0f < vector.x  && 0.0f <= vector.z) angle = -PI/2.0f - acos(vector.x);
+		//else if(0.0f < vector.x  && vector.z < 0.0f)  angle = -PI/2.0f + acos(vector.x);
+		printf("\n vector = %f, %f, %f\n", vector.x, vector.y, vector.z);
+		printf("\n Angle = %f\n", angle);
+		rotateYAxis(angle);
+	}
+	else
+	{
+		centerObject();
 	}
 }
 
@@ -2834,7 +2876,8 @@ void KeyPressedCallback(GLFWwindow* window, int key, int scancode, int action, i
 	
 	if(key == GLFW_KEY_K && action == GLFW_PRESS) // BMW
 	{
-		centerObject();
+		//centerObject();
+		orientModel(0);
 		return;
 	}
 }
@@ -3419,7 +3462,7 @@ void setEctopicBeat(int nodeId)
 	Node[nodeId].beatPeriod = BeatPeriod; // Default to same as main beat
 	Node[nodeId].beatTimer = 0; // Default to start immediately
 	
-	// We only let you set 1 ectopic beat at a time.
+	// We only let you set 1 ectopic beat at a time.Viewing Functions
 	SimulationSwitch.isInEctopicBeatMode = false;
 }
 
@@ -3541,6 +3584,12 @@ void drawPicture()
 			renderSphereVBO();
 		glPopMatrix();
 		
+		glColor3d(1.0,0.0,1.0);
+		glPushMatrix();
+			glTranslatef(AveragePVO.x, AveragePVO.y, AveragePVO.z);
+			renderSphereVBO();
+		glPopMatrix();
+		
 		glColor3d(1.0,1.0,1.0);
 		dx = CenterPVLS.x - OpeningPVLS.x;
 		dy = CenterPVLS.y - OpeningPVLS.y;
@@ -3600,6 +3649,11 @@ void drawPicture()
 		glBegin(GL_LINES);
 			glVertex3f(OpeningLAA.x, OpeningLAA.y, OpeningLAA.z);
 			glVertex3f(CenterLAA.x, CenterLAA.y, CenterLAA.z);
+		glEnd();
+		
+		glBegin(GL_LINES);
+			glVertex3f(AveragePVO.x, AveragePVO.y, AveragePVO.z);
+			glVertex3f(CenterMainLA.x, CenterMainLA.y, CenterMainLA.z);
 		glEnd();
 		
 		// Line for nonstandard shapes.
@@ -4230,6 +4284,14 @@ void centerObject()
 		Node[i].position.z -= centerOfObject.z;
 	}
 	copyNodesToGPU();
+	
+	for(int i = 0; i < NUMBER_OF_OTHER_POINTS; i++)
+	{
+		OtherPoints[i]->x -= centerOfObject.x;
+		OtherPoints[i]->y -= centerOfObject.y;
+		OtherPoints[i]->z -= centerOfObject.z;
+	}
+	
 	CenterOfSimulation.x = 0.0;
 	CenterOfSimulation.y = 0.0;
 	CenterOfSimulation.z = 0.0;
